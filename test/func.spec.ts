@@ -240,7 +240,11 @@ describe("AnonymousFunc Tests", function () {
     const f = func(selfName, "a");
     af.lockTo(f);
     assert.isTrue(data.funcStore.dataRecv.get(selfName)?.has("a"));
-    assert.lengthOf(data.funcStore.dataRecv.get(selfName) || [], 1);
+    // DefinitelyTypedのPR#66744が修正されるまでanyにして対処
+    assert.lengthOf(
+      (data.funcStore.dataRecv.get(selfName) || new Map()) as any,
+      1
+    );
     await f.runAsync().result;
     assert.strictEqual(called, 1);
   });
@@ -253,7 +257,10 @@ describe("AnonymousFunc Tests", function () {
     const f = func(selfName, "a");
     af.lockTo(f);
     assert.isTrue(data.funcStore.dataRecv.get(selfName)?.has("a"));
-    assert.lengthOf(data.funcStore.dataRecv.get(selfName) || new Map(), 1);
+    assert.lengthOf(
+      (data.funcStore.dataRecv.get(selfName) || new Map()) as any,
+      1
+    );
     await f.runAsync().result;
     assert.strictEqual(called, 1);
   });
