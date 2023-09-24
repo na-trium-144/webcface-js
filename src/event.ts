@@ -4,6 +4,7 @@ import { FieldBase, Field } from "./field.js";
 export const eventType = {
   memberEntry: () => "memberEntry",
   sync: (b: FieldBase) => JSON.stringify(["sync", b.member_]),
+  ping: (b: FieldBase) => JSON.stringify(["ping", b.member_]),
   valueEntry: (b: FieldBase) => JSON.stringify(["valueEntry", b.member_]),
   textEntry: (b: FieldBase) => JSON.stringify(["textEntry", b.member_]),
   funcEntry: (b: FieldBase) => JSON.stringify(["funcEntry", b.member_]),

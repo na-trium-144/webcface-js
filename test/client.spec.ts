@@ -16,6 +16,7 @@ import { Field, FieldBase } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
 import log4js from "log4js";
+import version from "../src/version.js";
 
 describe("Client Tests", function () {
   const selfName = "test";
@@ -47,7 +48,14 @@ describe("Client Tests", function () {
   });
   it("successfully connects", function (done) {
     assert.isTrue(wcli.connected);
-    const msg = { kind: Message.kind.syncInit, M: selfName, m: 0 };
+    const msg = {
+      kind: Message.kind.syncInit,
+      M: selfName,
+      m: 0,
+      l: "",
+      v: "",
+      a: "",
+    };
     wcli.send([msg]);
     setTimeout(() => {
       assert.deepEqual(wssRecv[0], msg);
@@ -82,6 +90,18 @@ describe("Client Tests", function () {
       let called = 0;
       wcli.onMemberEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.memberEntry());
+    });
+  });
+  describe("#serverName", function () {
+    it("returns data.svrName", function () {
+      data.svrName = "a";
+      assert.strictEqual(wcli.serverName, "a");
+    });
+  });
+  describe("#serverVersion", function () {
+    it("returns data.svrVersion", function () {
+      data.svrVersion = "a";
+      assert.strictEqual(wcli.serverVersion, "a");
     });
   });
   describe("#logAppender", function () {
@@ -119,6 +139,9 @@ describe("Client Tests", function () {
             kind: Message.kind.syncInit,
             M: selfName,
             m: 0,
+            l: "js",
+            v: version,
+            a: "",
           });
           done();
         }, 10);
@@ -154,11 +177,70 @@ describe("Client Tests", function () {
           ++called;
           assert.strictEqual(v.name, "a");
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "",
+          v: "",
+          a: "",
+        });
         wssSend({ kind: Message.kind.sync, m: 10, t: 1000 });
         setTimeout(() => {
           assert.strictEqual(called, 1);
           done();
+        }, 10);
+      });
+      it("receiving server version", function (done) {
+        wssSend({ kind: Message.kind.svrVersion, n: "a", v: "1" });
+        setTimeout(() => {
+          assert.strictEqual(data.svrName, "a");
+          assert.strictEqual(data.svrVersion, "1");
+          done();
+        }, 10);
+      });
+    });
+    describe("ping", function () {
+      it("receive and send back ping", function (done) {
+        wssSend({ kind: Message.kind.ping });
+        setTimeout(() => {
+          const m = wssRecv.find(
+            (m) => m.kind === Message.kind.ping
+          ) as Message.Ping;
+          assert.exists(m);
+          done();
+        }, 10);
+      });
+      it("receiving ping status", function (done) {
+        let called = 0;
+        assert.isNull(wcli.member("a").pingStatus);
+        wcli.member("a").onPing.on(() => ++called);
+        wcli.sync();
+        setTimeout(() => {
+          const m = wssRecv.find(
+            (m) => m.kind === Message.kind.pingStatusReq
+          ) as Message.PingStatusReq;
+          assert.exists(m);
+
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({
+            kind: Message.kind.pingStatus,
+            s: {
+              10: 15,
+            },
+          });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.strictEqual(wcli.member("a").pingStatus, 15);
+            done();
+          }, 10);
         }, 10);
       });
     });
@@ -169,12 +251,22 @@ describe("Client Tests", function () {
           ++called;
           assert.strictEqual(m.name, "a");
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "a",
+          v: "1",
+          a: "100",
+        });
         setTimeout(() => {
           assert.strictEqual(called, 1);
           assert.lengthOf(wcli.members(), 1);
           assert.strictEqual(wcli.members()[0].name, "a");
           assert.strictEqual(data.memberIds.get("a"), 10);
+          assert.strictEqual(data.memberLibName.get(10), "a");
+          assert.strictEqual(data.memberLibVer.get(10), "1");
+          assert.strictEqual(data.memberRemoteAddr.get(10), "100");
           done();
         }, 10);
       });
@@ -185,7 +277,14 @@ describe("Client Tests", function () {
           assert.strictEqual(v.member.name, "a");
           assert.strictEqual(v.name, "b");
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "",
+          v: "",
+          a: "",
+        });
         wssSend({ kind: Message.kind.valueEntry, m: 10, f: "b" });
         setTimeout(() => {
           assert.strictEqual(called, 1);
@@ -200,7 +299,14 @@ describe("Client Tests", function () {
           assert.strictEqual(v.member.name, "a");
           assert.strictEqual(v.name, "b");
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "",
+          v: "",
+          a: "",
+        });
         wssSend({ kind: Message.kind.textEntry, m: 10, f: "b" });
         setTimeout(() => {
           assert.strictEqual(called, 1);
@@ -215,7 +321,14 @@ describe("Client Tests", function () {
           assert.strictEqual(v.member.name, "a");
           assert.strictEqual(v.name, "b");
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "",
+          v: "",
+          a: "",
+        });
         wssSend({ kind: Message.kind.viewEntry, m: 10, f: "b" });
         setTimeout(() => {
           assert.strictEqual(called, 1);
@@ -232,7 +345,14 @@ describe("Client Tests", function () {
           assert.strictEqual(v.returnType, valType.number_);
           assert.lengthOf(v.args, 1);
         });
-        wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+        wssSend({
+          kind: Message.kind.syncInit,
+          M: "a",
+          m: 10,
+          l: "",
+          v: "",
+          a: "",
+        });
         wssSend({
           kind: Message.kind.funcInfo,
           m: 10,
@@ -527,7 +647,14 @@ describe("Client Tests", function () {
             .member("a")
             .log()
             .on(() => ++called);
-          wssSend({ kind: Message.kind.syncInit, M: "a", m: 10 });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
           wssSend({
             kind: Message.kind.log,
             m: 10,

@@ -81,4 +81,40 @@ export class Member extends Field {
       this.member_
     );
   }
+  get libName() {
+    return (
+      this.data.memberLibName.get(
+        this.data.getMemberIdFromName(this.member_)
+      ) || ""
+    );
+  }
+  get libVersion() {
+    return (
+      this.data.memberLibVer.get(
+        this.data.getMemberIdFromName(this.member_)
+      ) || ""
+    );
+  }
+  get remoteAddr() {
+    return (
+      this.data.memberRemoteAddr.get(
+        this.data.getMemberIdFromName(this.member_)
+      ) || ""
+    );
+  }
+  get pingStatus() {
+    if (!this.data.pingStatusReq) {
+      this.data.pingStatusReqSend = true;
+      this.data.pingStatusReq = true;
+    }
+    return this.data.pingStatus.get(this.data.getMemberIdFromName(this.member_)) || null;
+  }
+  get onPing() {
+    void this.pingStatus;
+    return new FieldWithEvent<Member>(
+      eventType.ping(this),
+      this.data,
+      this.member_
+    );
+  }
 }

@@ -14,9 +14,17 @@ export class ClientData {
   syncTimeStore: SyncDataStore1<Date>;
   funcResultStore: FuncResultStore;
   memberIds: Map<string, number>;
+  memberLibName: Map<number, string>;
+  memberLibVer: Map<number, string>;
+  memberRemoteAddr: Map<number, string>;
   callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void;
   eventEmitter: EventEmitter;
   logQueue: LogLine[];
+  svrName = "";
+  svrVersion = "";
+  pingStatus: Map<number, number>;
+  pingStatusReq = false;
+  pingStatusReqSend = false;
   constructor(
     name: string,
     callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void
@@ -30,9 +38,13 @@ export class ClientData {
     this.syncTimeStore = new SyncDataStore1<Date>(name);
     this.funcResultStore = new FuncResultStore();
     this.memberIds = new Map<string, number>();
+    this.memberLibName = new Map<number, string>();
+    this.memberLibVer = new Map<number, string>();
+    this.memberRemoteAddr = new Map<number, string>();
     this.callFunc = callFunc;
     this.eventEmitter = new EventEmitter();
     this.logQueue = [];
+    this.pingStatus = new Map<number, number>();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;

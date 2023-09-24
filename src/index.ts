@@ -14,3 +14,6 @@ export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";
 // export {} from "./event.ts";
 // export {} from "./field.js";
+import version_ from "./version.js";
+export const version = version_;
+

@@ -27,23 +27,27 @@ export const kind = {
   value: 0,
   text: 1,
   view: 3,
-  valueEntry: 25,
-  textEntry: 26,
-  viewEntry: 28,
-  valueReq: 50,
-  textReq: 51,
-  viewReq: 53,
-  valueRes: 75,
-  textRes: 76,
-  viewRes: 78,
-  syncInit: 100,
-  call: 101,
-  callResponse: 102,
-  callResult: 103,
-  funcInfo: 104,
-  log: 105,
-  logReq: 106,
-  sync: 107,
+  valueEntry: 20,
+  textEntry: 21,
+  viewEntry: 23,
+  valueReq: 40,
+  textReq: 41,
+  viewReq: 43,
+  valueRes: 60,
+  textRes: 61,
+  viewRes: 63,
+  syncInit: 80,
+  call: 81,
+  callResponse: 82,
+  callResult: 83,
+  funcInfo: 84,
+  log: 85,
+  logReq: 86,
+  sync: 87,
+  svrVersion: 88,
+  ping: 89,
+  pingStatus: 90,
+  pingStatusReq: 91,
 } as const;
 
 export const valType = {
@@ -84,30 +88,30 @@ export interface View {
   l: number;
 }
 export interface Entry {
-  kind: 25 | 26 | 28;
+  kind: 20 | 21 | 23;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 50 | 51 | 53;
+  kind: 40 | 41 | 43;
   M: string;
   f: string;
   i: number;
 }
 export interface ValueRes {
-  kind: 75;
+  kind: 60;
   i: number;
   f: string;
   d: number[];
 }
 export interface TextRes {
-  kind: 76;
+  kind: 61;
   i: number;
   f: string;
   d: string;
 }
 export interface ViewRes {
-  kind: 78;
+  kind: 63;
   i: number;
   f: string;
   d: ViewComponentsDiff;
@@ -115,17 +119,35 @@ export interface ViewRes {
 }
 
 export interface SyncInit {
-  kind: 100;
+  kind: 80;
   M: string;
   m: number;
+  l: string;
+  v: string;
+  a: string;
+}
+export interface SvrVersion {
+  kind: 88;
+  n: string;
+  v: string;
 }
 export interface Sync {
-  kind: 107;
+  kind: 87;
   m: number;
   t: number;
 }
+export interface Ping {
+  kind: 89;
+}
+export interface PingStatus {
+  kind: 90;
+  s: { [member_id in number]: number };
+}
+export interface PingStatusReq {
+  kind: 91;
+}
 export interface Call {
-  kind: 101;
+  kind: 81;
   i: number;
   c: number;
   r: number;
@@ -133,13 +155,13 @@ export interface Call {
   a: Val[];
 }
 export interface CallResponse {
-  kind: 102;
+  kind: 82;
   i: number;
   c: number;
   s: boolean;
 }
 export interface CallResult {
-  kind: 103;
+  kind: 83;
   i: number;
   c: number;
   e: boolean;
@@ -155,7 +177,7 @@ export interface Arg {
   o: number[] | string[];
 }
 export interface FuncInfo {
-  kind: 104;
+  kind: 84;
   m: number;
   f: string;
   r: number;
@@ -168,12 +190,12 @@ export interface LogLine {
   m: string;
 }
 export interface Log {
-  kind: 105;
+  kind: 85;
   m: number;
   l: LogLine[];
 }
 export interface LogReq {
-  kind: 106;
+  kind: 86;
   M: string;
 }
 export interface Unknown {
@@ -190,6 +212,10 @@ export type AnyMessage =
   | ViewRes
   | SyncInit
   | Sync
+  | SvrVersion
+  | Ping
+  | PingStatus
+  | PingStatusReq
   | Call
   | CallResponse
   | CallResult

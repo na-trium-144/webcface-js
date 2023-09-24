@@ -15,6 +15,7 @@ import util from "util";
 import { getLogger } from "@log4js-node/log4js-api";
 import { Field, FieldBase } from "./field.js";
 import { FieldWithEvent, eventType } from "./event.js";
+import version from "./version.js";
 
 export class Client extends Member {
   ws: null | websocket.w3cwebsocket = null;
@@ -108,6 +109,32 @@ export class Client extends Member {
       const messages = Message.unpack(event.data as ArrayBuffer);
       for (const data of messages) {
         switch (data.kind) {
+          case Message.kind.svrVersion: {
+            const dataR = data as Message.SvrVersion;
+            this.data.svrName = dataR.n;
+            this.data.svrVersion = dataR.v;
+            break;
+          }
+          case Message.kind.ping: {
+            this.send([
+              {
+                kind: Message.kind.ping,
+              },
+            ]);
+            break;
+          }
+          case Message.kind.pingStatus: {
+            const dataR = data as Message.PingStatus;
+            const ps = new Map<number, number>();
+            for (const [m, p] of Object.entries(dataR.s)) {
+              ps.set(parseInt(m), p);
+            }
+            this.data.pingStatus = ps;
+            for (const target of this.members()) {
+              this.data.eventEmitter.emit(eventType.ping(target), target);
+            }
+            break;
+          }
           case Message.kind.sync: {
             const dataR = data as Message.Sync;
             const member = this.data.getMemberNameFromId(dataR.m);
@@ -269,6 +296,9 @@ export class Client extends Member {
             this.data.textStore.addMember(dataR.M);
             this.data.funcStore.addMember(dataR.M);
             this.data.memberIds.set(dataR.M, dataR.m);
+            this.data.memberLibName.set(dataR.m, dataR.l);
+            this.data.memberLibVer.set(dataR.m, dataR.v);
+            this.data.memberRemoteAddr.set(dataR.m, dataR.a);
             const target = this.member(dataR.M);
             this.data.eventEmitter.emit(eventType.memberEntry(), target);
             break;
@@ -316,6 +346,9 @@ export class Client extends Member {
             this.data.eventEmitter.emit(eventType.funcEntry(target), target);
             break;
           }
+          default: {
+            this.loggerInternal.error("invalid message kind", data.kind);
+          }
         }
       }
     };
@@ -340,6 +373,9 @@ export class Client extends Member {
           kind: Message.kind.syncInit,
           M: this.data.selfMemberName,
           m: 0,
+          l: "js",
+          v: version,
+          a: "",
         });
         this.syncInit = true;
         isFirst = true;
@@ -421,6 +457,11 @@ export class Client extends Member {
         msg.push({ kind: Message.kind.logReq, M: k });
       }
 
+      if ((this.data.pingStatusReq && isFirst) || this.data.pingStatusReqSend) {
+        msg.push({ kind: Message.kind.pingStatusReq });
+        this.data.pingStatusReqSend = false;
+      }
+
       this.send(msg);
     }
   }
@@ -437,6 +478,12 @@ export class Client extends Member {
       "",
       ""
     );
+  }
+  get serverName() {
+    return this.data.svrName;
+  }
+  get serverVersion() {
+    return this.data.svrVersion;
   }
   get logAppender() {
     return {
