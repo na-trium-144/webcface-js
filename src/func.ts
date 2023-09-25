@@ -84,7 +84,7 @@ export function runFunc(fi: FuncInfo, args: Val[]) {
           return a;
       }
     });
-    if (fi.funcImpl != undefined) {
+    if (fi.funcImpl !== undefined) {
       return fi.funcImpl(...newArgs);
     }
     return undefined;
@@ -126,14 +126,14 @@ export class Func extends Field {
   }
   get returnType() {
     const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
-    if (funcInfo != null) {
+    if (funcInfo !== null) {
       return funcInfo.returnType;
     }
     return valType.none_;
   }
   get args() {
     const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
-    if (funcInfo != null) {
+    if (funcInfo !== null) {
       return funcInfo.args.map((a) => ({ ...a }));
     }
     return [];
@@ -151,7 +151,7 @@ export class Func extends Field {
   runImpl(r: AsyncFuncResult, args: Val[]) {
     const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
     if (this.data.isSelf(this.member_)) {
-      if (funcInfo != null && funcInfo.funcImpl != undefined) {
+      if (funcInfo !== null && funcInfo.funcImpl !== undefined) {
         r.resolveStarted(true);
         try {
           // funcImplがpromise返す場合もそのままresolveにぶちこめばよいはず
@@ -197,7 +197,7 @@ export class AnonymousFunc {
     this.func_ = func;
     this.returnType_ = returnType;
     this.args_ = args;
-    if (base == null) {
+    if (base === null) {
       this.base_ = null;
     } else {
       this.base_ = new Func(base, AnonymousFunc.fieldNameTmp());
@@ -206,7 +206,7 @@ export class AnonymousFunc {
     }
   }
   lockTo(target: Func) {
-    if (this.base_ == null) {
+    if (this.base_ === null) {
       this.base_ = new Func(target, AnonymousFunc.fieldNameTmp());
       this.base_.set(this.func_, this.returnType_, this.args_);
       this.base_.hidden = true;

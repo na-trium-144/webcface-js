@@ -27,7 +27,7 @@ export class Client extends Member {
   reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   get loggerInternal() {
     const logger = getLogger("webcface");
-    if (logger.level != null) {
+    if (logger.level !== undefined) {
       return logger;
     } else {
       // log4jsが使えないときのフォールバック
@@ -75,7 +75,7 @@ export class Client extends Member {
   }
   close() {
     this.closing = true;
-    if (this.reconnectTimer != null) {
+    if (this.reconnectTimer !== null) {
       clearTimeout(this.reconnectTimer);
     }
     this.ws?.close();
@@ -265,7 +265,7 @@ export class Client extends Member {
           case Message.kind.callResponse: {
             const dataR = data as Message.CallResponse;
             const r = this.data.funcResultStore.getResult(dataR.i);
-            if (r != undefined) {
+            if (r !== undefined) {
               r.resolveStarted(dataR.s);
             } else {
               this.loggerInternal.error(
@@ -277,7 +277,7 @@ export class Client extends Member {
           case Message.kind.callResult: {
             const dataR = data as Message.CallResult;
             const r = this.data.funcResultStore.getResult(dataR.i);
-            if (r != undefined) {
+            if (r !== undefined) {
               if (dataR.e) {
                 r.rejectResult(new Error(String(dataR.r)));
               } else {
@@ -365,7 +365,7 @@ export class Client extends Member {
     };
   }
   sync() {
-    if (this.connected && this.ws != null) {
+    if (this.connected && this.ws !== null) {
       const msg: Message.AnyMessage[] = [];
       let isFirst = false;
       if (!this.syncInit) {
@@ -430,18 +430,18 @@ export class Client extends Member {
             r: v.returnType,
             a: v.args.map((a) => ({
               n: a.name || "",
-              t: a.type != undefined ? a.type : Message.valType.none_,
-              i: a.init != undefined ? a.init : null,
-              m: a.min != undefined ? a.min : null,
-              x: a.max != undefined ? a.max : null,
-              o: a.option != undefined ? a.option : [],
+              t: a.type !== undefined ? a.type : Message.valType.none_,
+              i: a.init !== undefined ? a.init : null,
+              m: a.min !== undefined ? a.min : null,
+              x: a.max !== undefined ? a.max : null,
+              o: a.option !== undefined ? a.option : [],
             })),
           });
         }
       }
 
       const logSend: Message.LogLine[] = [];
-      if (this.data.logStore.getRecv(this.name) == null) {
+      if (this.data.logStore.getRecv(this.name) === null) {
         this.data.logStore.setRecv(this.name, []);
       }
       const logRecv = this.data.logStore.getRecv(this.name) as LogLine[];
@@ -497,7 +497,7 @@ export class Client extends Member {
         (logEvent: log4jsLoggingEvent) => {
           const ll = {
             level:
-              levels != undefined
+              levels !== undefined
                 ? log4jsLevelConvert(logEvent.level, levels)
                 : 2,
             time: new Date(logEvent.startTime),

@@ -107,7 +107,8 @@ export class Member extends Field {
       this.data.pingStatusReqSend = true;
       this.data.pingStatusReq = true;
     }
-    return this.data.pingStatus.get(this.data.getMemberIdFromName(this.member_)) || null;
+    const ps = this.data.pingStatus.get(this.data.getMemberIdFromName(this.member_));
+    return ps !== undefined ? ps : null;
   }
   get onPing() {
     void this.pingStatus;

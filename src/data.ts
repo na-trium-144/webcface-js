@@ -26,11 +26,11 @@ export class Value extends FieldWithEvent<Value> {
   }
   tryGet() {
     const v = this.tryGetVec();
-    return v != null && v.length >= 1 ? v[0] : null;
+    return v !== null && v.length >= 1 ? v[0] : null;
   }
   getVec() {
     const v = this.tryGetVec();
-    if (v == null) {
+    if (v === null) {
       return [];
     } else {
       return v;
@@ -38,7 +38,7 @@ export class Value extends FieldWithEvent<Value> {
   }
   get() {
     const v = this.tryGet();
-    if (v == null) {
+    if (v === null) {
       return 0;
     } else {
       return v;
@@ -51,7 +51,7 @@ export class Value extends FieldWithEvent<Value> {
         this.triggerEvent(this);
       } else if (
         Array.isArray(data) &&
-        data.find((v) => typeof v !== "number") == null
+        data.find((v) => typeof v !== "number") === undefined
       ) {
         this.data.valueStore.setSend(this.field_, data);
         this.triggerEvent(this);

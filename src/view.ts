@@ -57,7 +57,7 @@ export function mergeViewDiff(
   prev: Message.ViewComponent[]
 ) {
   for (let i = 0; i < size; i++) {
-    if (diff[i] != undefined) {
+    if (diff[i] !== undefined) {
       if (prev.length <= i) {
         prev.push(diff[i]);
       } else {
@@ -113,15 +113,15 @@ export class ViewComponent {
       this.type_ = arg.t;
       this.text_ = arg.x;
       this.on_click_ =
-        arg.L != null && arg.l != null ? new FieldBase(arg.L, arg.l) : null;
+        arg.L !== null && arg.l !== null ? new FieldBase(arg.L, arg.l) : null;
       this.text_color_ = arg.c;
       this.bg_color_ = arg.b;
     }
     this.data = data;
-    if (options?.textColor != undefined) {
+    if (options?.textColor !== undefined) {
       this.textColor = options.textColor;
     }
-    if (options?.bgColor != undefined) {
+    if (options?.bgColor !== undefined) {
       this.bgColor = options.bgColor;
     }
   }
@@ -138,8 +138,8 @@ export class ViewComponent {
     return {
       t: this.type,
       x: this.text,
-      L: this.on_click_ == null ? null : this.on_click_.member_,
-      l: this.on_click_ == null ? null : this.on_click_.field_,
+      L: this.on_click_ === null ? null : this.on_click_.member_,
+      l: this.on_click_ === null ? null : this.on_click_.field_,
       c: this.text_color_,
       b: this.bg_color_,
     };
@@ -154,8 +154,8 @@ export class ViewComponent {
     this.text_ = t;
   }
   get onClick(): Func | null {
-    if (this.on_click_ != null) {
-      if (this.data != null) {
+    if (this.on_click_ !== null) {
+      if (this.data !== null) {
         return new Func(
           new Field(this.data, this.on_click_.member_, this.on_click_.field_)
         );
