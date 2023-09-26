@@ -1,0 +1,64 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js Test and Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    # - run: npm run build --if-present
+    - run: npm test
+
+    # https://stackoverflow.com/questions/59203704/how-to-create-a-badge-with-test-coverage-jacoco-on-github-actions
+    - name: Get coverage
+      id: coverage
+      run: |
+        COVERAGE=$(npx c8 report -r text-summary | grep Statements | awk '{print $3}')
+        echo "##[set-output name=lines;]${COVERAGE}"
+
+    - uses: actions/checkout@v3
+      with:
+        ref: badge
+        path: badge
+
+    - name: Generate the badge SVG image
+      uses: emibcn/badge-action@v2.0.2
+      with:
+        label: 'Test coverage'
+        status: ${{ steps.coverage.outputs.lines }}
+        color: 'blue'
+        path: badge/coverage.svg
+
+    - name: Commit badge
+      working-directory: ${{github.workspace}}/badge
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add coverage.svg
+        git commit -m "Add/Update badge"
+
+    - name: Push badge commit
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: badge
+        directory: badge
