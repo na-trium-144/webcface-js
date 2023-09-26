@@ -1,21 +1,24 @@
 # webcface-js
-[WebCFace](https://github.com/na-trium-144/webcface)のJavaScript/TypeScript版クライアントライブラリです。
-Node.jsとブラウザーで動きます。
 
-使い方はwebcfaceのリポジトリを参照してください。
-このライブラリを動かすにはwebcface-serverを別途インストールする必要があります。
+Client library of [WebCFace](https://github.com/na-trium-144/webcface) for JavaScript and TypeScript.
+Runs on Node.js and browser.
 
-## example
-書きかけ
-適当
+Please refer to the WebCFace repository for how to use it.
+To use this library, you need WebCFace server separately.
+
+## Installation
+
+```bash
+npm install webcface
+```
+
+## Usage
 
 ### value, text
-送信側
 ```ts
 import { Client, Value } from "webcface";
 const wcli = new Client("example_main");
 wcli.value("test").set(0);
-// まとめてセット
 wcli.value("dict").set({
   a: 1,
   b: 2,
@@ -25,7 +28,6 @@ wcli.text("str").set("hello");
 wcli.sync();
 ```
 
-受信側
 ```ts
 import { Client, Value } from "webcface";
 const wcli = Client("example_recv");
