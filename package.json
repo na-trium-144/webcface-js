@@ -35,5 +35,13 @@
     "lodash.isequal": "^4.5.0",
     "util": "^0.12.5",
     "websocket": "^1.0.34"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/na-trium-144/webcface-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/na-trium-144/webcface-js/issues"
+  },
+  "homepage": "https://github.com/na-trium-144/webcface-js#readme"
 }
