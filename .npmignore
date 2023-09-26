@@ -1,8 +1,11 @@
 /node_modules
+/.github
 /src
 /example
 /test
 /dist/example
 /dist/test
-tsconfig.json
+.c8rc.json
 .eslintrc.cjs
+package-lock.json
+tsconfig.json
