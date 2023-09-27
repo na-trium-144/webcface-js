@@ -79,7 +79,7 @@ wcli.view("a").set([
 ```
 
 ### log
-[log4js-node](https://www.npmjs.com/package/log4js)のAppenderとして実装しています
+WebCFace client provides Appender for [log4js-node](https://www.npmjs.com/package/log4js).
 ```ts
 import log4js from "log4js";
 
