@@ -33,7 +33,7 @@ jobs:
       id: coverage
       run: |
         COVERAGE=$(npx c8 report -r text-summary | grep Statements | awk '{print $3}')
-        echo "##[set-output name=lines;]${COVERAGE}"
+        echo "lines=${COVERAGE}" >> $GITHUB_OUTPUT
 
     - uses: actions/checkout@v3
       with:
@@ -54,7 +54,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add coverage.svg
-        git commit -m "Add/Update badge"
+        git commit -m "Add/Update badge" || true
 
     - name: Push badge commit
       uses: ad-m/github-push-action@master
