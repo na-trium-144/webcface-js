@@ -25,6 +25,7 @@ export class Client extends Member {
   host: string;
   port: number;
   syncInit = false;
+  doSyncOnConnect = false;
   closing = false;
   get loggerInternal() {
     const logger = getLogger("webcface");
@@ -110,6 +111,9 @@ export class Client extends Member {
           this.ws = null;
           setTimeout(() => this.reconnect(), 1000);
         };
+        if (this.doSyncOnConnect) {
+          this.sync();
+        }
       }
     };
   }
@@ -352,7 +356,10 @@ export class Client extends Member {
     }
   }
   sync() {
-    if (this.ws != null) {
+    if (this.ws == null) {
+      this.doSyncOnConnect = true;
+    } else {
+      this.doSyncOnConnect = false;
       const msg: Message.AnyMessage[] = [];
       let isFirst = false;
       if (!this.syncInit) {
