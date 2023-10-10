@@ -12,6 +12,10 @@
     "lint": "eslint src test example",
     "typedoc": "typedoc --out ./docs/ ./src/"
   },
+  "files": [
+    "dist/src",
+    "dist/package.json"
+  ],
   "author": "na-trium-144",
   "license": "MIT",
   "devDependencies": {
