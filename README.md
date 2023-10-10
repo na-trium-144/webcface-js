@@ -15,7 +15,9 @@ npm install webcface
 ```
 
 ## API Documentation
-TODO
+[API Reference](https://na-trium-144.github.io/webcface-js/modules.html)
+
+See also [WebCFace c++ documentation](https://na-trium-144.github.io/webcface/)(Currently Japanese only), which has similar API.
 
 ## Usage
 
