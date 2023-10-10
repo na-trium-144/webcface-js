@@ -95,6 +95,7 @@ export class Client extends Member {
     ws.onopen = () => {
       if (this.ws == null) {
         this.ws = ws;
+        this.syncInit = false;
         this.loggerInternal.debug("connected");
         ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) =>
           this.onMessage(event);
