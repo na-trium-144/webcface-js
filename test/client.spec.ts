@@ -159,6 +159,23 @@ describe("Client Tests", function () {
           }, 10);
         }, 10);
       });
+      it("send SyncInit after connection if #sync() was called before connection", function (done) {
+        const wcli2 = new Client("test2", "127.0.0.1", 37530);
+        wcli2.sync();
+        assert.isFalse(wcli2.connected);
+        setTimeout(() => {
+          assert.deepEqual(wssRecv[0], {
+            kind: Message.kind.syncInit,
+            M: "test2",
+            m: 0,
+            l: "js",
+            v: version,
+            a: "",
+          });
+          wcli2.close();
+          done();
+        }, 10);
+      });
       it("send Sync every time", function (done) {
         wcli.sync();
         setTimeout(() => {
