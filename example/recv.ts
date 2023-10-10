@@ -11,14 +11,7 @@ c.onMemberEntry.on((m: Member) => {
     console.log(`text ${v.name}`);
   });
   m.onFuncEntry.on((v: Func) => {
-    console.log(
-      `func  ${v.name} arg: {${v.args
-        .map(
-          (a) =>
-            `<${a.name} type=${a.type},init=${a.init},min=${a.min},max=${a.max},option=${a.option}>`
-        )
-        .join(", ")}} ret: ${v.returnType}`
-    );
+    console.log(`func  ${v.name} ${v.args.length} args, ret: ${v.returnType}`);
   });
 });
 

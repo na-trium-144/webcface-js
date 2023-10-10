@@ -35,12 +35,15 @@ export class Client extends Member {
       // log4jsが使えないときのフォールバック
       return {
         debug(...args: any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           console?.log(...args);
         },
         warn(...args: any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           console?.warn(...args);
         },
         error(...args: any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           console?.error(...args);
         },
       };
@@ -495,6 +498,7 @@ export class Client extends Member {
                 ? log4jsLevelConvert(logEvent.level, levels)
                 : 2,
             time: new Date(logEvent.startTime),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             message: util.format(...logEvent.data),
           };
           this.data.logQueue.push(ll);
