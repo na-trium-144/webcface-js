@@ -19,12 +19,13 @@ import version from "./version.js";
 
 export class Client extends Member {
   ws: null | websocket.w3cwebsocket = null;
-  connected = false;
+  get connected() {
+    return this.ws != null;
+  }
   host: string;
   port: number;
   syncInit = false;
   closing = false;
-  reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   get loggerInternal() {
     const logger = getLogger("webcface");
     if (logger.level !== undefined) {
@@ -75,9 +76,6 @@ export class Client extends Member {
   }
   close() {
     this.closing = true;
-    if (this.reconnectTimer !== null) {
-      clearTimeout(this.reconnectTimer);
-    }
     this.ws?.close();
     this.ws = null;
   }
@@ -86,286 +84,274 @@ export class Client extends Member {
       return;
     }
     this.loggerInternal.debug(`reconnecting to ws://${this.host}:${this.port}`);
-    let connection_done = false;
     const ws = new w3cwebsocket(`ws://${this.host}:${this.port}`);
-    this.ws = ws;
-    this.reconnectTimer = setTimeout(() => {
-      if (!connection_done) {
+    setTimeout(() => {
+      if (this.ws == null) {
         this.loggerInternal.warn("connection timeout");
-        ws.onopen = () => null;
-        ws.onmessage = () => null;
-        ws.onclose = () => null;
-        ws.onerror = () => null;
-        this.ws = null;
         this.reconnect();
       }
     }, 1000);
     ws.binaryType = "arraybuffer";
     ws.onopen = () => {
-      connection_done = true;
-      this.connected = true;
+      if (this.ws == null) {
+        this.ws = ws;
+        this.loggerInternal.debug("connected");
+        ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) =>
+          this.onMessage(event);
+        ws.onerror = () => {
+          this.loggerInternal.warn("connection error");
+          ws.close();
+          this.ws = null;
+          setTimeout(() => this.reconnect(), 1000);
+        };
+        ws.onclose = () => {
+          this.loggerInternal.warn("closed");
+          this.ws = null;
+          setTimeout(() => this.reconnect(), 1000);
+        };
+      }
     };
-    ws.onmessage = (event) => {
-      const messages = Message.unpack(event.data as ArrayBuffer);
-      for (const data of messages) {
-        switch (data.kind) {
-          case Message.kind.svrVersion: {
-            const dataR = data as Message.SvrVersion;
-            this.data.svrName = dataR.n;
-            this.data.svrVersion = dataR.v;
-            break;
+  }
+  onMessage(event: { data: string | ArrayBuffer | Buffer }) {
+    const messages = Message.unpack(event.data as ArrayBuffer);
+    for (const data of messages) {
+      switch (data.kind) {
+        case Message.kind.svrVersion: {
+          const dataR = data as Message.SvrVersion;
+          this.data.svrName = dataR.n;
+          this.data.svrVersion = dataR.v;
+          break;
+        }
+        case Message.kind.ping: {
+          this.send([
+            {
+              kind: Message.kind.ping,
+            },
+          ]);
+          break;
+        }
+        case Message.kind.pingStatus: {
+          const dataR = data as Message.PingStatus;
+          const ps = new Map<number, number>();
+          for (const [m, p] of Object.entries(dataR.s)) {
+            ps.set(parseInt(m), p);
           }
-          case Message.kind.ping: {
-            this.send([
-              {
-                kind: Message.kind.ping,
-              },
-            ]);
-            break;
+          this.data.pingStatus = ps;
+          for (const target of this.members()) {
+            this.data.eventEmitter.emit(eventType.ping(target), target);
           }
-          case Message.kind.pingStatus: {
-            const dataR = data as Message.PingStatus;
-            const ps = new Map<number, number>();
-            for (const [m, p] of Object.entries(dataR.s)) {
-              ps.set(parseInt(m), p);
-            }
-            this.data.pingStatus = ps;
-            for (const target of this.members()) {
-              this.data.eventEmitter.emit(eventType.ping(target), target);
-            }
-            break;
+          break;
+        }
+        case Message.kind.sync: {
+          const dataR = data as Message.Sync;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          this.data.syncTimeStore.setRecv(member, new Date(dataR.t));
+          const target = this.member(member);
+          this.data.eventEmitter.emit(eventType.sync(target), target);
+          break;
+        }
+        case Message.kind.valueRes: {
+          const dataR = data as Message.ValueRes;
+          const [member, field] = this.data.valueStore.getReq(dataR.i, dataR.f);
+          this.data.valueStore.setRecv(member, field, dataR.d);
+          const target = this.member(member).value(field);
+          this.data.eventEmitter.emit(eventType.valueChange(target), target);
+          break;
+        }
+        case Message.kind.textRes: {
+          const dataR = data as Message.TextRes;
+          const [member, field] = this.data.textStore.getReq(dataR.i, dataR.f);
+          this.data.textStore.setRecv(member, field, dataR.d);
+          const target = this.member(member).text(field);
+          this.data.eventEmitter.emit(eventType.textChange(target), target);
+          break;
+        }
+        case Message.kind.viewRes: {
+          const dataR = data as Message.ViewRes;
+          const [member, field] = this.data.viewStore.getReq(dataR.i, dataR.f);
+          const current = this.data.viewStore.getRecv(member, field) || [];
+          const diff: Message.ViewComponentsDiff = {};
+          for (const k of Object.keys(dataR.d)) {
+            diff[k] = dataR.d[k];
           }
-          case Message.kind.sync: {
-            const dataR = data as Message.Sync;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            this.data.syncTimeStore.setRecv(member, new Date(dataR.t));
-            const target = this.member(member);
-            this.data.eventEmitter.emit(eventType.sync(target), target);
-            break;
+          mergeViewDiff(diff, dataR.l, current);
+          this.data.viewStore.setRecv(member, field, current);
+          const target = this.member(member).view(field);
+          this.data.eventEmitter.emit(eventType.viewChange(target), target);
+          break;
+        }
+        case Message.kind.log: {
+          const dataR = data as Message.Log;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          const log = this.data.logStore.getRecv(member) || [];
+          const target = this.member(member).log();
+          for (const ll of dataR.l) {
+            const ll2: LogLine = {
+              level: ll.v,
+              time: new Date(ll.t),
+              message: ll.m,
+            };
+            log.push(ll2);
           }
-          case Message.kind.valueRes: {
-            const dataR = data as Message.ValueRes;
-            const [member, field] = this.data.valueStore.getReq(
-              dataR.i,
-              dataR.f
+          this.data.logStore.setRecv(member, log);
+          this.data.eventEmitter.emit(eventType.logAppend(target), target);
+          break;
+        }
+        case Message.kind.call: {
+          setTimeout(() => {
+            const dataR = data as Message.Call;
+            const s = this.data.funcStore.dataRecv.get(
+              this.data.selfMemberName
             );
-            this.data.valueStore.setRecv(member, field, dataR.d);
-            const target = this.member(member).value(field);
-            this.data.eventEmitter.emit(eventType.valueChange(target), target);
-            break;
-          }
-          case Message.kind.textRes: {
-            const dataR = data as Message.TextRes;
-            const [member, field] = this.data.textStore.getReq(
-              dataR.i,
-              dataR.f
-            );
-            this.data.textStore.setRecv(member, field, dataR.d);
-            const target = this.member(member).text(field);
-            this.data.eventEmitter.emit(eventType.textChange(target), target);
-            break;
-          }
-          case Message.kind.viewRes: {
-            const dataR = data as Message.ViewRes;
-            const [member, field] = this.data.viewStore.getReq(
-              dataR.i,
-              dataR.f
-            );
-            const current = this.data.viewStore.getRecv(member, field) || [];
-            const diff: Message.ViewComponentsDiff = {};
-            for (const k of Object.keys(dataR.d)) {
-              diff[k] = dataR.d[k];
-            }
-            mergeViewDiff(diff, dataR.l, current);
-            this.data.viewStore.setRecv(member, field, current);
-            const target = this.member(member).view(field);
-            this.data.eventEmitter.emit(eventType.viewChange(target), target);
-            break;
-          }
-          case Message.kind.log: {
-            const dataR = data as Message.Log;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            const log = this.data.logStore.getRecv(member) || [];
-            const target = this.member(member).log();
-            for (const ll of dataR.l) {
-              const ll2: LogLine = {
-                level: ll.v,
-                time: new Date(ll.t),
-                message: ll.m,
-              };
-              log.push(ll2);
-            }
-            this.data.logStore.setRecv(member, log);
-            this.data.eventEmitter.emit(eventType.logAppend(target), target);
-            break;
-          }
-          case Message.kind.call: {
-            setTimeout(() => {
-              const dataR = data as Message.Call;
-              const s = this.data.funcStore.dataRecv.get(
-                this.data.selfMemberName
-              );
-              const sendResult = (res: Val | void) => {
-                this.send([
-                  {
-                    kind: Message.kind.callResult,
-                    i: dataR.i,
-                    c: dataR.c,
-                    e: false,
-                    r: res === undefined ? "" : res,
-                  },
-                ]);
-              };
-              const sendError = (e: any) => {
-                this.send([
-                  {
-                    kind: Message.kind.callResult,
-                    i: dataR.i,
-                    c: dataR.c,
-                    e: true,
-                    r: (e as Error).toString(),
-                  },
-                ]);
-              };
-              const sendResponse = (s: boolean) => {
-                this.send([
-                  {
-                    kind: Message.kind.callResponse,
-                    i: dataR.i,
-                    c: dataR.c,
-                    s: s,
-                  },
-                ]);
-              };
-              if (s) {
-                const m = s.get(dataR.f);
-                if (m) {
-                  sendResponse(true);
-                  try {
-                    const res = runFunc(m, dataR.a);
-                    if (res instanceof Promise) {
-                      res
-                        .then((res: Val | void) => sendResult(res))
-                        .catch((e: any) => sendError(e));
-                    } else {
-                      sendResult(res);
-                    }
-                  } catch (e: any) {
-                    sendError(e);
+            const sendResult = (res: Val | void) => {
+              this.send([
+                {
+                  kind: Message.kind.callResult,
+                  i: dataR.i,
+                  c: dataR.c,
+                  e: false,
+                  r: res === undefined ? "" : res,
+                },
+              ]);
+            };
+            const sendError = (e: any) => {
+              this.send([
+                {
+                  kind: Message.kind.callResult,
+                  i: dataR.i,
+                  c: dataR.c,
+                  e: true,
+                  r: (e as Error).toString(),
+                },
+              ]);
+            };
+            const sendResponse = (s: boolean) => {
+              this.send([
+                {
+                  kind: Message.kind.callResponse,
+                  i: dataR.i,
+                  c: dataR.c,
+                  s: s,
+                },
+              ]);
+            };
+            if (s) {
+              const m = s.get(dataR.f);
+              if (m) {
+                sendResponse(true);
+                try {
+                  const res = runFunc(m, dataR.a);
+                  if (res instanceof Promise) {
+                    res
+                      .then((res: Val | void) => sendResult(res))
+                      .catch((e: any) => sendError(e));
+                  } else {
+                    sendResult(res);
                   }
-                } else {
-                  sendResponse(false);
+                } catch (e: any) {
+                  sendError(e);
                 }
               } else {
                 sendResponse(false);
               }
-            });
-            break;
-          }
-          case Message.kind.callResponse: {
-            const dataR = data as Message.CallResponse;
-            const r = this.data.funcResultStore.getResult(dataR.i);
-            if (r !== undefined) {
-              r.resolveStarted(dataR.s);
             } else {
-              this.loggerInternal.error(
-                `error receiving call result id=${dataR.i}`
-              );
+              sendResponse(false);
             }
-            break;
+          });
+          break;
+        }
+        case Message.kind.callResponse: {
+          const dataR = data as Message.CallResponse;
+          const r = this.data.funcResultStore.getResult(dataR.i);
+          if (r !== undefined) {
+            r.resolveStarted(dataR.s);
+          } else {
+            this.loggerInternal.error(
+              `error receiving call result id=${dataR.i}`
+            );
           }
-          case Message.kind.callResult: {
-            const dataR = data as Message.CallResult;
-            const r = this.data.funcResultStore.getResult(dataR.i);
-            if (r !== undefined) {
-              if (dataR.e) {
-                r.rejectResult(new Error(String(dataR.r)));
-              } else {
-                r.resolveResult(dataR.r);
-              }
+          break;
+        }
+        case Message.kind.callResult: {
+          const dataR = data as Message.CallResult;
+          const r = this.data.funcResultStore.getResult(dataR.i);
+          if (r !== undefined) {
+            if (dataR.e) {
+              r.rejectResult(new Error(String(dataR.r)));
             } else {
-              this.loggerInternal.error(
-                `error receiving call result id=${dataR.i}`
-              );
+              r.resolveResult(dataR.r);
             }
-            break;
+          } else {
+            this.loggerInternal.error(
+              `error receiving call result id=${dataR.i}`
+            );
           }
-          case Message.kind.syncInit: {
-            const dataR = data as Message.SyncInit;
-            this.data.valueStore.addMember(dataR.M);
-            this.data.textStore.addMember(dataR.M);
-            this.data.funcStore.addMember(dataR.M);
-            this.data.memberIds.set(dataR.M, dataR.m);
-            this.data.memberLibName.set(dataR.m, dataR.l);
-            this.data.memberLibVer.set(dataR.m, dataR.v);
-            this.data.memberRemoteAddr.set(dataR.m, dataR.a);
-            const target = this.member(dataR.M);
-            this.data.eventEmitter.emit(eventType.memberEntry(), target);
-            break;
-          }
-          case Message.kind.valueEntry: {
-            const dataR = data as Message.Entry;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            this.data.valueStore.setEntry(member, dataR.f);
-            const target = this.member(member).value(dataR.f);
-            this.data.eventEmitter.emit(eventType.valueEntry(target), target);
-            break;
-          }
-          case Message.kind.textEntry: {
-            const dataR = data as Message.Entry;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            this.data.textStore.setEntry(member, dataR.f);
-            const target = this.member(member).text(dataR.f);
-            this.data.eventEmitter.emit(eventType.textEntry(target), target);
-            break;
-          }
-          case Message.kind.viewEntry: {
-            const dataR = data as Message.Entry;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            this.data.viewStore.setEntry(member, dataR.f);
-            const target = this.member(member).view(dataR.f);
-            this.data.eventEmitter.emit(eventType.viewEntry(target), target);
-            break;
-          }
-          case Message.kind.funcInfo: {
-            const dataR = data as Message.FuncInfo;
-            const member = this.data.getMemberNameFromId(dataR.m);
-            this.data.funcStore.setEntry(member, dataR.f);
-            this.data.funcStore.setRecv(member, dataR.f, {
-              returnType: dataR.r,
-              args: dataR.a.map((a) => ({
-                name: a.n,
-                type: a.t,
-                init: a.i,
-                min: a.m,
-                max: a.x,
-                option: a.o,
-              })),
-            });
-            const target = this.member(member).func(dataR.f);
-            this.data.eventEmitter.emit(eventType.funcEntry(target), target);
-            break;
-          }
-          default: {
-            this.loggerInternal.error("invalid message kind", data.kind);
-          }
+          break;
+        }
+        case Message.kind.syncInit: {
+          const dataR = data as Message.SyncInit;
+          this.data.valueStore.addMember(dataR.M);
+          this.data.textStore.addMember(dataR.M);
+          this.data.funcStore.addMember(dataR.M);
+          this.data.memberIds.set(dataR.M, dataR.m);
+          this.data.memberLibName.set(dataR.m, dataR.l);
+          this.data.memberLibVer.set(dataR.m, dataR.v);
+          this.data.memberRemoteAddr.set(dataR.m, dataR.a);
+          const target = this.member(dataR.M);
+          this.data.eventEmitter.emit(eventType.memberEntry(), target);
+          break;
+        }
+        case Message.kind.valueEntry: {
+          const dataR = data as Message.Entry;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          this.data.valueStore.setEntry(member, dataR.f);
+          const target = this.member(member).value(dataR.f);
+          this.data.eventEmitter.emit(eventType.valueEntry(target), target);
+          break;
+        }
+        case Message.kind.textEntry: {
+          const dataR = data as Message.Entry;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          this.data.textStore.setEntry(member, dataR.f);
+          const target = this.member(member).text(dataR.f);
+          this.data.eventEmitter.emit(eventType.textEntry(target), target);
+          break;
+        }
+        case Message.kind.viewEntry: {
+          const dataR = data as Message.Entry;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          this.data.viewStore.setEntry(member, dataR.f);
+          const target = this.member(member).view(dataR.f);
+          this.data.eventEmitter.emit(eventType.viewEntry(target), target);
+          break;
+        }
+        case Message.kind.funcInfo: {
+          const dataR = data as Message.FuncInfo;
+          const member = this.data.getMemberNameFromId(dataR.m);
+          this.data.funcStore.setEntry(member, dataR.f);
+          this.data.funcStore.setRecv(member, dataR.f, {
+            returnType: dataR.r,
+            args: dataR.a.map((a) => ({
+              name: a.n,
+              type: a.t,
+              init: a.i,
+              min: a.m,
+              max: a.x,
+              option: a.o,
+            })),
+          });
+          const target = this.member(member).func(dataR.f);
+          this.data.eventEmitter.emit(eventType.funcEntry(target), target);
+          break;
+        }
+        default: {
+          this.loggerInternal.error("invalid message kind", data.kind);
         }
       }
-    };
-    ws.onerror = () => {
-      connection_done = true;
-      this.loggerInternal.warn("connection error");
-      ws.close();
-    };
-    ws.onclose = () => {
-      connection_done = true;
-      this.connected = false;
-      this.loggerInternal.warn("closed");
-      this.reconnectTimer = setTimeout(() => this.reconnect(), 1000);
-    };
+    }
   }
   sync() {
-    if (this.connected && this.ws !== null) {
+    if (this.ws != null) {
       const msg: Message.AnyMessage[] = [];
       let isFirst = false;
       if (!this.syncInit) {
