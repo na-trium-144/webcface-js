@@ -165,7 +165,7 @@ export class SyncDataStore2<T> {
   }
   //! 受信したentryを追加
   setEntry(member: string, e: string) {
-    this.entry.set(member, (this.getEntry(member) || []).concat([e]));
+    this.entry.set(member, this.getEntry(member).concat([e]));
   }
   //! data_sendを返し、data_sendをクリア
   transferSend(isFirst: boolean) {
@@ -243,6 +243,9 @@ export class SyncDataStore1<T> {
       return m;
     }
     return null;
+  }
+  unsetRecv(member: string){
+    this.dataRecv.delete(member);
   }
   transferReq(isFirst: boolean) {
     if (isFirst) {
