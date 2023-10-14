@@ -301,6 +301,9 @@ export class Client extends Member {
           this.data.valueStore.addMember(dataR.M);
           this.data.textStore.addMember(dataR.M);
           this.data.funcStore.addMember(dataR.M);
+          this.data.viewStore.addMember(dataR.M);
+          this.data.logStore.unsetRecv(dataR.M);
+          this.data.syncTimeStore.unsetRecv(dataR.M);
           this.data.memberIds.set(dataR.M, dataR.m);
           this.data.memberLibName.set(dataR.m, dataR.l);
           this.data.memberLibVer.set(dataR.m, dataR.v);
