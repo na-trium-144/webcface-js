@@ -122,6 +122,7 @@ export class Client extends Member {
   }
   onMessage(event: { data: string | ArrayBuffer | Buffer }) {
     const messages = Message.unpack(event.data as ArrayBuffer);
+    const syncMembers: string[] = [];
     for (const data of messages) {
       switch (data.kind) {
         case Message.kind.svrVersion: {
@@ -154,8 +155,7 @@ export class Client extends Member {
           const dataR = data as Message.Sync;
           const member = this.data.getMemberNameFromId(dataR.m);
           this.data.syncTimeStore.setRecv(member, new Date(dataR.t));
-          const target = this.member(member);
-          this.data.eventEmitter.emit(eventType.sync(target), target);
+          syncMembers.push(member);
           break;
         }
         case Message.kind.valueRes: {
@@ -359,6 +359,10 @@ export class Client extends Member {
           this.loggerInternal.error("invalid message kind", data.kind);
         }
       }
+    }
+    for (const member of syncMembers) {
+      const target = this.member(member);
+      this.data.eventEmitter.emit(eventType.sync(target), target);
     }
   }
   sync() {
