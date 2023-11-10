@@ -2,21 +2,20 @@ import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { Member } from "./member.js";
 import { AsyncFuncResult, runFunc, Val } from "./func.js";
-import {
-  log4jsLoggingEvent,
-  log4jsLevels,
-  log4jsLevelConvert,
-  LogLine,
-} from "./logger.js";
+import { log4jsLevelConvert, LogLine } from "./logger.js";
 import { getViewDiff, mergeViewDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
 import util from "util";
+import { Levels, LoggingEvent, AppenderModule } from "log4js";
 import { getLogger } from "@log4js-node/log4js-api";
 import { Field, FieldBase } from "./field.js";
 import { FieldWithEvent, eventType } from "./event.js";
 import version from "./version.js";
 
+/**
+ * サーバーに接続するクライアント
+ */
 export class Client extends Member {
   ws: null | websocket.w3cwebsocket = null;
   get connected() {
@@ -49,7 +48,12 @@ export class Client extends Member {
       };
     }
   }
-  constructor(name: string, host = "127.0.0.1", port = 7530) {
+  /**
+   * @param name 名前
+   * @param host サーバーのアドレス
+   * @param port サーバーのポート
+   */
+  constructor(name = "", host = "127.0.0.1", port = 7530) {
     super(
       new Field(
         new ClientData(name, (r: AsyncFuncResult, b: FieldBase, args: Val[]) =>
@@ -78,6 +82,10 @@ export class Client extends Member {
       },
     ]);
   }
+  /**
+   * 接続を切り、今後再接続しない
+   * JavaScriptにデストラクタはないので、忘れずに呼ぶ必要がある。
+   */
   close() {
     this.closing = true;
     this.ws?.close();
@@ -365,6 +373,15 @@ export class Client extends Member {
       this.data.eventEmitter.emit(eventType.sync(target), target);
     }
   }
+  /**
+   * データをまとめて送信する
+   *
+   * 送信用にセットしたデータをすべて送る。
+   * データ受信のリクエストを送る。
+   * 他memberの情報を取得できるのは初回のsync()の後のみ。
+   * 他memberの関数の呼び出しと結果の受信はsync()とは非同期に行われる。
+   * clientを使用する時は必ずsendを適当なタイミングで繰り返し呼ぶこと。
+   */
   sync() {
     if (this.ws == null) {
       this.doSyncOnConnect = true;
@@ -469,12 +486,26 @@ export class Client extends Member {
       this.send(msg);
     }
   }
+  /**
+   * 他のmemberにアクセスする
+   */
   member(member: string) {
     return new Member(this, member);
   }
+  /**
+   * サーバーに接続されている他のmemberのリストを得る。
+   * 自分自身と、無名のmemberを除く。
+   */
   members() {
     return [...this.data.valueStore.getMembers()].map((n) => this.member(n));
   }
+  /**
+   * Memberが追加されたときのイベント
+   * このクライアントが接続する前から存在したメンバーについては
+   * 初回の sync() 後に一度に送られるので、
+   * eventの設定は初回のsync()より前に行うと良い
+   * @return Member追加イベント
+   */
   get onMemberEntry() {
     return new FieldWithEvent<Member>(
       eventType.memberEntry(),
@@ -483,22 +514,28 @@ export class Client extends Member {
       ""
     );
   }
+  /**
+   * サーバーの識別情報
+   * @return 通常は"webcface"
+   */
   get serverName() {
     return this.data.svrName;
   }
+  /**
+   * サーバーのバージョン
+   */
   get serverVersion() {
     return this.data.svrVersion;
   }
-  get logAppender() {
+  /**
+   * webcfaceに出力するLogAppender
+   * @return log4jsのappenderに設定して使う。
+   */
+  get logAppender(): AppenderModule {
     return {
       configure:
-        (
-          config: object,
-          layouts: any,
-          findAppender: any,
-          levels?: log4jsLevels
-        ) =>
-        (logEvent: log4jsLoggingEvent) => {
+        (config?: object, layouts?: any, findAppender?: any, levels?: Levels) =>
+        (logEvent: LoggingEvent) => {
           const ll = {
             level:
               levels !== undefined
