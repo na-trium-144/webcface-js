@@ -2,7 +2,7 @@ import { Value, Text, Log } from "./data.js";
 import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
 import { View } from "./view.js";
 import { Field } from "./field.js";
-import { FieldWithEvent, eventType } from "./event.js";
+import { EventTarget, eventType } from "./event.js";
 
 export class Member extends Field {
   constructor(base: Field, member = "") {
@@ -47,35 +47,35 @@ export class Member extends Field {
     return this.data.funcStore.getEntry(this.member_).map((n) => this.func(n));
   }
   get onValueEntry() {
-    return new FieldWithEvent<Value>(
+    return new EventTarget<Value>(
       eventType.valueEntry(this),
       this.data,
       this.member_
     );
   }
   get onTextEntry() {
-    return new FieldWithEvent<Text>(
+    return new EventTarget<Text>(
       eventType.textEntry(this),
       this.data,
       this.member_
     );
   }
   get onFuncEntry() {
-    return new FieldWithEvent<Func>(
+    return new EventTarget<Func>(
       eventType.funcEntry(this),
       this.data,
       this.member_
     );
   }
   get onViewEntry() {
-    return new FieldWithEvent<View>(
+    return new EventTarget<View>(
       eventType.viewEntry(this),
       this.data,
       this.member_
     );
   }
   get onSync() {
-    return new FieldWithEvent<Member>(
+    return new EventTarget<Member>(
       eventType.sync(this),
       this.data,
       this.member_
@@ -112,7 +112,7 @@ export class Member extends Field {
   }
   get onPing() {
     void this.pingStatus;
-    return new FieldWithEvent<Member>(
+    return new EventTarget<Member>(
       eventType.ping(this),
       this.data,
       this.member_

@@ -48,19 +48,6 @@ describe("Client Tests", function () {
   });
   it("successfully connects", function (done) {
     assert.isTrue(wcli.connected);
-    const msg = {
-      kind: Message.kind.syncInit,
-      M: selfName,
-      m: 0,
-      l: "",
-      v: "",
-      a: "",
-    };
-    wcli.send([msg]);
-    setTimeout(() => {
-      assert.deepEqual(wssRecv[0], msg);
-      done();
-    }, 10);
   });
   describe("#name", function () {
     it("returns self name", function () {

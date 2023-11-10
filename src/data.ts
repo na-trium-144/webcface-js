@@ -1,9 +1,9 @@
 import { Member } from "./member.js";
-import { FieldWithEvent, eventType } from "./event.js";
+import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import { LogLine } from "./logger.js";
 
-export class Value extends FieldWithEvent<Value> {
+export class Value extends EventTarget<Value> {
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.valueChange(this);
@@ -68,7 +68,7 @@ export class Value extends FieldWithEvent<Value> {
     return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
   }
 }
-export class Text extends FieldWithEvent<Text> {
+export class Text extends EventTarget<Text> {
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.textChange(this);
@@ -112,7 +112,7 @@ export class Text extends FieldWithEvent<Text> {
   }
 }
 
-export class Log extends FieldWithEvent<Log> {
+export class Log extends EventTarget<Log> {
   constructor(base: Field) {
     super("", base.data, base.member_, "");
     this.eventType_ = eventType.logAppend(this);

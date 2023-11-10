@@ -12,8 +12,7 @@ export {
 export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";
-// export {} from "./event.ts";
+export { EventTarget } from "./event.js";
 // export {} from "./field.js";
 import version_ from "./version.js";
 export const version = version_;
-

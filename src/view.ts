@@ -3,7 +3,7 @@ import isEqual from "lodash.isequal";
 import { Func, AnonymousFunc, FuncCallback } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
-import { FieldWithEvent, eventType } from "./event.js";
+import { EventTarget, eventType } from "./event.js";
 import { Field, FieldBase } from "./field.js";
 
 export const viewComponentTypes = {
@@ -190,7 +190,7 @@ export class ViewComponent {
   }
 }
 
-export class View extends FieldWithEvent<View> {
+export class View extends EventTarget<View> {
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.viewChange(this);

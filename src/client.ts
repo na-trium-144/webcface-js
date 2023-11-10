@@ -10,23 +10,26 @@ import util from "util";
 import { Levels, LoggingEvent, AppenderModule } from "log4js";
 import { getLogger } from "@log4js-node/log4js-api";
 import { Field, FieldBase } from "./field.js";
-import { FieldWithEvent, eventType } from "./event.js";
+import { EventTarget, eventType } from "./event.js";
 import version from "./version.js";
 
 /**
  * サーバーに接続するクライアント
  */
 export class Client extends Member {
-  ws: null | websocket.w3cwebsocket = null;
+  private ws: null | websocket.w3cwebsocket = null;
+  /**
+   * @return サーバーに接続できていればtrue
+   */
   get connected() {
     return this.ws != null;
   }
-  host: string;
-  port: number;
-  syncInit = false;
-  doSyncOnConnect = false;
-  closing = false;
-  get loggerInternal() {
+  private host: string;
+  private port: number;
+  private syncInit = false;
+  private doSyncOnConnect = false;
+  private closing = false;
+  private get loggerInternal() {
     const logger = getLogger("webcface");
     if (logger.level !== undefined) {
       return logger;
@@ -67,10 +70,10 @@ export class Client extends Member {
     this.port = port;
     this.reconnect();
   }
-  send(msg: Message.AnyMessage[]) {
+  private send(msg: Message.AnyMessage[]) {
     this.ws?.send(Message.pack(msg));
   }
-  callFunc(r: AsyncFuncResult, b: FieldBase, args: Val[]) {
+  private callFunc(r: AsyncFuncResult, b: FieldBase, args: Val[]) {
     this.send([
       {
         kind: Message.kind.call,
@@ -91,7 +94,7 @@ export class Client extends Member {
     this.ws?.close();
     this.ws = null;
   }
-  reconnect() {
+  private reconnect() {
     if (this.closing) {
       return;
     }
@@ -128,7 +131,7 @@ export class Client extends Member {
       }
     };
   }
-  onMessage(event: { data: string | ArrayBuffer | Buffer }) {
+  private onMessage(event: { data: string | ArrayBuffer | Buffer }) {
     const messages = Message.unpack(event.data as ArrayBuffer);
     const syncMembers: string[] = [];
     for (const data of messages) {
@@ -507,7 +510,7 @@ export class Client extends Member {
    * @return Member追加イベント
    */
   get onMemberEntry() {
-    return new FieldWithEvent<Member>(
+    return new EventTarget<Member>(
       eventType.memberEntry(),
       this.data,
       "",
