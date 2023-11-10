@@ -46,7 +46,7 @@ describe("Client Tests", function () {
     wss.close();
     setTimeout(done, 10);
   });
-  it("successfully connects", function (done) {
+  it("successfully connects", function () {
     assert.isTrue(wcli.connected);
   });
   describe("#name", function () {
