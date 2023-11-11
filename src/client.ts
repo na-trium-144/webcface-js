@@ -15,6 +15,8 @@ import version from "./version.js";
 
 /**
  * サーバーに接続するクライアント
+ * 
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_01__client.html Clientのドキュメント} を参照
  */
 export class Client extends Member {
   private ws: null | websocket.w3cwebsocket = null;
@@ -379,11 +381,11 @@ export class Client extends Member {
   /**
    * データをまとめて送信する
    *
-   * 送信用にセットしたデータをすべて送る。
-   * データ受信のリクエストを送る。
-   * 他memberの情報を取得できるのは初回のsync()の後のみ。
-   * 他memberの関数の呼び出しと結果の受信はsync()とは非同期に行われる。
-   * clientを使用する時は必ずsendを適当なタイミングで繰り返し呼ぶこと。
+   * * 送信用にセットしたデータをすべて送る。
+   * * データ受信のリクエストを送る。
+   * * 他memberの情報を取得できるのは初回のsync()の後のみ。
+   * * 他memberの関数の呼び出しと結果の受信はsync()とは非同期に行われる。
+   * * clientを使用する時は必ずsendを適当なタイミングで繰り返し呼ぶこと。
    */
   sync() {
     if (this.ws == null) {
