@@ -15,7 +15,7 @@ import version from "./version.js";
 
 /**
  * サーバーに接続するクライアント
- * 
+ *
  * 詳細は {@link https://na-trium-144.github.io/webcface/md_01__client.html Clientのドキュメント} を参照
  */
 export class Client extends Member {
@@ -379,13 +379,10 @@ export class Client extends Member {
     }
   }
   /**
-   * データをまとめて送信する
+   * 送信用にセットしたデータとリクエストデータをすべて送信キューに入れる。
    *
-   * * 送信用にセットしたデータをすべて送る。
-   * * データ受信のリクエストを送る。
    * * 他memberの情報を取得できるのは初回のsync()の後のみ。
    * * 他memberの関数の呼び出しと結果の受信はsync()とは非同期に行われる。
-   * * clientを使用する時は必ずsendを適当なタイミングで繰り返し呼ぶこと。
    */
   sync() {
     if (this.ws == null) {
@@ -506,18 +503,15 @@ export class Client extends Member {
   }
   /**
    * Memberが追加されたときのイベント
+   * 
+   * コールバックの型は (target: Member) => void
+   * 
    * このクライアントが接続する前から存在したメンバーについては
    * 初回の sync() 後に一度に送られるので、
    * eventの設定は初回のsync()より前に行うと良い
-   * @return Member追加イベント
    */
   get onMemberEntry() {
-    return new EventTarget<Member>(
-      eventType.memberEntry(),
-      this.data,
-      "",
-      ""
-    );
+    return new EventTarget<Member>(eventType.memberEntry(), this.data, "", "");
   }
   /**
    * サーバーの識別情報
