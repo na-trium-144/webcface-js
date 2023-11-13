@@ -24,7 +24,7 @@
     "@types/mocha": "^10.0.1",
     "@types/websocket": "^1.0.5",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^5.62.0",
     "c8": "^8.0.1",
     "chai": "^4.3.7",
