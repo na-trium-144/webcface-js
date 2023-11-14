@@ -503,12 +503,8 @@ export class Client extends Member {
   }
   /**
    * Memberが追加されたときのイベント
-   * 
+   *
    * コールバックの型は (target: Member) => void
-   * 
-   * このクライアントが接続する前から存在したメンバーについては
-   * 初回の sync() 後に一度に送られるので、
-   * eventの設定は初回のsync()より前に行うと良い
    */
   get onMemberEntry() {
     return new EventTarget<Member>(eventType.memberEntry(), this.data, "", "");

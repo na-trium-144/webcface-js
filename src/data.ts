@@ -3,17 +3,37 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import { LogLine } from "./logger.js";
 
+/**
+ * Valueを指すクラス
+ *
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_10__value.html Valueのドキュメント}
+ * を参照
+ */
 export class Value extends EventTarget<Value> {
+  /**
+   * このコンストラクタは直接使わず、
+   * Member.value(), Member.values(), Member.onValueEntry などを使うこと
+   */
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.valueChange(this);
   }
+  /**
+   * Memberを返す
+   */
   get member() {
     return new Member(this);
   }
+  /**
+   * field名を返す
+   */
   get name() {
     return this.field_;
   }
+  /**
+   * 子フィールドを返す
+   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするValue
+   */
   child(field: string): Value {
     return new Value(this, this.field_ + "." + field);
   }
@@ -21,13 +41,23 @@ export class Value extends EventTarget<Value> {
   // tryGetRecurse(){
   //   return this.data.valueStore.getRecvRecurse(this.member_, this.field_);
   // }
+
+  /**
+   *  値をarrayで返す
+   */
   tryGetVec() {
     return this.data.valueStore.getRecv(this.member_, this.field_);
   }
+  /**
+   *  値を返す
+   */
   tryGet() {
     const v = this.tryGetVec();
     return v !== null && v.length >= 1 ? v[0] : null;
   }
+  /**
+   *  値をarrayで返す
+   */
   getVec() {
     const v = this.tryGetVec();
     if (v === null) {
@@ -36,6 +66,9 @@ export class Value extends EventTarget<Value> {
       return v;
     }
   }
+  /**
+   *  値を返す
+   */
   get() {
     const v = this.tryGet();
     if (v === null) {
@@ -44,6 +77,9 @@ export class Value extends EventTarget<Value> {
       return v;
     }
   }
+  /**
+   * 値をセットする
+   */
   set(data: number | number[] | object) {
     if (this.data.valueStore.isSelf(this.member_)) {
       if (typeof data === "number") {
@@ -64,6 +100,9 @@ export class Value extends EventTarget<Value> {
       throw new Error("Cannot set data to member other than self");
     }
   }
+  /**
+   * Memberのsyncの時刻を返す
+   */
   time() {
     return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
   }
