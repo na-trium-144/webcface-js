@@ -3,7 +3,9 @@ import { Client } from "../src/client.js";
 import { WebSocketServer } from "ws";
 import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
-import { Value, Text, Log } from "../src/data.js";
+import { Value } from "../src/value.js";
+import { Text } from "../src/text.js";
+import { Log } from "../src/log.js";
 import {
   Func,
   AnonymousFunc,

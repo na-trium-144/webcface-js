@@ -1,6 +1,8 @@
 export { Client } from "./client.js";
 // export { } from "./clientData.js";
-export { Value, Text, Log } from "./data.js";
+export { Value } from "./value.js";
+export { Text } from "./text.js";
+export { Log } from "./log.js";
 export { Member } from "./member.js";
 export {
   View,

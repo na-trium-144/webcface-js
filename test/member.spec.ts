@@ -1,6 +1,8 @@
 import { assert } from "chai";
 import { ClientData } from "../src/clientData.js";
-import { Value, Text, Log } from "../src/data.js";
+import { Value } from "../src/value.js";
+import { Text } from "../src/text.js";
+import { Log } from "../src/log.js";
 import { Func, AnonymousFunc } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View } from "../src/view.js";

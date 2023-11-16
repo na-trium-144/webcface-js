@@ -1,4 +1,6 @@
-import { Value, Text, Log } from "./data.js";
+import { Value } from "./value.js";
+import { Text } from "./text.js";
+import { Log } from "./log.js";
 import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
 import { View } from "./view.js";
 import { Field } from "./field.js";
