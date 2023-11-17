@@ -34,6 +34,14 @@ describe("View Tests", function () {
       assert.strictEqual(view("a", "b").name, "b");
     });
   });
+  describe("#child()", function () {
+    it("returns child View object", function () {
+      const c = view("a", "b").child("c");
+      assert.instanceOf(c, View);
+      assert.strictEqual(c.member.name, "a");
+      assert.strictEqual(c.name, "b.c");
+    });
+  });
   describe("#tryGet()", function () {
     it("returns null by default", function () {
       assert.isNull(view("a", "b").tryGet());

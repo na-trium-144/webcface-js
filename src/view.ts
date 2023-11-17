@@ -71,10 +71,19 @@ export function mergeViewDiff(
 }
 
 export const viewComponents = {
+  /**
+   * newLineコンポーネント
+   */
   newLine: (options?: ViewComponentOption) =>
     new ViewComponent(viewComponentTypes.newLine, null, options),
+  /**
+   * textコンポーネント
+   */
   text: (t: string, options?: ViewComponentOption) =>
     new ViewComponent(t, null, options),
+  /**
+   * buttonコンポーネント
+   */
   button: (
     t: string,
     f: Func | AnonymousFunc | FuncCallback,
@@ -91,6 +100,9 @@ interface ViewComponentOption {
   textColor?: number;
   bgColor?: number;
 }
+/**
+ * Viewのコンポーネントを表すクラス
+ */
 export class ViewComponent {
   type_ = 0;
   text_ = "";
@@ -99,6 +111,15 @@ export class ViewComponent {
   text_color_ = 0;
   bg_color_ = 0;
   data: ClientData | null = null;
+  /**
+   * 引数に文字列を入れるとtextコンポーネントを作成できる
+   *
+   * それ以外の場合、viewComponents にある各コンポーネントの生成関数を使用してください
+   *
+   * @param arg numberのときtype, stringのときtextになる Message.ViewComponentの場合展開
+   * @param data ClientDataが参照できる場合は指定
+   * @param options その他のプロパティ
+   */
   constructor(
     arg: number | string | Message.ViewComponent,
     data: ClientData | null = null,
@@ -125,6 +146,9 @@ export class ViewComponent {
       this.bgColor = options.bgColor;
     }
   }
+  /**
+   * AnonymousFuncをFuncオブジェクトにロックする
+   */
   lockTmp(data: ClientData, field: string) {
     if (this.on_click_tmp_) {
       const f = new Func(new Field(data, data.selfMemberName, field));
@@ -134,6 +158,9 @@ export class ViewComponent {
     }
     return this;
   }
+  /**
+   * Messageに変換
+   */
   toMessage(): Message.ViewComponent {
     return {
       t: this.type,
@@ -144,15 +171,23 @@ export class ViewComponent {
       b: this.bg_color_,
     };
   }
+  /**
+   * コンポーネントの種類
+   *
+   * viewComponentTypesに定義されている定数を使う
+   */
   get type() {
     return this.type_;
   }
+  /**
+   * 表示する文字列
+   */
   get text() {
     return this.text_;
   }
-  set text(t: string) {
-    this.text_ = t;
-  }
+  /**
+   * クリック時に実行する関数
+   */
   get onClick(): Func | null {
     if (this.on_click_ !== null) {
       if (this.data !== null) {
@@ -166,41 +201,62 @@ export class ViewComponent {
       return null;
     }
   }
-  // todo: 関数を直接渡す、anonymousfunc実装
-  set onClick(func: Func | AnonymousFunc | FuncCallback) {
-    if (func instanceof AnonymousFunc) {
-      this.on_click_tmp_ = func;
-    } else if (func instanceof Func) {
-      this.on_click_ = func;
-    } else {
-      this.onClick = new AnonymousFunc(null, func, Message.valType.none_, []);
-    }
-  }
+  /**
+   * 文字の色
+   *
+   * viewColorに定義されている定数を使う
+   */
   get textColor() {
     return this.text_color_;
   }
-  set textColor(c: number) {
-    this.text_color_ = c;
-  }
+  /**
+   * 背景の色
+   *
+   * viewColorに定義されている定数を使う
+   */
   get bgColor() {
     return this.bg_color_;
   }
-  set bgColor(c: number) {
-    this.bg_color_ = c;
-  }
 }
 
+/**
+ * Viewを指すクラス
+ *
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_13__view.html Viewのドキュメント}
+ * を参照
+ */
 export class View extends EventTarget<View> {
+  /**
+   * このコンストラクタは直接使わず、
+   * Member.view(), Member.views(), Member.onViewEntry などを使うこと
+   */
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.viewChange(this);
   }
+  /**
+   * Memberを返す
+   */
   get member() {
     return new Member(this);
   }
+  /**
+   * field名を返す
+   */
   get name() {
     return this.field_;
   }
+  /**
+   * 子フィールドを返す
+   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするView
+   */
+  child(field: string): View {
+    return new View(this, this.field_ + "." + field);
+  }
+
+  /**
+   * Viewを返す
+   */
   tryGet() {
     return (
       this.data.viewStore
@@ -208,6 +264,9 @@ export class View extends EventTarget<View> {
         ?.map((v) => new ViewComponent(v, this.data)) || null
     );
   }
+  /**
+   * Viewを返す
+   */
   get() {
     const v = this.tryGet();
     if (v === null) {
@@ -216,9 +275,15 @@ export class View extends EventTarget<View> {
       return v;
     }
   }
+  /**
+   * Memberのsyncの時刻を返す
+   */
   time() {
     return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
   }
+  /**
+   * ViewComponentのリストをセットする
+   */
   set(data: (ViewComponent | string | number | boolean)[]) {
     if (this.data.viewStore.isSelf(this.member_)) {
       const data2: ViewComponent[] = [];
