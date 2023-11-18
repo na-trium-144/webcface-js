@@ -89,14 +89,18 @@ export const viewComponents = {
     f: Func | AnonymousFunc | FuncCallback,
     options?: ViewComponentOption
   ) => {
-    const v = new ViewComponent(viewComponentTypes.button, null, options);
-    v.text = t;
-    v.onClick = f;
+    const v = new ViewComponent(viewComponentTypes.button, null, {
+      ...options,
+      text: t,
+      onClick: f,
+    });
     return v;
   },
 } as const;
 
 interface ViewComponentOption {
+  text?: string;
+  onClick?: Func | AnonymousFunc | FuncCallback;
   textColor?: number;
   bgColor?: number;
 }
@@ -139,11 +143,28 @@ export class ViewComponent {
       this.bg_color_ = arg.b;
     }
     this.data = data;
+    if (options?.text !== undefined) {
+      this.text_ = options?.text;
+    }
+    if (options?.onClick !== undefined) {
+      if (options.onClick instanceof AnonymousFunc) {
+        this.on_click_tmp_ = options.onClick;
+      } else if (options.onClick instanceof Func) {
+        this.on_click_ = options.onClick;
+      } else {
+        this.on_click_tmp_ = new AnonymousFunc(
+          null,
+          options.onClick,
+          Message.valType.none_,
+          []
+        );
+      }
+    }
     if (options?.textColor !== undefined) {
-      this.textColor = options.textColor;
+      this.text_color_ = options.textColor;
     }
     if (options?.bgColor !== undefined) {
-      this.bgColor = options.bgColor;
+      this.bg_color_ = options.bgColor;
     }
   }
   /**
