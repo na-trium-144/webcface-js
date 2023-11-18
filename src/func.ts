@@ -27,17 +27,25 @@ export class FuncNotFoundError extends Error {
   }
 }
 
+/**
+ * 非同期で実行した関数の実行結果を表す。
+ */
 export class AsyncFuncResult extends Field {
   callerId: number;
   caller: string;
-  // 関数が開始したらtrue, 存在しなければfalse
-  // falseの場合rejectResultも自動で呼ばれる
   resolveStarted: (r: boolean) => void = () => undefined;
-  // 結果をセットする
   resolveResult: (r: Val | Promise<Val>) => void = () => undefined;
   // 例外をセットする
   rejectResult: (e: any) => void = () => undefined;
+  /**
+   * 関数が開始したらtrue, 存在しなければfalse
+   * 
+   * falseの場合自動でresultにもFuncNotFoundErrorが入る
+   */
   started: Promise<boolean>;
+  /**
+   * 実行結果または例外
+   */
   result: Promise<Val>;
   constructor(callerId: number, caller: string, base: Field) {
     super(base.data, base.member_, base.field_);
@@ -56,9 +64,15 @@ export class AsyncFuncResult extends Field {
       this.rejectResult = rej;
     });
   }
+  /**
+   * 関数のMember
+   */
   get member() {
     return new Member(this);
   }
+  /**
+   * 関数のfield名
+   */
   get name() {
     return this.field_;
   }
@@ -96,13 +110,30 @@ export function runFunc(fi: FuncInfo, args: Val[]) {
 }
 
 export type FuncCallback = (...args: any[]) => Val | Promise<Val> | void;
+
+/**
+ * Funcを指すクラス
+ *
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_30__func.html Funcのドキュメント}
+ * を参照
+ */
 export class Func extends Field {
+  /**
+   * このコンストラクタは直接使わず、
+   * Member.func(), Member.funcs(), Member.onFuncEntry などを使うこと
+   */
   constructor(base: Field, field = "") {
     super(base.data, base.member_, field || base.field_);
   }
+  /**
+   * Memberを返す
+   */
   get member() {
     return new Member(this);
   }
+  /**
+   * field名を返す
+   */
   get name() {
     return this.field_;
   }
@@ -113,16 +144,25 @@ export class Func extends Field {
       throw new Error("Cannot set data to member other than self");
     }
   }
+  /** 関数からFuncInfoを構築しセットする
+   *
+   * @param func 登録したい関数
+   * @param return_type 関数の戻り値 (valTypeオブジェクトの定数を使う)
+   * @param args 関数の引数の情報
+   * @param hidden trueにすると関数を他のMemberから隠す
+   */
   set(
     func: FuncCallback,
     returnType: number = valType.none_,
-    args: Arg[] = []
+    args: Arg[] = [],
+    hidden = false
   ) {
     this.setInfo({
       returnType: returnType,
       args: args,
       funcImpl: func,
     });
+    this.data.funcStore.setHidden(this.field_, hidden);
   }
   get returnType() {
     const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
@@ -138,13 +178,9 @@ export class Func extends Field {
     }
     return [];
   }
-  set hidden(h: boolean) {
-    if (this.data.funcStore.isSelf(this.member_)) {
-      this.data.funcStore.setHidden(this.field_, h);
-    } else {
-      throw new Error("Cannot set data to member other than self");
-    }
-  }
+  /**
+   * 関数の設定を削除
+   */
   free() {
     this.data.funcStore.unsetRecv(this.member_, this.field_);
   }
@@ -170,6 +206,14 @@ export class Func extends Field {
       this.data.callFunc(r, this, args);
     }
   }
+  /**
+   * 関数を実行する (非同期)
+   *
+   * 戻り値やエラー、例外はAsyncFuncResultから取得する
+   *
+   * * 例外が発生した場合そのままthrow, 関数が存在しない場合 FuncNotFoundError をthrowする
+   * * リモートで実行し例外が発生した場合、例外は Error クラスになる
+   */
   runAsync(...args: Val[]) {
     const r = this.data.funcResultStore.addResult("", this);
     setTimeout(() => {
@@ -178,6 +222,13 @@ export class Func extends Field {
     return r;
   }
 }
+
+/**
+ * 名前を指定せず先に関数を登録するFunc
+ *
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_30__func.html Funcのドキュメント}
+ * を参照
+ */
 export class AnonymousFunc {
   static fieldId = 0;
   static fieldNameTmp() {
@@ -201,15 +252,16 @@ export class AnonymousFunc {
       this.base_ = null;
     } else {
       this.base_ = new Func(base, AnonymousFunc.fieldNameTmp());
-      this.base_.set(func, returnType, args);
-      this.base_.hidden = true;
+      this.base_.set(func, returnType, args, true);
     }
   }
+  /**
+   * target に関数を移動
+   */
   lockTo(target: Func) {
     if (this.base_ === null) {
       this.base_ = new Func(target, AnonymousFunc.fieldNameTmp());
-      this.base_.set(this.func_, this.returnType_, this.args_);
-      this.base_.hidden = true;
+      this.base_.set(this.func_, this.returnType_, this.args_, true);
     }
     const fi = this.base_.data.funcStore.getRecv(
       this.base_.member_,
@@ -220,7 +272,7 @@ export class AnonymousFunc {
       this.base_.free();
     } else {
       // コンストラクタかlockToのどちらかで必ずsetされているはずなのであり得ないが
-      throw new Error("Error in AnosymousFunc.lockTo()");
+      throw new Error("Error in AnonymousFunc.lockTo()");
     }
   }
 }
