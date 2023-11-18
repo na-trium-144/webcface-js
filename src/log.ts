@@ -21,4 +21,8 @@ export class Log extends EventTarget<Log> {
       return v;
     }
   }
+  clear() {
+    this.data.logStore.setRecv(this.member_, []);
+    return this;
+  }
 }
