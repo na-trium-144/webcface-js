@@ -39,7 +39,7 @@ export class AsyncFuncResult extends Field {
   rejectResult: (e: any) => void = () => undefined;
   /**
    * 関数が開始したらtrue, 存在しなければfalse
-   * 
+   *
    * falseの場合自動でresultにもFuncNotFoundErrorが入る
    */
   started: Promise<boolean>;
@@ -257,8 +257,9 @@ export class AnonymousFunc {
   }
   /**
    * target に関数を移動
+   * @param hidden targetに設定されるhidden属性
    */
-  lockTo(target: Func) {
+  lockTo(target: Func, hidden = false) {
     if (this.base_ === null) {
       this.base_ = new Func(target, AnonymousFunc.fieldNameTmp());
       this.base_.set(this.func_, this.returnType_, this.args_, true);
@@ -268,7 +269,8 @@ export class AnonymousFunc {
       this.base_.field_
     );
     if (fi) {
-      target.setInfo(fi);
+      const fi2 = { ...fi, hidden };
+      target.setInfo(fi2);
       this.base_.free();
     } else {
       // コンストラクタかlockToのどちらかで必ずsetされているはずなのであり得ないが

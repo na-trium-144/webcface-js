@@ -173,8 +173,7 @@ export class ViewComponent {
   lockTmp(data: ClientData, field: string) {
     if (this.on_click_tmp_) {
       const f = new Func(new Field(data, data.selfMemberName, field));
-      this.on_click_tmp_.lockTo(f);
-      f.hidden = true;
+      this.on_click_tmp_.lockTo(f, true);
       this.on_click_ = f;
     }
     return this;
