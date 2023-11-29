@@ -1,3 +1,16 @@
+## [1.0.4] - 2023-11-30
+### Added
+* APIドキュメント (#27)
+* `View.child()`
+* `Log.clear()`
+### Changed
+* log4jsをdependencyにした
+* `FieldWithEvent`を`EventTarget`に変更
+* 一部のプロパティにprivate, protectを設定
+* ViewComponentの各種セッターを削除
+* `Func.hidden`プロパティを削除
+* updated dependencies
+
 ## [1.0.3] - 2023-10-14
 ### Fixed
 * memberが再接続したときにViewのEntryが増えるバグを修正 (#18)
