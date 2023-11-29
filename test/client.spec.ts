@@ -3,7 +3,9 @@ import { Client } from "../src/client.js";
 import { WebSocketServer } from "ws";
 import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
-import { Value, Text, Log } from "../src/data.js";
+import { Value } from "../src/value.js";
+import { Text } from "../src/text.js";
+import { Log } from "../src/log.js";
 import {
   Func,
   AnonymousFunc,
@@ -46,21 +48,8 @@ describe("Client Tests", function () {
     wss.close();
     setTimeout(done, 10);
   });
-  it("successfully connects", function (done) {
+  it("successfully connects", function () {
     assert.isTrue(wcli.connected);
-    const msg = {
-      kind: Message.kind.syncInit,
-      M: selfName,
-      m: 0,
-      l: "",
-      v: "",
-      a: "",
-    };
-    wcli.send([msg]);
-    setTimeout(() => {
-      assert.deepEqual(wssRecv[0], msg);
-      done();
-    }, 10);
   });
   describe("#name", function () {
     it("returns self name", function () {

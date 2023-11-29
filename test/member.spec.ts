@@ -1,6 +1,8 @@
 import { assert } from "chai";
 import { ClientData } from "../src/clientData.js";
-import { Value, Text, Log } from "../src/data.js";
+import { Value } from "../src/value.js";
+import { Text } from "../src/text.js";
+import { Log } from "../src/log.js";
 import { Func, AnonymousFunc } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View } from "../src/view.js";
@@ -14,6 +16,7 @@ describe("Member Tests", function () {
   const member = (member: string) => new Member(new Field(data, member));
   beforeEach(function () {
     data = new ClientData(selfName, () => undefined);
+    data.memberIds.set("a", 1);
   });
   describe("#name", function () {
     it("returns member name", function () {
@@ -72,7 +75,7 @@ describe("Member Tests", function () {
       assert.isArray(member("a").values());
       assert.lengthOf(member("a").values(), 3);
     });
-    it("returns emmpty array by default", function () {
+    it("returns empty array by default", function () {
       assert.isArray(member("a").values());
       assert.isEmpty(member("a").values());
     });
@@ -83,7 +86,7 @@ describe("Member Tests", function () {
       assert.isArray(member("a").texts());
       assert.lengthOf(member("a").texts(), 3);
     });
-    it("returns emmpty array by default", function () {
+    it("returns empty array by default", function () {
       assert.isArray(member("a").texts());
       assert.isEmpty(member("a").texts());
     });
@@ -94,7 +97,7 @@ describe("Member Tests", function () {
       assert.isArray(member("a").views());
       assert.lengthOf(member("a").views(), 3);
     });
-    it("returns emmpty array by default", function () {
+    it("returns empty array by default", function () {
       assert.isArray(member("a").views());
       assert.isEmpty(member("a").views());
     });
@@ -105,7 +108,7 @@ describe("Member Tests", function () {
       assert.isArray(member("a").funcs());
       assert.lengthOf(member("a").funcs(), 3);
     });
-    it("returns emmpty array by default", function () {
+    it("returns empty array by default", function () {
       assert.isArray(member("a").funcs());
       assert.isEmpty(member("a").funcs());
     });
@@ -115,6 +118,7 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onValueEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.valueEntry(new FieldBase("a")));
+      assert.strictEqual(called, 1);
     });
   });
   describe("#onTextEntry", function () {
@@ -122,6 +126,7 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onTextEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.textEntry(new FieldBase("a")));
+      assert.strictEqual(called, 1);
     });
   });
   describe("#onFuncEntry", function () {
@@ -129,6 +134,7 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onFuncEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.funcEntry(new FieldBase("a")));
+      assert.strictEqual(called, 1);
     });
   });
   describe("#onViewEntry", function () {
@@ -136,6 +142,7 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onViewEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.viewEntry(new FieldBase("a")));
+      assert.strictEqual(called, 1);
     });
   });
   describe("#onSync", function () {
@@ -143,6 +150,49 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onSync.on(() => ++called);
       data.eventEmitter.emit(eventType.sync(new FieldBase("a")));
+      assert.strictEqual(called, 1);
+    });
+  });
+  describe("#libName", function () {
+    it("returns memberLibName", function () {
+      data.memberLibName.set(1, "hoge");
+      assert.strictEqual(member("a").libName, "hoge");
+    });
+  });
+  describe("#libVersion", function () {
+    it("returns memberLibVer", function () {
+      data.memberLibVer.set(1, "hoge");
+      assert.strictEqual(member("a").libVersion, "hoge");
+    });
+  });
+  describe("#remoteAddr", function () {
+    it("returns memberRemoteAddr", function () {
+      data.memberRemoteAddr.set(1, "hoge");
+      assert.strictEqual(member("a").remoteAddr, "hoge");
+    });
+  });
+  describe("#pingStatus", function () {
+    it("returns pingStatus", function () {
+      data.pingStatus.set(1, 10);
+      assert.strictEqual(member("a").pingStatus, 10);
+    });
+    it("sets pingStatusReq and pingStatusReqSend", function () {
+      member("a").pingStatus;
+      assert.isTrue(data.pingStatusReq);
+      assert.isTrue(data.pingStatusReqSend);
+    });
+  });
+  describe("#onPing", function () {
+    it("handles ping event", function () {
+      let called = 0;
+      member("a").onPing.on(() => ++called);
+      data.eventEmitter.emit(eventType.ping(new FieldBase("a")));
+      assert.strictEqual(called, 1);
+    });
+    it("sets pingStatusReq and pingStatusReqSend", function () {
+      member("a").onPing.on(() => undefined);
+      assert.isTrue(data.pingStatusReq);
+      assert.isTrue(data.pingStatusReqSend);
     });
   });
 });

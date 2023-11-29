@@ -1,6 +1,8 @@
 import { assert } from "chai";
 import { ClientData } from "../src/clientData.js";
-import { Value, Text, Log } from "../src/data.js";
+import { Value } from "../src/value.js";
+import { Text } from "../src/text.js";
+import { Log } from "../src/log.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 
@@ -276,6 +278,38 @@ describe("Log Tests", function () {
     it("does not set request when member is self name", function () {
       log(selfName).tryGet();
       assert.isEmpty(data.logStore.req);
+    });
+  });
+  describe("#get()", function () {
+    it("returns empty array by default", function () {
+      assert.isArray(log("a").get());
+      assert.isEmpty(log("a").get());
+    });
+    it("returns value if data.logStore.dataRecv is set", function () {
+      data.logStore.dataRecv.set("a", [
+        { level: 1, time: new Date(), message: "a" },
+      ]);
+      assert.lengthOf(log("a").get(), 1);
+      assert.strictEqual(log("a").get()[0]?.level, 1);
+      assert.strictEqual(log("a").get()[0]?.message, "a");
+    });
+    it("sets request when member is not self name", function () {
+      log("a").get();
+      assert.strictEqual(data.logStore.req.get("a"), true);
+    });
+    it("does not set request when member is self name", function () {
+      log(selfName).get();
+      assert.isEmpty(data.logStore.req);
+    });
+  });
+  describe("#clear()", function () {
+    it("clears data.logStore.dataRecv", function () {
+      data.logStore.dataRecv.set("a", [
+        { level: 1, time: new Date(), message: "a" },
+      ]);
+      log("a").clear();
+      assert.isArray(data.logStore.dataRecv.get("a"));
+      assert.isEmpty(data.logStore.dataRecv.get("a"));
     });
   });
 });

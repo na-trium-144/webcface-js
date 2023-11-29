@@ -191,17 +191,6 @@ describe("Func Tests", function () {
       assert.isEmpty(func("a", "a").args);
     });
   });
-  describe("#hidden", function () {
-    it("sets data.funcStore.dataSendHidden", function () {
-      func(selfName, "a").hidden = true;
-      assert.isTrue(data.funcStore.dataSendHidden.get("a"));
-    });
-    it("throws error when member is not self", function () {
-      assert.throws(() => {
-        func("a", "b").hidden = true;
-      }, Error);
-    });
-  });
   describe("#free()", function () {
     it("removes info from data.funcStore.dataRecv", function () {
       data.funcStore.dataRecv.set(

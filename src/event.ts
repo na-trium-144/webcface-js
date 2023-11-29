@@ -17,8 +17,10 @@ export const eventType = {
     JSON.stringify(["viewChange", b.member_, b.field_]),
   logAppend: (b: FieldBase) => JSON.stringify(["logAppend", b.member_]),
 };
+
 type EventListener<TargetType> = (target: TargetType) => void;
-export class FieldWithEvent<TargetType> extends Field {
+
+export class EventTarget<TargetType> extends Field {
   eventType_: string;
   // onAppend: () => void;
   constructor(
@@ -32,7 +34,7 @@ export class FieldWithEvent<TargetType> extends Field {
     this.eventType_ = eventType;
     // this.onAppend = onAppend;
   }
-  triggerEvent(arg: TargetType){
+  triggerEvent(arg: TargetType) {
     this.data.eventEmitter.emit(this.eventType_, arg);
   }
   addListener(listener: EventListener<TargetType>) {

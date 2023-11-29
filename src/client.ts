@@ -2,32 +2,36 @@ import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { Member } from "./member.js";
 import { AsyncFuncResult, runFunc, Val } from "./func.js";
-import {
-  log4jsLoggingEvent,
-  log4jsLevels,
-  log4jsLevelConvert,
-  LogLine,
-} from "./logger.js";
+import { log4jsLevelConvert, LogLine } from "./logger.js";
 import { getViewDiff, mergeViewDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
 import util from "util";
+import { Levels, LoggingEvent, AppenderModule } from "log4js";
 import { getLogger } from "@log4js-node/log4js-api";
 import { Field, FieldBase } from "./field.js";
-import { FieldWithEvent, eventType } from "./event.js";
+import { EventTarget, eventType } from "./event.js";
 import version from "./version.js";
 
+/**
+ * サーバーに接続するクライアント
+ *
+ * 詳細は {@link https://na-trium-144.github.io/webcface/md_01__client.html Clientのドキュメント} を参照
+ */
 export class Client extends Member {
-  ws: null | websocket.w3cwebsocket = null;
+  private ws: null | websocket.w3cwebsocket = null;
+  /**
+   * @return サーバーに接続できていればtrue
+   */
   get connected() {
     return this.ws != null;
   }
-  host: string;
-  port: number;
-  syncInit = false;
-  doSyncOnConnect = false;
-  closing = false;
-  get loggerInternal() {
+  private host: string;
+  private port: number;
+  private syncInit = false;
+  private doSyncOnConnect = false;
+  private closing = false;
+  private get loggerInternal() {
     const logger = getLogger("webcface");
     if (logger.level !== undefined) {
       return logger;
@@ -49,7 +53,12 @@ export class Client extends Member {
       };
     }
   }
-  constructor(name: string, host = "127.0.0.1", port = 7530) {
+  /**
+   * @param name 名前
+   * @param host サーバーのアドレス
+   * @param port サーバーのポート
+   */
+  constructor(name = "", host = "127.0.0.1", port = 7530) {
     super(
       new Field(
         new ClientData(name, (r: AsyncFuncResult, b: FieldBase, args: Val[]) =>
@@ -63,10 +72,10 @@ export class Client extends Member {
     this.port = port;
     this.reconnect();
   }
-  send(msg: Message.AnyMessage[]) {
+  private send(msg: Message.AnyMessage[]) {
     this.ws?.send(Message.pack(msg));
   }
-  callFunc(r: AsyncFuncResult, b: FieldBase, args: Val[]) {
+  private callFunc(r: AsyncFuncResult, b: FieldBase, args: Val[]) {
     this.send([
       {
         kind: Message.kind.call,
@@ -78,12 +87,16 @@ export class Client extends Member {
       },
     ]);
   }
+  /**
+   * 接続を切り、今後再接続しない
+   * JavaScriptにデストラクタはないので、忘れずに呼ぶ必要がある。
+   */
   close() {
     this.closing = true;
     this.ws?.close();
     this.ws = null;
   }
-  reconnect() {
+  private reconnect() {
     if (this.closing) {
       return;
     }
@@ -120,7 +133,7 @@ export class Client extends Member {
       }
     };
   }
-  onMessage(event: { data: string | ArrayBuffer | Buffer }) {
+  private onMessage(event: { data: string | ArrayBuffer | Buffer }) {
     const messages = Message.unpack(event.data as ArrayBuffer);
     const syncMembers: string[] = [];
     for (const data of messages) {
@@ -365,6 +378,12 @@ export class Client extends Member {
       this.data.eventEmitter.emit(eventType.sync(target), target);
     }
   }
+  /**
+   * 送信用にセットしたデータとリクエストデータをすべて送信キューに入れる。
+   *
+   * * 他memberの情報を取得できるのは初回のsync()の後のみ。
+   * * 他memberの関数の呼び出しと結果の受信はsync()とは非同期に行われる。
+   */
   sync() {
     if (this.ws == null) {
       this.doSyncOnConnect = true;
@@ -469,36 +488,49 @@ export class Client extends Member {
       this.send(msg);
     }
   }
+  /**
+   * 他のmemberにアクセスする
+   */
   member(member: string) {
     return new Member(this, member);
   }
+  /**
+   * サーバーに接続されている他のmemberのリストを得る。
+   * 自分自身と、無名のmemberを除く。
+   */
   members() {
     return [...this.data.valueStore.getMembers()].map((n) => this.member(n));
   }
+  /**
+   * Memberが追加されたときのイベント
+   *
+   * コールバックの型は (target: Member) => void
+   */
   get onMemberEntry() {
-    return new FieldWithEvent<Member>(
-      eventType.memberEntry(),
-      this.data,
-      "",
-      ""
-    );
+    return new EventTarget<Member>(eventType.memberEntry(), this.data, "", "");
   }
+  /**
+   * サーバーの識別情報
+   * @return 通常は"webcface"
+   */
   get serverName() {
     return this.data.svrName;
   }
+  /**
+   * サーバーのバージョン
+   */
   get serverVersion() {
     return this.data.svrVersion;
   }
-  get logAppender() {
+  /**
+   * webcfaceに出力するLogAppender
+   * @return log4jsのappenderに設定して使う。
+   */
+  get logAppender(): AppenderModule {
     return {
       configure:
-        (
-          config: object,
-          layouts: any,
-          findAppender: any,
-          levels?: log4jsLevels
-        ) =>
-        (logEvent: log4jsLoggingEvent) => {
+        (config?: object, layouts?: any, findAppender?: any, levels?: Levels) =>
+        (logEvent: LoggingEvent) => {
           const ll = {
             level:
               levels !== undefined
