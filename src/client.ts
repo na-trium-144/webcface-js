@@ -476,7 +476,7 @@ export class Client extends Member {
         this.data.logQueue = [];
         msg.push({ kind: Message.kind.log, l: logSend });
       }
-      for (const [k, v] of this.data.logStore.transferReq(isFirst).entries()) {
+      for (const [k] of this.data.logStore.transferReq(isFirst).entries()) {
         msg.push({ kind: Message.kind.logReq, M: k });
       }
 

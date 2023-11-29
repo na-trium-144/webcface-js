@@ -5,13 +5,7 @@ import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
-import { Log } from "../src/log.js";
-import {
-  Func,
-  AnonymousFunc,
-  AsyncFuncResult,
-  FuncNotFoundError,
-} from "../src/func.js";
+import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
 import { Field, FieldBase } from "../src/field.js";
@@ -820,7 +814,7 @@ describe("Client Tests", function () {
               done();
             })
             .catch((e) => {
-              assert.fail("r.result threw error");
+              assert.fail(`r.result threw error ${e}`);
               done();
             });
         }, 10);

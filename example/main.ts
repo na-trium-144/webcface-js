@@ -3,9 +3,7 @@ import log4js from "log4js";
 
 const c = new Client("example_main");
 c.value("test").set(0);
-const f1 = c
-  .func("func1")
-  .set(() => console.log("hello, world!"), valType.none_, []);
+c.func("func1").set(() => console.log("hello, world!"), valType.none_, []);
 c.func("func2").set(
   (a: number, b: number, c: boolean, d: string) => {
     console.log(`hello world 2 ${a} ${b} ${c ? "true" : "false"} ${d}`);
