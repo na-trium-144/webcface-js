@@ -144,7 +144,7 @@ describe("Func Tests", function () {
         assert.sameOrderedMembers(args, ["5", 123, true]);
         done();
       };
-      const r = func("a", "b").runAsync("5", 123, true);
+      func("a", "b").runAsync("5", 123, true);
     });
   });
   describe("#returnType", function () {

@@ -106,8 +106,8 @@ export class SyncDataStore2<T> {
   }
   getMaxReq() {
     let maxReq = 0;
-    for (const [rm, r] of this.req.entries()) {
-      for (const [rf, ri] of r.entries()) {
+    for (const [, r] of this.req.entries()) {
+      for (const [, ri] of r.entries()) {
         if (ri > maxReq) {
           maxReq = ri;
         }
@@ -244,7 +244,7 @@ export class SyncDataStore1<T> {
     }
     return null;
   }
-  unsetRecv(member: string){
+  unsetRecv(member: string) {
     this.dataRecv.delete(member);
   }
   transferReq(isFirst: boolean) {

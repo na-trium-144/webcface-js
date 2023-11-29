@@ -7,7 +7,7 @@ import {
   viewColor,
 } from "../src/view.js";
 import { ClientData } from "../src/clientData.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
 
