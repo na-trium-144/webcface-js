@@ -3,6 +3,8 @@ import { EventEmitter } from "eventemitter3";
 import { LogLine } from "./logger.js";
 import * as Message from "./message.js";
 import { FieldBase, Field } from "./field.js";
+import websocket from "websocket";
+const w3cwebsocket = websocket.w3cwebsocket;
 
 export class ClientData {
   selfMemberName: string;
@@ -17,7 +19,6 @@ export class ClientData {
   memberLibName: Map<number, string>;
   memberLibVer: Map<number, string>;
   memberRemoteAddr: Map<number, string>;
-  callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void;
   eventEmitter: EventEmitter;
   logQueue: LogLine[];
   svrName = "";
@@ -25,11 +26,17 @@ export class ClientData {
   pingStatus: Map<number, number>;
   pingStatusReq = false;
   pingStatusReqSend = false;
-  constructor(
-    name: string,
-    callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void
-  ) {
+  host: string;
+  port: number;
+  closing = false;
+  connectionStarted = false;
+  ws: null | websocket.w3cwebsocket = null;
+  messageQueue: ArrayBuffer[] = [];
+
+  constructor(name: string, host: string, port: number) {
     this.selfMemberName = name;
+    this.host = host;
+    this.port = port;
     this.valueStore = new SyncDataStore2<number[]>(name);
     this.textStore = new SyncDataStore2<string>(name);
     this.funcStore = new SyncDataStore2<FuncInfo>(name);
@@ -41,7 +48,6 @@ export class ClientData {
     this.memberLibName = new Map<number, string>();
     this.memberLibVer = new Map<number, string>();
     this.memberRemoteAddr = new Map<number, string>();
-    this.callFunc = callFunc;
     this.eventEmitter = new EventEmitter();
     this.logQueue = [];
     this.pingStatus = new Map<number, number>();
@@ -59,6 +65,22 @@ export class ClientData {
   }
   getMemberIdFromName(name: string) {
     return this.memberIds.get(name) || 0;
+  }
+  /**
+   * messageQueueを消費
+   *
+   * messageQueueになにか追加するところで呼ぶこと
+   */
+  pushSend(msgs?: Message.AnyMessage[]) {
+    if (msgs != undefined) {
+      this.messageQueue.push(Message.pack(msgs));
+    }
+    if (this.ws != null) {
+      for (const msg of this.messageQueue) {
+        this.ws.send(msg);
+      }
+      this.messageQueue = [];
+    }
   }
 }
 
