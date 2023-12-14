@@ -87,21 +87,17 @@ export class ClientData {
 export class SyncDataStore2<T> {
   dataSend: Map<string, T>;
   dataSendPrev: Map<string, T>;
-  dataSendHidden: Map<string, boolean>;
   dataRecv: Map<string, Map<string, T>>;
   entry: Map<string, string[]>;
   req: Map<string, Map<string, number>>;
-  reqSend: Map<string, Map<string, number>>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
     this.dataSend = new Map();
     this.dataSendPrev = new Map();
-    this.dataSendHidden = new Map();
     this.dataRecv = new Map();
     this.entry = new Map();
     this.req = new Map();
-    this.reqSend = new Map();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
@@ -110,12 +106,6 @@ export class SyncDataStore2<T> {
   setSend(field: string, data: T) {
     this.dataSend.set(field, data);
     this.setRecv(this.selfMemberName, field, data);
-  }
-  setHidden(field: string, isHidden: boolean) {
-    this.dataSendHidden.set(field, isHidden);
-  }
-  isHidden(field: string) {
-    return this.dataSendHidden.get(field) == true;
   }
   //! 受信したデータをdata_recvにセット
   setRecv(member: string, field: string, data: T) {
@@ -137,8 +127,12 @@ export class SyncDataStore2<T> {
     }
     return maxReq;
   }
-  //! data_recvからデータを返す or なければreq,req_sendをtrueにセット
-  getRecv(member: string, field: string) {
+  /**
+   * リクエストされてなければリクエストし新しいidを返す
+   *
+   * すでにリクエストされてれば0
+   */
+  addReq(member: string, field: string) {
     if (!this.isSelf(member) && !this.req.get(member)?.get(field)) {
       const m = this.req.get(member);
       const newReq = this.getMaxReq() + 1;
@@ -147,13 +141,12 @@ export class SyncDataStore2<T> {
       } else {
         this.req.set(member, new Map([[field, newReq]]));
       }
-      const m2 = this.reqSend.get(member);
-      if (m2) {
-        m2.set(field, newReq);
-      } else {
-        this.reqSend.set(member, new Map([[field, newReq]]));
-      }
+      return newReq;
     }
+    return 0;
+  }
+  //! data_recvからデータを返す
+  getRecv(member: string, field: string) {
     const m = this.dataRecv.get(member)?.get(field);
     if (m != undefined) {
       return m;
@@ -164,12 +157,6 @@ export class SyncDataStore2<T> {
   unsetRecv(member: string, field: string) {
     if (!this.isSelf(member) && !!this.req.get(member)?.get(field)) {
       this.req.get(member)?.set(field, 0);
-      const m2 = this.reqSend.get(member);
-      if (m2) {
-        m2.set(field, 0);
-      } else {
-        this.reqSend.set(member, new Map([[field, 0]]));
-      }
     }
     this.dataRecv.get(member)?.delete(field);
   }
@@ -216,15 +203,8 @@ export class SyncDataStore2<T> {
     }
   }
   //! req_sendを返し、req_sendをクリア
-  transferReq(isFirst: boolean) {
-    if (isFirst) {
-      this.reqSend = new Map();
-      return this.req;
-    } else {
-      const r = this.reqSend;
-      this.reqSend = new Map();
-      return r;
-    }
+  transferReq() {
+    return this.req;
   }
   getReq(i: number, subField: string) {
     for (const [rm, r] of this.req.entries()) {
@@ -241,13 +221,11 @@ export class SyncDataStore2<T> {
 export class SyncDataStore1<T> {
   dataRecv: Map<string, T>;
   req: Map<string, boolean>;
-  reqSend: Map<string, boolean>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
     this.dataRecv = new Map();
     this.req = new Map();
-    this.reqSend = new Map();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
@@ -255,11 +233,14 @@ export class SyncDataStore1<T> {
   setRecv(member: string, data: T) {
     this.dataRecv.set(member, data);
   }
-  getRecv(member: string) {
+  addReq(member: string) {
     if (!this.isSelf(member) && this.req.get(member) !== true) {
       this.req.set(member, true);
-      this.reqSend.set(member, true);
+      return true;
     }
+    return false;
+  }
+  getRecv(member: string) {
     const m = this.dataRecv.get(member);
     if (m != undefined) {
       return m;
@@ -269,15 +250,8 @@ export class SyncDataStore1<T> {
   unsetRecv(member: string) {
     this.dataRecv.delete(member);
   }
-  transferReq(isFirst: boolean) {
-    if (isFirst) {
-      this.reqSend = new Map();
-      return this.req;
-    } else {
-      const r = this.reqSend;
-      this.reqSend = new Map();
-      return r;
-    }
+  transferReq() {
+    return this.req;
   }
 }
 

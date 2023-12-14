@@ -9,9 +9,21 @@ export class FieldBase {
   }
 }
 export class Field extends FieldBase {
-  data: ClientData;
-  constructor(data: ClientData, member: string, field = "") {
+  data: ClientData | null;
+  constructor(data: ClientData | null, member: string, field = "") {
     super(member, field);
     this.data = data;
+  }
+  dataCheck() {
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    return this.data;
+  }
+  setCheck() {
+    if (this.data == null || this.data.selfMemberName === this.member_) {
+      throw new Error("Cannot set data to member other than self");
+    }
+    return this.data;
   }
 }

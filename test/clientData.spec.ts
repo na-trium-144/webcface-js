@@ -11,7 +11,7 @@ describe("ClientData Tests", function () {
   const selfName = "test";
   let data: ClientData;
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("SyncDataStore2 Tests", function () {
     let s2: SyncDataStore2<string>;
@@ -39,45 +39,33 @@ describe("ClientData Tests", function () {
         assert.strictEqual(s2.dataRecv.get(selfName)?.get("a"), "b");
       });
     });
-    describe("#setHidden()", function () {
-      it("sets value to #dataSendHidden", function () {
-        s2.setHidden("a", true);
-        assert.isTrue(s2.dataSendHidden.get("a"));
-      });
-    });
-    describe("#isHidden()", function () {
-      it("returns false when it is set false", function () {
-        s2.dataSendHidden.set("a", false);
-        assert.isFalse(s2.isHidden("a"));
-      });
-      it("returns true when it is set true", function () {
-        s2.dataSendHidden.set("a", true);
-        assert.isTrue(s2.isHidden("a"));
-      });
-      it("returns false bt default", function () {
-        assert.isFalse(s2.isHidden("a"));
-      });
-    });
     describe("#setRecv()", function () {
       it("sets value to #dataRecv", function () {
         s2.setRecv("a", "b", "c");
         assert.strictEqual(s2.dataRecv.get("a")?.get("b"), "c");
       });
     });
+    describe("#addReq()", function () {
+      it("sets new request to #req and return id", function () {
+        const r = s2.addReq("a", "b");
+        assert.strictEqual(r, 1);
+        assert.strictEqual(s2.req.get("a")?.get("b"), 1);
+      });
+      it("return 0 for the second time", function () {
+        s2.addReq("a", "b");
+        const r = s2.addReq("a", "b");
+        assert.strictEqual(r, 0);
+      });
+      it("does not set #req if member is self name", function () {
+        const r = s2.getRecv(selfName, "b");
+        assert.strictEqual(r, 0);
+        assert.isEmpty(s2.req);
+      });
+    });
     describe("#getRecv()", function () {
       it("returns value in #dataRecv", function () {
         s2.dataRecv.set("a", new Map([["b", "c"]]));
         assert.strictEqual(s2.getRecv("a", "b"), "c");
-      });
-      it("sets new request to #req and #reqSend", function () {
-        s2.getRecv("a", "b");
-        assert.strictEqual(s2.req.get("a")?.get("b"), 1);
-        assert.strictEqual(s2.reqSend.get("a")?.get("b"), 1);
-      });
-      it("does not set #req and #reqSend if member is self name", function () {
-        s2.getRecv(selfName, "b");
-        assert.isEmpty(s2.req);
-        assert.isEmpty(s2.reqSend);
       });
     });
     describe("#unsetRecv()", function () {
@@ -86,13 +74,11 @@ describe("ClientData Tests", function () {
         s2.unsetRecv("a", "b");
         assert.notExists(s2.dataRecv.get("a")?.get("b"));
       });
-      it("sets 0 to #req and #reqSend if already set", function () {
+      it("sets 0 to #req if already set", function () {
         s2.dataRecv.set("a", new Map([["b", "c"]]));
         s2.req.set("a", new Map([["b", 1]]));
-        s2.reqSend.set("a", new Map([["b", 1]]));
         s2.unsetRecv("a", "b");
         assert.strictEqual(s2.req.get("a")?.get("b"), 0);
-        assert.strictEqual(s2.reqSend.get("a")?.get("b"), 0);
       });
     });
     describe("#addMember()", function () {
@@ -172,7 +158,6 @@ describe("ClientData Tests", function () {
     });
     describe("#transferReq", function () {
       beforeEach(function () {
-        s2.reqSend.set("a", new Map([["b", 1]]));
         s2.req.set(
           "a",
           new Map([
@@ -181,18 +166,8 @@ describe("ClientData Tests", function () {
           ])
         );
       });
-      it("returns #reqSend when isFirst = false", function () {
-        const s = s2.transferReq(false);
-        assert.strictEqual(s.get("a")?.get("b"), 1);
-        assert.isFalse(s.get("a")?.has("c"));
-      });
-      it("returns nothing on second call with isFirst = false", function () {
-        s2.transferReq(false);
-        const s = s2.transferReq(false);
-        assert.isEmpty(s);
-      });
-      it("returns #req when isFirst = true", function () {
-        const s = s2.transferReq(true);
+      it("returns #req", function () {
+        const s = s2.transferReq();
         assert.strictEqual(s.get("a")?.get("b"), 1);
         assert.strictEqual(s.get("a")?.get("c"), 2);
       });
@@ -238,39 +213,35 @@ describe("ClientData Tests", function () {
         assert.strictEqual(s1.dataRecv.get("a"), "b");
       });
     });
+    describe("#addReq()", function () {
+      it("sets new request to #req and return true", function () {
+        const r = s1.addReq("a");
+        assert.isTrue(r);
+        assert.strictEqual(s1.req.get("a"), true);
+      });
+      it("return false for the second time", function () {
+        s1.addReq("a");
+        const r = s1.addReq("a");
+        assert.isFalse(r);
+      });
+      it("does not set #req if member is self name", function () {
+        const r = s1.addReq(selfName);
+        assert.isFalse(r);
+        assert.isEmpty(s1.req);
+      });
+    });
     describe("#getRecv()", function () {
       it("returns value in #dataRecv", function () {
         s1.dataRecv.set("a", "b");
         assert.strictEqual(s1.getRecv("a"), "b");
       });
-      it("sets new request to #req and #reqSend", function () {
-        s1.getRecv("a");
-        assert.strictEqual(s1.req.get("a"), true);
-        assert.strictEqual(s1.reqSend.get("a"), true);
-      });
-      it("does not set #req and #reqSend if member is self name", function () {
-        s1.getRecv(selfName);
-        assert.isEmpty(s1.req);
-        assert.isEmpty(s1.reqSend);
-      });
     });
     describe("#transferReq", function () {
       beforeEach(function () {
-        s1.reqSend.set("a", true);
         s1.req.set("a", true);
         s1.req.set("b", true);
       });
-      it("returns #reqSend when isFirst = false", function () {
-        const s = s1.transferReq(false);
-        assert.strictEqual(s.get("a"), true);
-        assert.isFalse(s.has("b"));
-      });
-      it("returns nothing on second call with isFirst = false", function () {
-        s1.transferReq(false);
-        const s = s1.transferReq(false);
-        assert.isEmpty(s);
-      });
-      it("returns #req when isFirst = true", function () {
+      it("returns #req", function () {
         const s = s1.transferReq(true);
         assert.strictEqual(s.get("a"), true);
         assert.strictEqual(s.get("b"), true);

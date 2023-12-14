@@ -1,6 +1,7 @@
 import { Member } from "./member.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
+import * as Message from "./message.js";
 
 /**
  * Valueを指すクラス
@@ -42,10 +43,29 @@ export class Value extends EventTarget<Value> {
   // }
 
   /**
+   * 値をリクエストする。
+   */
+  request() {
+    const reqId = this.dataCheck().valueStore.addReq(this.member_, this.field_);
+    if (reqId > 0) {
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.valueReq,
+          M: this.member_,
+          f: this.field_,
+          i: reqId,
+        },
+      ]);
+    }
+  }
+  /**
    *  値をarrayで返す
+   *
+   * リクエストもする
    */
   tryGetVec() {
-    return this.data.valueStore.getRecv(this.member_, this.field_);
+    this.request();
+    return this.dataCheck().valueStore.getRecv(this.member_, this.field_);
   }
   /**
    *  値を返す
@@ -80,29 +100,25 @@ export class Value extends EventTarget<Value> {
    * 値をセットする
    */
   set(data: number | number[] | object) {
-    if (this.data.valueStore.isSelf(this.member_)) {
-      if (typeof data === "number") {
-        this.data.valueStore.setSend(this.field_, [data]);
-        this.triggerEvent(this);
-      } else if (
-        Array.isArray(data) &&
-        data.find((v) => typeof v !== "number") === undefined
-      ) {
-        this.data.valueStore.setSend(this.field_, data);
-        this.triggerEvent(this);
-      } else if (typeof data === "object" && data != null) {
-        for (const [k, v] of Object.entries(data)) {
-          this.child(k).set(v as number | number[] | object);
-        }
+    if (typeof data === "number") {
+      this.setCheck().valueStore.setSend(this.field_, [data]);
+      this.triggerEvent(this);
+    } else if (
+      Array.isArray(data) &&
+      data.find((v) => typeof v !== "number") === undefined
+    ) {
+      this.setCheck().valueStore.setSend(this.field_, data);
+      this.triggerEvent(this);
+    } else if (typeof data === "object" && data != null) {
+      for (const [k, v] of Object.entries(data)) {
+        this.child(k).set(v as number | number[] | object);
       }
-    } else {
-      throw new Error("Cannot set data to member other than self");
     }
   }
   /**
    * Memberのsyncの時刻を返す
    */
   time() {
-    return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
+    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
   }
 }

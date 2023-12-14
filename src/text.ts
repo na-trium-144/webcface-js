@@ -1,6 +1,7 @@
 import { Member } from "./member.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
+import * as Message from "./message.js";
 
 /**
  * Textを指すクラス
@@ -37,10 +38,27 @@ export class Text extends EventTarget<Text> {
     return new Text(this, this.field_ + "." + field);
   }
   /**
+   * 値をリクエストする。
+   */
+  request() {
+    const reqId = this.dataCheck().textStore.addReq(this.member_, this.field_);
+    if (reqId > 0) {
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.textReq,
+          M: this.member_,
+          f: this.field_,
+          i: reqId,
+        },
+      ]);
+    }
+  }
+  /**
    * 文字列を返す
    */
   tryGet() {
-    return this.data.textStore.getRecv(this.member_, this.field_);
+    this.request();
+    return this.dataCheck().textStore.getRecv(this.member_, this.field_);
   }
   /**
    * 文字列を返す
@@ -57,17 +75,13 @@ export class Text extends EventTarget<Text> {
    * 文字列をセットする
    */
   set(data: string | object) {
-    if (this.data.textStore.isSelf(this.member_)) {
-      if (typeof data === "object" && data != null) {
-        for (const [k, v] of Object.entries(data)) {
-          this.child(k).set(v as string | object);
-        }
-      } else {
-        this.data.textStore.setSend(this.field_, String(data));
-        this.triggerEvent(this);
+    if (typeof data === "object" && data != null) {
+      for (const [k, v] of Object.entries(data)) {
+        this.child(k).set(v as string | object);
       }
     } else {
-      throw new Error("Cannot set data to member other than self");
+      this.setCheck().textStore.setSend(this.field_, String(data));
+      this.triggerEvent(this);
     }
   }
   /**

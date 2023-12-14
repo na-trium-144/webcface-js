@@ -2,6 +2,7 @@ import { ClientData } from "./clientData.js";
 import { FieldBase, Field } from "./field.js";
 
 export const eventType = {
+  onWsOpen: () => "wsOpen",
   memberEntry: () => "memberEntry",
   sync: (b: FieldBase) => JSON.stringify(["sync", b.member_]),
   ping: (b: FieldBase) => JSON.stringify(["ping", b.member_]),
