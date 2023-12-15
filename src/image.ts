@@ -36,6 +36,16 @@ export class ImageFrame {
     this.colorMode = colorMode;
     this.compressMode = compressMode;
   }
+  toBase64() {
+    // todo: もっと速い方法がないか?
+    let binary = "";
+    const bytes = new Uint8Array(this.data);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  }
 }
 
 export interface ImageReq {
@@ -82,7 +92,7 @@ export class Image extends EventTarget<Image> {
    * 値をリクエストする。
    */
   request(reqOption?: ImageReq) {
-    if(reqOption !== undefined){
+    if (reqOption !== undefined) {
       this.dataCheck().imageStore.clearRecv(this.member_, this.field_);
     }
     const reqId = this.dataCheck().imageStore.addReq(
