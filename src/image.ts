@@ -92,15 +92,13 @@ export class Image extends EventTarget<Image> {
    * 値をリクエストする。
    */
   request(reqOption?: ImageReq) {
-    if (reqOption !== undefined) {
-      this.dataCheck().imageStore.clearRecv(this.member_, this.field_);
-    }
     const reqId = this.dataCheck().imageStore.addReq(
       this.member_,
       this.field_,
       reqOption
     );
     if (reqId > 0) {
+      this.dataCheck().imageStore.clearRecv(this.member_, this.field_);
       this.dataCheck().pushSend([
         {
           kind: Message.kind.imageReq,
