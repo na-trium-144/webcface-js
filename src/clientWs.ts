@@ -31,18 +31,24 @@ export function reconnect(wcli: Client, data: ClientData) {
     if (data.ws == null) {
       data.ws = ws;
       console.log("connected");
-      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) =>
-        onMessage(wcli, data, event);
-      ws.onerror = () => {
-        console.warn("connection error");
+      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
+        console.log(`onMessage ${(event.data as ArrayBuffer).byteLength}`);
+        try {
+          onMessage(wcli, data, event);
+        } catch (e) {
+          console.error(`error in onMessage: ${String(e)}`);
+        }
+      };
+      ws.onerror = (e) => {
+        console.warn(`connection error: ${String(e)}`);
         ws.close();
         data.ws = null;
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
       };
-      ws.onclose = () => {
-        console.warn("closed");
+      ws.onclose = (e) => {
+        console.warn(`closed: ${String(e.reason)}`);
         data.ws = null;
         syncDataFirst(data);
         if (!data.closing) {
