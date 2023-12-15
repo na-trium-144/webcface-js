@@ -108,7 +108,7 @@ export class Member extends Field {
   images() {
     return this.dataCheck()
       .imageStore.getEntry(this.member_)
-      .map((n) => this.view(n));
+      .map((n) => this.image(n));
   }
   /**
    * このMemberが公開しているFuncのリストを返す
