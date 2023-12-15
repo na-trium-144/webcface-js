@@ -39,7 +39,7 @@ export class Log extends EventTarget<Log> {
    */
   tryGet() {
     this.request();
-    return this.data.logStore.getRecv(this.member_);
+    return this.dataCheck().logStore.getRecv(this.member_);
   }
   /**
    * ログを取得する
@@ -58,7 +58,7 @@ export class Log extends EventTarget<Log> {
    * リクエスト状態は解除しない
    */
   clear() {
-    this.data.logStore.setRecv(this.member_, []);
+    this.dataCheck().logStore.setRecv(this.member_, []);
     return this;
   }
 }

@@ -21,7 +21,7 @@ export class Field extends FieldBase {
     return this.data;
   }
   setCheck() {
-    if (this.data == null || this.data.selfMemberName === this.member_) {
+    if (this.data == null || this.data.selfMemberName !== this.member_) {
       throw new Error("Cannot set data to member other than self");
     }
     return this.data;

@@ -88,6 +88,6 @@ export class Text extends EventTarget<Text> {
    * Memberのsyncの時刻を返す
    */
   time() {
-    return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
+    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
   }
 }

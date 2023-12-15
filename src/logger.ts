@@ -1,4 +1,6 @@
-import { Level, Levels } from "log4js";
+import { Level, Levels, LoggingEvent, AppenderModule } from "log4js";
+import util from "util";
+import { ClientData } from "./clientData.js";
 
 export interface LogLine {
   level: number;
@@ -22,4 +24,23 @@ export function log4jsLevelConvert(level: Level, levels: Levels) {
   } else {
     return -1;
   }
+}
+
+export function appender(data: ClientData): AppenderModule {
+  return {
+    configure:
+      (config?: object, layouts?: any, findAppender?: any, levels?: Levels) =>
+      (logEvent: LoggingEvent) => {
+        const ll = {
+          level:
+            levels !== undefined
+              ? log4jsLevelConvert(logEvent.level, levels)
+              : 2,
+          time: new Date(logEvent.startTime),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          message: util.format(...logEvent.data),
+        };
+        data.logStore.getRecv(data.selfMemberName)?.push(ll);
+      },
+  };
 }

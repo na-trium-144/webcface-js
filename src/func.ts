@@ -1,6 +1,7 @@
 import { Member } from "./member.js";
 import { valType } from "./message.js";
 import { Field, FieldBase } from "./field.js";
+import * as Message from "./message.js";
 
 export type Val = string | number | boolean;
 
@@ -9,6 +10,7 @@ export interface FuncInfo {
   args: Arg[];
   funcImpl?: FuncCallback;
   // call
+  hidden?: boolean;
 }
 
 export interface Arg {
@@ -138,11 +140,7 @@ export class Func extends Field {
     return this.field_;
   }
   setInfo(data: FuncInfo) {
-    if (this.data.funcStore.isSelf(this.member_)) {
-      this.data.funcStore.setSend(this.field_, data);
-    } else {
-      throw new Error("Cannot set data to member other than self");
-    }
+    this.setCheck().funcStore.setSend(this.field_, data);
   }
   /** 関数からFuncInfoを構築しセットする
    *
@@ -161,18 +159,24 @@ export class Func extends Field {
       returnType: returnType,
       args: args,
       funcImpl: func,
+      hidden: hidden,
     });
-    this.data.funcStore.setHidden(this.field_, hidden);
   }
   get returnType() {
-    const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
+    const funcInfo = this.dataCheck().funcStore.getRecv(
+      this.member_,
+      this.field_
+    );
     if (funcInfo !== null) {
       return funcInfo.returnType;
     }
     return valType.none_;
   }
   get args() {
-    const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
+    const funcInfo = this.dataCheck().funcStore.getRecv(
+      this.member_,
+      this.field_
+    );
     if (funcInfo !== null) {
       return funcInfo.args.map((a) => ({ ...a }));
     }
@@ -182,11 +186,14 @@ export class Func extends Field {
    * 関数の設定を削除
    */
   free() {
-    this.data.funcStore.unsetRecv(this.member_, this.field_);
+    this.dataCheck().funcStore.unsetRecv(this.member_, this.field_);
   }
   runImpl(r: AsyncFuncResult, args: Val[]) {
-    const funcInfo = this.data.funcStore.getRecv(this.member_, this.field_);
-    if (this.data.isSelf(this.member_)) {
+    const funcInfo = this.dataCheck().funcStore.getRecv(
+      this.member_,
+      this.field_
+    );
+    if (this.dataCheck().isSelf(this.member_)) {
       if (funcInfo !== null && funcInfo.funcImpl !== undefined) {
         r.resolveStarted(true);
         try {
@@ -203,7 +210,16 @@ export class Func extends Field {
         r.resolveStarted(false);
       }
     } else {
-      this.data.callFunc(r, this, args);
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.call,
+          i: r.callerId,
+          c: this.dataCheck().getMemberIdFromName(r.caller),
+          r: this.dataCheck().getMemberIdFromName(this.member_),
+          f: this.field_,
+          a: args,
+        },
+      ]);
     }
   }
   /**
@@ -215,7 +231,7 @@ export class Func extends Field {
    * * リモートで実行し例外が発生した場合、例外は Error クラスになる
    */
   runAsync(...args: Val[]) {
-    const r = this.data.funcResultStore.addResult("", this);
+    const r = this.dataCheck().funcResultStore.addResult("", this);
     setTimeout(() => {
       this.runImpl(r, args);
     });
@@ -264,7 +280,7 @@ export class AnonymousFunc {
       this.base_ = new Func(target, AnonymousFunc.fieldNameTmp());
       this.base_.set(this.func_, this.returnType_, this.args_, true);
     }
-    const fi = this.base_.data.funcStore.getRecv(
+    const fi = this.base_.dataCheck().funcStore.getRecv(
       this.base_.member_,
       this.base_.field_
     );

@@ -12,11 +12,14 @@ import { getLogger } from "@log4js-node/log4js-api";
 import { Field, FieldBase } from "./field.js";
 import { EventTarget, eventType } from "./event.js";
 import version from "./version.js";
-import { ClientData } from "./clientData.js";
 import { Client } from "./client.js";
 
-export const reconnect = (wcli: Client, data: ClientData) => {
+export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {
+    return;
+  }
+  if (data.port == -1) {
+    // テスト用
     return;
   }
   console.debug(`reconnecting to ws://${data.host}:${data.port}`);
@@ -38,24 +41,28 @@ export const reconnect = (wcli: Client, data: ClientData) => {
         console.warn("connection error");
         ws.close();
         data.ws = null;
-        setTimeout(() => reconnect(wcli, data), 1000);
+        if (!data.closing) {
+          setTimeout(() => reconnect(wcli, data), 1000);
+        }
       };
       ws.onclose = () => {
         console.warn("closed");
         data.ws = null;
         syncDataFirst(data);
-        setTimeout(() => reconnect(wcli, data), 1000);
+        if (!data.closing) {
+          setTimeout(() => reconnect(wcli, data), 1000);
+        }
       };
       data.pushSend();
     }
   };
-};
+}
 
 /**
  * 初期化時に送信するメッセージをキューに入れる
  * 各種reqとsyncData(true)の全データ
  */
-export const syncDataFirst = (data: ClientData) => {
+export function syncDataFirst(data: ClientData) {
   const msg: Message.AnyMessage[] = [];
   msg.push({
     kind: Message.kind.syncInit,
@@ -92,9 +99,11 @@ export const syncDataFirst = (data: ClientData) => {
   }
 
   data.pushSend(msg);
-};
 
-export const syncData = (data: ClientData, isFirst: boolean) => {
+  syncData(data, true);
+}
+
+export function syncData(data: ClientData, isFirst: boolean) {
   const msg: Message.AnyMessage[] = [];
 
   msg.push({ kind: Message.kind.sync, m: 0, t: new Date().getTime() });
@@ -113,7 +122,7 @@ export const syncData = (data: ClientData, isFirst: boolean) => {
   }
 
   for (const [k, v] of data.funcStore.transferSend(isFirst).entries()) {
-    if (!data.funcStore.isHidden(k)) {
+    if (!v.hidden) {
       msg.push({
         kind: Message.kind.funcInfo,
         f: k,
@@ -130,28 +139,23 @@ export const syncData = (data: ClientData, isFirst: boolean) => {
     }
   }
 
-  const logSend: Message.LogLine[] = [];
-  if (data.logStore.getRecv(data.selfMemberName) === null) {
-    data.logStore.setRecv(data.selfMemberName, []);
-  }
-  const logRecv = data.logStore.getRecv(data.selfMemberName) as LogLine[];
-  for (const l of data.logQueue) {
-    logSend.push({ v: l.level, t: l.time.getTime(), m: l.message });
-    logRecv.push(l);
-  }
-  if (logSend.length > 0) {
-    data.logQueue = [];
+  const logs = data.logStore.getRecv(data.selfMemberName) || [];
+  if ((logs.length > 0 && isFirst) || logs.length > data.logSentLines) {
+    const logSend = logs
+      .slice(isFirst ? 0 : data.logSentLines)
+      .map((l) => ({ v: l.level, t: l.time.getTime(), m: l.message }));
+    data.logSentLines = logs.length;
     msg.push({ kind: Message.kind.log, l: logSend });
   }
 
   data.pushSend(msg);
-};
+}
 
-export const onMessage = (
+export function onMessage(
   wcli: Client,
   data: ClientData,
   event: { data: string | ArrayBuffer | Buffer }
-) => {
+) {
   const messages = Message.unpack(event.data as ArrayBuffer);
   const syncMembers: string[] = [];
   for (const msg of messages) {
@@ -223,7 +227,7 @@ export const onMessage = (
         const dataR = msg as Message.Log;
         const member = data.getMemberNameFromId(dataR.m);
         const log = data.logStore.getRecv(member) || [];
-        const target = member(member).log();
+        const target = wcli.member(member).log();
         for (const ll of dataR.l) {
           const ll2: LogLine = {
             level: ll.v,
@@ -309,7 +313,7 @@ export const onMessage = (
       }
       case Message.kind.callResult: {
         const dataR = msg as Message.CallResult;
-        const r = this.data.funcResultStore.getResult(dataR.i);
+        const r = data.funcResultStore.getResult(dataR.i);
         if (r !== undefined) {
           if (dataR.e) {
             r.rejectResult(new Error(String(dataR.r)));
@@ -381,12 +385,12 @@ export const onMessage = (
         break;
       }
       default: {
-        console.error("invalid message kind", data.kind);
+        console.error("invalid message kind", msg.kind);
       }
     }
   }
   for (const member of syncMembers) {
-    const target = this.member(member);
-    this.data.eventEmitter.emit(eventType.sync(target), target);
+    const target = wcli.member(member);
+    data.eventEmitter.emit(eventType.sync(target), target);
   }
-};
+}

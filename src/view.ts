@@ -1,4 +1,3 @@
-import * as Message from "./message.js";
 import isEqual from "lodash.isequal";
 import { Func, AnonymousFunc, FuncCallback } from "./func.js";
 import { Member } from "./member.js";
@@ -344,7 +343,7 @@ export class View extends EventTarget<View> {
     this.setCheck().viewStore.setSend(
       this.field_,
       data2.map((c, i) =>
-        c.lockTmp(this.data, `${this.field_}_${i}`).toMessage()
+        c.lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
       )
     );
     this.triggerEvent(this);

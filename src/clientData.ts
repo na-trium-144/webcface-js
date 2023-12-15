@@ -13,6 +13,7 @@ export class ClientData {
   funcStore: SyncDataStore2<FuncInfo>;
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
   logStore: SyncDataStore1<LogLine[]>;
+  logSentLines = 0;
   syncTimeStore: SyncDataStore1<Date>;
   funcResultStore: FuncResultStore;
   memberIds: Map<string, number>;
@@ -20,7 +21,6 @@ export class ClientData {
   memberLibVer: Map<number, string>;
   memberRemoteAddr: Map<number, string>;
   eventEmitter: EventEmitter;
-  logQueue: LogLine[];
   svrName = "";
   svrVersion = "";
   pingStatus: Map<number, number>;
@@ -33,7 +33,7 @@ export class ClientData {
   ws: null | websocket.w3cwebsocket = null;
   messageQueue: ArrayBuffer[] = [];
 
-  constructor(name: string, host: string, port: number) {
+  constructor(name: string, host = "", port = -1) {
     this.selfMemberName = name;
     this.host = host;
     this.port = port;
@@ -42,6 +42,7 @@ export class ClientData {
     this.funcStore = new SyncDataStore2<FuncInfo>(name);
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
     this.logStore = new SyncDataStore1<LogLine[]>(name);
+    this.logStore.setRecv(name, []);
     this.syncTimeStore = new SyncDataStore1<Date>(name);
     this.funcResultStore = new FuncResultStore();
     this.memberIds = new Map<string, number>();
@@ -49,7 +50,6 @@ export class ClientData {
     this.memberLibVer = new Map<number, string>();
     this.memberRemoteAddr = new Map<number, string>();
     this.eventEmitter = new EventEmitter();
-    this.logQueue = [];
     this.pingStatus = new Map<number, number>();
   }
   isSelf(member: string) {

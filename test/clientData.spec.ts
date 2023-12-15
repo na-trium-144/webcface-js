@@ -57,7 +57,7 @@ describe("ClientData Tests", function () {
         assert.strictEqual(r, 0);
       });
       it("does not set #req if member is self name", function () {
-        const r = s2.getRecv(selfName, "b");
+        const r = s2.addReq(selfName, "b");
         assert.strictEqual(r, 0);
         assert.isEmpty(s2.req);
       });
@@ -242,7 +242,7 @@ describe("ClientData Tests", function () {
         s1.req.set("b", true);
       });
       it("returns #req", function () {
-        const s = s1.transferReq(true);
+        const s = s1.transferReq();
         assert.strictEqual(s.get("a"), true);
         assert.strictEqual(s.get("b"), true);
       });

@@ -5,6 +5,7 @@ import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
 import { View } from "./view.js";
 import { Field } from "./field.js";
 import { EventTarget, eventType } from "./event.js";
+import * as Message from "./message.js";
 
 /**
  * Memberを指すクラス
@@ -74,7 +75,7 @@ export class Member extends Field {
    * このMemberが公開しているValueのリストを返す
    */
   values() {
-    return this.data.valueStore
+    return this.dataCheck().valueStore
       .getEntry(this.member_)
       .map((n) => this.value(n));
   }
@@ -82,20 +83,20 @@ export class Member extends Field {
    * このMemberが公開しているTextのリストを返す
    */
   texts() {
-    return this.data.textStore.getEntry(this.member_).map((n) => this.text(n));
+    return this.dataCheck().textStore.getEntry(this.member_).map((n) => this.text(n));
   }
   /**
    * このMemberが公開しているViewのリストを返す
    */
   views() {
-    return this.data.viewStore.getEntry(this.member_).map((n) => this.view(n));
+    return this.dataCheck().viewStore.getEntry(this.member_).map((n) => this.view(n));
   }
   /**
    * このMemberが公開しているFuncのリストを返す
    */
 
   funcs() {
-    return this.data.funcStore.getEntry(this.member_).map((n) => this.func(n));
+    return this.dataCheck().funcStore.getEntry(this.member_).map((n) => this.func(n));
   }
   /**
    * Valueが追加された時のイベント
@@ -165,8 +166,8 @@ export class Member extends Field {
    */
   get libName() {
     return (
-      this.data.memberLibName.get(
-        this.data.getMemberIdFromName(this.member_)
+      this.dataCheck().memberLibName.get(
+        this.dataCheck().getMemberIdFromName(this.member_)
       ) || ""
     );
   }
@@ -175,7 +176,7 @@ export class Member extends Field {
    */
   get libVersion() {
     return (
-      this.data.memberLibVer.get(this.data.getMemberIdFromName(this.member_)) ||
+      this.dataCheck().memberLibVer.get(this.dataCheck().getMemberIdFromName(this.member_)) ||
       ""
     );
   }
@@ -184,8 +185,8 @@ export class Member extends Field {
    */
   get remoteAddr() {
     return (
-      this.data.memberRemoteAddr.get(
-        this.data.getMemberIdFromName(this.member_)
+      this.dataCheck().memberRemoteAddr.get(
+        this.dataCheck().getMemberIdFromName(this.member_)
       ) || ""
     );
   }
@@ -197,12 +198,14 @@ export class Member extends Field {
    * @return 初回→ null, 2回目以降(取得できれば)→ pingの往復時間 (ms)
    */
   get pingStatus() {
-    if (!this.data.pingStatusReq) {
-      this.data.pingStatusReqSend = true;
-      this.data.pingStatusReq = true;
+    if (!this.dataCheck().pingStatusReq) {
+      this.dataCheck().pingStatusReq = true;
+      this.dataCheck().pushSend([{
+        kind: Message.kind.pingStatusReq
+      }])
     }
-    const ps = this.data.pingStatus.get(
-      this.data.getMemberIdFromName(this.member_)
+    const ps = this.dataCheck().pingStatus.get(
+      this.dataCheck().getMemberIdFromName(this.member_)
     );
     return ps !== undefined ? ps : null;
   }

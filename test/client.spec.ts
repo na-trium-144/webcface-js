@@ -33,7 +33,7 @@ describe("Client Tests", function () {
     });
     setTimeout(() => {
       wcli = new Client(selfName, "127.0.0.1", 37530);
-      data = wcli.data;
+      data = wcli.dataCheck();
       setTimeout(done, 10);
     }, 10);
   });
@@ -42,8 +42,19 @@ describe("Client Tests", function () {
     wss.close();
     setTimeout(done, 10);
   });
-  it("successfully connects", function () {
-    assert.isTrue(wcli.connected);
+  it("successfully connects with #start", function (done) {
+    wcli.start();
+    setTimeout(() => {
+      assert.isTrue(wcli.connected);
+      done();
+    }, 10);
+  });
+  it("successfully connects with #sync", function (done) {
+    wcli.sync();
+    setTimeout(() => {
+      assert.isTrue(wcli.connected);
+      done();
+    }, 10);
   });
   describe("#name", function () {
     it("returns self name", function () {
@@ -88,7 +99,7 @@ describe("Client Tests", function () {
     });
   });
   describe("#logAppender", function () {
-    it("push log to data.logQueue", function () {
+    it("push log to data.logStore", function () {
       log4js.configure({
         appenders: {
           wcf: { type: wcli.logAppender },
@@ -104,13 +115,14 @@ describe("Client Tests", function () {
       logger.warn("d");
       logger.error("e");
       logger.fatal("f");
-      assert.lengthOf(data.logQueue, 6);
-      assert.include(data.logQueue[0], { level: 0, message: "a" });
-      assert.include(data.logQueue[1], { level: 1, message: "b" });
-      assert.include(data.logQueue[2], { level: 2, message: "c" });
-      assert.include(data.logQueue[3], { level: 3, message: "d" });
-      assert.include(data.logQueue[4], { level: 4, message: "e" });
-      assert.include(data.logQueue[5], { level: 5, message: "f" });
+      const ls = data.logStore.getRecv(selfName) || [];
+      assert.lengthOf(ls, 6);
+      assert.include(ls[0], { level: 0, message: "a" });
+      assert.include(ls[1], { level: 1, message: "b" });
+      assert.include(ls[2], { level: 2, message: "c" });
+      assert.include(ls[3], { level: 3, message: "d" });
+      assert.include(ls[4], { level: 4, message: "e" });
+      assert.include(ls[5], { level: 5, message: "f" });
     });
   });
   describe("messages", function () {
@@ -172,43 +184,52 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("receiving sync", function (done) {
-        let called = 0;
-        wcli.member("a").onSync.on((v: Member) => {
-          ++called;
-          assert.strictEqual(v.name, "a");
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "",
-          v: "",
-          a: "",
-        });
-        wssSend({ kind: Message.kind.sync, m: 10, t: 1000 });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          done();
+          let called = 0;
+          wcli.member("a").onSync.on((v: Member) => {
+            ++called;
+            assert.strictEqual(v.name, "a");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({ kind: Message.kind.sync, m: 10, t: 1000 });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            done();
+          }, 10);
         }, 10);
       });
       it("receiving server version", function (done) {
-        wssSend({ kind: Message.kind.svrVersion, n: "a", v: "1" });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(data.svrName, "a");
-          assert.strictEqual(data.svrVersion, "1");
-          done();
+          wssSend({ kind: Message.kind.svrVersion, n: "a", v: "1" });
+          setTimeout(() => {
+            assert.strictEqual(data.svrName, "a");
+            assert.strictEqual(data.svrVersion, "1");
+            done();
+          }, 10);
         }, 10);
       });
     });
     describe("ping", function () {
       it("receive and send back ping", function (done) {
-        wssSend({ kind: Message.kind.ping });
+        wcli.start();
         setTimeout(() => {
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.ping
-          ) as Message.Ping;
-          assert.exists(m);
-          done();
+          wssSend({ kind: Message.kind.ping });
+          setTimeout(() => {
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.ping
+            ) as Message.Ping;
+            assert.exists(m);
+            done();
+          }, 10);
         }, 10);
       });
       it("receiving ping status", function (done) {
@@ -246,133 +267,148 @@ describe("Client Tests", function () {
     });
     describe("receiving entry", function () {
       it("member entry", function (done) {
-        let called = 0;
-        wcli.onMemberEntry.on((m: Member) => {
-          ++called;
-          assert.strictEqual(m.name, "a");
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "a",
-          v: "1",
-          a: "100",
-        });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          assert.lengthOf(wcli.members(), 1);
-          assert.strictEqual(wcli.members()[0].name, "a");
-          assert.strictEqual(data.memberIds.get("a"), 10);
-          assert.strictEqual(data.memberLibName.get(10), "a");
-          assert.strictEqual(data.memberLibVer.get(10), "1");
-          assert.strictEqual(data.memberRemoteAddr.get(10), "100");
-          done();
+          let called = 0;
+          wcli.onMemberEntry.on((m: Member) => {
+            ++called;
+            assert.strictEqual(m.name, "a");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "a",
+            v: "1",
+            a: "100",
+          });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.members(), 1);
+            assert.strictEqual(wcli.members()[0].name, "a");
+            assert.strictEqual(data.memberIds.get("a"), 10);
+            assert.strictEqual(data.memberLibName.get(10), "a");
+            assert.strictEqual(data.memberLibVer.get(10), "1");
+            assert.strictEqual(data.memberRemoteAddr.get(10), "100");
+            done();
+          }, 10);
         }, 10);
       });
       it("value entry", function (done) {
-        let called = 0;
-        wcli.member("a").onValueEntry.on((v: Value) => {
-          ++called;
-          assert.strictEqual(v.member.name, "a");
-          assert.strictEqual(v.name, "b");
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "",
-          v: "",
-          a: "",
-        });
-        wssSend({ kind: Message.kind.valueEntry, m: 10, f: "b" });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          assert.lengthOf(wcli.member("a").values(), 1);
-          done();
+          let called = 0;
+          wcli.member("a").onValueEntry.on((v: Value) => {
+            ++called;
+            assert.strictEqual(v.member.name, "a");
+            assert.strictEqual(v.name, "b");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({ kind: Message.kind.valueEntry, m: 10, f: "b" });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").values(), 1);
+            done();
+          }, 10);
         }, 10);
       });
       it("text entry", function (done) {
-        let called = 0;
-        wcli.member("a").onTextEntry.on((v: Text) => {
-          ++called;
-          assert.strictEqual(v.member.name, "a");
-          assert.strictEqual(v.name, "b");
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "",
-          v: "",
-          a: "",
-        });
-        wssSend({ kind: Message.kind.textEntry, m: 10, f: "b" });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          assert.lengthOf(wcli.member("a").texts(), 1);
-          done();
+          let called = 0;
+          wcli.member("a").onTextEntry.on((v: Text) => {
+            ++called;
+            assert.strictEqual(v.member.name, "a");
+            assert.strictEqual(v.name, "b");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({ kind: Message.kind.textEntry, m: 10, f: "b" });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").texts(), 1);
+            done();
+          }, 10);
         }, 10);
       });
       it("view entry", function (done) {
-        let called = 0;
-        wcli.member("a").onViewEntry.on((v: View) => {
-          ++called;
-          assert.strictEqual(v.member.name, "a");
-          assert.strictEqual(v.name, "b");
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "",
-          v: "",
-          a: "",
-        });
-        wssSend({ kind: Message.kind.viewEntry, m: 10, f: "b" });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          assert.lengthOf(wcli.member("a").views(), 1);
-          done();
+          let called = 0;
+          wcli.member("a").onViewEntry.on((v: View) => {
+            ++called;
+            assert.strictEqual(v.member.name, "a");
+            assert.strictEqual(v.name, "b");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({ kind: Message.kind.viewEntry, m: 10, f: "b" });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").views(), 1);
+            done();
+          }, 10);
         }, 10);
       });
       it("func entry", function (done) {
-        let called = 0;
-        wcli.member("a").onFuncEntry.on((v: Func) => {
-          ++called;
-          assert.strictEqual(v.member.name, "a");
-          assert.strictEqual(v.name, "b");
-          assert.strictEqual(v.returnType, valType.number_);
-          assert.lengthOf(v.args, 1);
-        });
-        wssSend({
-          kind: Message.kind.syncInit,
-          M: "a",
-          m: 10,
-          l: "",
-          v: "",
-          a: "",
-        });
-        wssSend({
-          kind: Message.kind.funcInfo,
-          m: 10,
-          f: "b",
-          r: valType.number_,
-          a: [
-            {
-              n: "a",
-              t: valType.number_,
-              i: null,
-              m: null,
-              x: null,
-              o: [],
-            },
-          ],
-        });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          assert.lengthOf(wcli.member("a").funcs(), 1);
-          done();
+          let called = 0;
+          wcli.member("a").onFuncEntry.on((v: Func) => {
+            ++called;
+            assert.strictEqual(v.member.name, "a");
+            assert.strictEqual(v.name, "b");
+            assert.strictEqual(v.returnType, valType.number_);
+            assert.lengthOf(v.args, 1);
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({
+            kind: Message.kind.funcInfo,
+            m: 10,
+            f: "b",
+            r: valType.number_,
+            a: [
+              {
+                n: "a",
+                t: valType.number_,
+                i: null,
+                m: null,
+                x: null,
+                o: [],
+              },
+            ],
+          });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").funcs(), 1);
+            done();
+          }, 10);
         }, 10);
       });
     });
@@ -467,8 +503,12 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("log", function (done) {
-        data.logQueue.push({ level: 0, time: new Date(), message: "a" });
-        data.logQueue.push({ level: 1, time: new Date(), message: "b" });
+        data.logStore
+          .getRecv(selfName)
+          ?.push({ level: 0, time: new Date(), message: "a" });
+        data.logStore
+          .getRecv(selfName)
+          ?.push({ level: 1, time: new Date(), message: "b" });
         wcli.sync();
         assert.exists(data.logStore.dataRecv.get(selfName));
         assert.lengthOf(data.logStore.dataRecv.get(selfName) || [], 2);
@@ -482,7 +522,9 @@ describe("Client Tests", function () {
           wssRecv = [];
 
           // 追加分を送る
-          data.logQueue.push({ level: 2, time: new Date(), message: "c" });
+          data.logStore
+            .getRecv(selfName)
+            ?.push({ level: 2, time: new Date(), message: "c" });
           wcli.sync();
           assert.lengthOf(data.logStore.dataRecv.get(selfName) || [], 3);
           setTimeout(() => {
@@ -498,8 +540,8 @@ describe("Client Tests", function () {
     });
     describe("data request", function () {
       it("value", function (done) {
-        data.valueStore.getRecv("a", "b");
-        wcli.sync();
+        wcli.start();
+        wcli.member("a").value("b").request();
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.valueReq
@@ -532,8 +574,8 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("text", function (done) {
-        data.textStore.getRecv("a", "b");
-        wcli.sync();
+        wcli.start();
+        wcli.member("a").text("b").request();
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.textReq
@@ -561,8 +603,8 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("view", function (done) {
-        data.viewStore.getRecv("a", "b");
-        wcli.sync();
+        wcli.start();
+        wcli.member("a").view("b").request();
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.viewReq
@@ -634,8 +676,8 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("log", function (done) {
-        data.logStore.getRecv("a");
-        wcli.sync();
+        wcli.start();
+        wcli.member("a").log().request();
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.logReq
@@ -712,240 +754,309 @@ describe("Client Tests", function () {
     });
     describe("send func call", function () {
       it("send func call on data.callFunc()", function (done) {
-        data.memberIds.set("a", 10);
-        const r = new AsyncFuncResult(1, "", new Field(data, "a", "b"));
-        data.callFunc(r, new FieldBase("a", "b"), [1, true, "a"]);
+        wcli.start();
         setTimeout(() => {
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.call
-          ) as Message.Call;
-          assert.strictEqual(m?.i, 1);
-          assert.strictEqual(m?.r, 10);
-          assert.strictEqual(m?.f, "b");
-          assert.lengthOf(m?.a || [], 3);
-          assert.strictEqual(m?.a[0], 1);
-          assert.strictEqual(m?.a[1], true);
-          assert.strictEqual(m?.a[2], "a");
-          done();
+          data.memberIds.set("a", 10);
+          const r = new AsyncFuncResult(1, "", new Field(data, "a", "b"));
+          data.pushSend([
+            {
+              kind: Message.kind.call,
+              i: r.callerId,
+              c: 0,
+              r: 10,
+              f: "b",
+              a: [1, true, "a"],
+            },
+          ]);
+          setTimeout(() => {
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.call
+            ) as Message.Call;
+            assert.strictEqual(m?.i, 1);
+            assert.strictEqual(m?.r, 10);
+            assert.strictEqual(m?.f, "b");
+            assert.lengthOf(m?.a || [], 3);
+            assert.strictEqual(m?.a[0], 1);
+            assert.strictEqual(m?.a[1], true);
+            assert.strictEqual(m?.a[2], "a");
+            done();
+          }, 10);
         }, 10);
       });
       it("receive response of not started", function (done) {
-        data.memberIds.set("a", 10);
-        const r = data.funcResultStore.addResult("", new Field(data, "a", "b"));
-        assert.strictEqual(r.callerId, 0);
-        data.callFunc(r, new FieldBase("a", "b"), []);
+        wcli.start();
         setTimeout(() => {
-          wssSend({
-            kind: Message.kind.callResponse,
-            i: 0,
-            c: 0,
-            s: false,
-          });
-          r.started
-            .then((started) => assert.isFalse(started))
-            .catch(() => assert.fail("r.started threw error"));
-          r.result
-            .then(() => {
-              assert.fail("r.result did not throw error");
-              done();
-            })
-            .catch((e) => {
-              assert.instanceOf(e, FuncNotFoundError);
-              done();
+          data.memberIds.set("a", 10);
+          const r = data.funcResultStore.addResult(
+            "",
+            new Field(data, "a", "b")
+          );
+          assert.strictEqual(r.callerId, 0);
+          data.pushSend([
+            {
+              kind: Message.kind.call,
+              i: r.callerId,
+              c: 0,
+              r: 10,
+              f: "b",
+              a: [],
+            },
+          ]);
+          setTimeout(() => {
+            wssSend({
+              kind: Message.kind.callResponse,
+              i: 0,
+              c: 0,
+              s: false,
             });
+            r.started
+              .then((started) => assert.isFalse(started))
+              .catch(() => assert.fail("r.started threw error"));
+            r.result
+              .then(() => {
+                assert.fail("r.result did not throw error");
+                done();
+              })
+              .catch((e) => {
+                assert.instanceOf(e, FuncNotFoundError);
+                done();
+              });
+          }, 10);
         }, 10);
       });
       it("receive error result", function (done) {
-        data.memberIds.set("a", 10);
-        const r = data.funcResultStore.addResult("", new Field(data, "a", "b"));
-        data.callFunc(r, new FieldBase("a", "b"), []);
+        wcli.start();
         setTimeout(() => {
-          wssSend({
-            kind: Message.kind.callResponse,
-            i: 0,
-            c: 0,
-            s: true,
-          });
-          wssSend({
-            kind: Message.kind.callResult,
-            i: 0,
-            c: 0,
-            e: true,
-            r: "aaa",
-          });
-          r.started
-            .then((started) => assert.isFalse(started))
-            .catch(() => assert.fail("r.started threw error"));
-          r.result
-            .then(() => {
-              assert.fail("r.result did not throw error");
-              done();
-            })
-            .catch((e) => {
-              assert.instanceOf(e, Error);
-              done();
+          data.memberIds.set("a", 10);
+          const r = data.funcResultStore.addResult(
+            "",
+            new Field(data, "a", "b")
+          );
+          data.pushSend([
+            {
+              kind: Message.kind.call,
+              i: r.callerId,
+              c: 0,
+              r: 10,
+              f: "b",
+              a: [],
+            },
+          ]);
+          setTimeout(() => {
+            wssSend({
+              kind: Message.kind.callResponse,
+              i: 0,
+              c: 0,
+              s: true,
             });
+            wssSend({
+              kind: Message.kind.callResult,
+              i: 0,
+              c: 0,
+              e: true,
+              r: "aaa",
+            });
+            r.started
+              .then((started) => assert.isFalse(started))
+              .catch(() => assert.fail("r.started threw error"));
+            r.result
+              .then(() => {
+                assert.fail("r.result did not throw error");
+                done();
+              })
+              .catch((e) => {
+                assert.instanceOf(e, Error);
+                done();
+              });
+          }, 10);
         }, 10);
       });
       it("receive result", function (done) {
-        data.memberIds.set("a", 10);
-        const r = data.funcResultStore.addResult("", new Field(data, "a", "b"));
-        data.callFunc(r, new FieldBase("a", "b"), []);
+        wcli.start();
         setTimeout(() => {
-          wssSend({
-            kind: Message.kind.callResponse,
-            i: 0,
-            c: 0,
-            s: true,
-          });
-          wssSend({
-            kind: Message.kind.callResult,
-            i: 0,
-            c: 0,
-            e: false,
-            r: "aaa",
-          });
-          r.started
-            .then((started) => assert.isTrue(started))
-            .catch(() => assert.fail("r.started threw error"));
-          r.result
-            .then((res) => {
-              assert.strictEqual(res, "aaa");
-              done();
-            })
-            .catch((e) => {
-              assert.fail(`r.result threw error ${e}`);
-              done();
+          data.memberIds.set("a", 10);
+          const r = data.funcResultStore.addResult(
+            "",
+            new Field(data, "a", "b")
+          );
+          data.pushSend([
+            {
+              kind: Message.kind.call,
+              i: r.callerId,
+              c: 0,
+              r: 10,
+              f: "b",
+              a: [],
+            },
+          ]);
+          setTimeout(() => {
+            wssSend({
+              kind: Message.kind.callResponse,
+              i: 0,
+              c: 0,
+              s: true,
             });
+            wssSend({
+              kind: Message.kind.callResult,
+              i: 0,
+              c: 0,
+              e: false,
+              r: "aaa",
+            });
+            r.started
+              .then((started) => assert.isTrue(started))
+              .catch(() => assert.fail("r.started threw error"));
+            r.result
+              .then((res) => {
+                assert.strictEqual(res, "aaa");
+                done();
+              })
+              .catch((e) => {
+                assert.fail(`r.result threw error ${e}`);
+                done();
+              });
+          }, 10);
         }, 10);
       });
     });
     describe("receive func call", function () {
       it("runs callback with arg", function (done) {
-        let called = 0;
-        data.funcStore.setSend("a", {
-          funcImpl: (a: number) => {
-            ++called;
-            assert.strictEqual(a, 100);
-            return a + 1;
-          },
-          returnType: valType.number_,
-          args: [
-            {
-              name: "a",
-              type: valType.number_,
-              init: null,
-              min: null,
-              max: null,
-              option: [],
-            },
-          ],
-        });
-        wssSend({
-          kind: Message.kind.call,
-          i: 5,
-          c: 10,
-          r: 0,
-          f: "a",
-          a: [100],
-        });
+        wcli.start();
         setTimeout(() => {
-          assert.strictEqual(called, 1);
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.callResponse
-          ) as Message.CallResponse;
-          assert.strictEqual(m?.i, 5);
-          assert.strictEqual(m?.c, 10);
-          assert.strictEqual(m?.s, true);
-          const m2 = wssRecv.find(
-            (m) => m.kind === Message.kind.callResult
-          ) as Message.CallResult;
-          assert.strictEqual(m2?.i, 5);
-          assert.strictEqual(m2?.c, 10);
-          assert.strictEqual(m2?.e, false);
-          assert.strictEqual(m2?.r, 101);
-          done();
+          let called = 0;
+          data.funcStore.setSend("a", {
+            funcImpl: (a: number) => {
+              ++called;
+              assert.strictEqual(a, 100);
+              return a + 1;
+            },
+            returnType: valType.number_,
+            args: [
+              {
+                name: "a",
+                type: valType.number_,
+                init: null,
+                min: null,
+                max: null,
+                option: [],
+              },
+            ],
+          });
+          wssSend({
+            kind: Message.kind.call,
+            i: 5,
+            c: 10,
+            r: 0,
+            f: "a",
+            a: [100],
+          });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.callResponse
+            ) as Message.CallResponse;
+            assert.strictEqual(m?.i, 5);
+            assert.strictEqual(m?.c, 10);
+            assert.strictEqual(m?.s, true);
+            const m2 = wssRecv.find(
+              (m) => m.kind === Message.kind.callResult
+            ) as Message.CallResult;
+            assert.strictEqual(m2?.i, 5);
+            assert.strictEqual(m2?.c, 10);
+            assert.strictEqual(m2?.e, false);
+            assert.strictEqual(m2?.r, 101);
+            done();
+          }, 10);
         }, 10);
       });
       it("send result with error when arg does not match", function (done) {
-        data.funcStore.setSend("a", {
-          funcImpl: () => undefined,
-          returnType: valType.number_,
-          args: [
-            {
-              name: "a",
-              type: valType.number_,
-              init: null,
-              min: null,
-              max: null,
-              option: [],
-            },
-          ],
-        });
-        wssSend({
-          kind: Message.kind.call,
-          i: 5,
-          c: 10,
-          r: 0,
-          f: "a",
-          a: [100, 100],
-        });
+        wcli.start();
         setTimeout(() => {
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.callResponse
-          ) as Message.CallResponse;
-          assert.strictEqual(m?.s, true);
-          const m2 = wssRecv.find(
-            (m) => m.kind === Message.kind.callResult
-          ) as Message.CallResult;
-          assert.strictEqual(m2?.e, true);
-          done();
+          data.funcStore.setSend("a", {
+            funcImpl: () => undefined,
+            returnType: valType.number_,
+            args: [
+              {
+                name: "a",
+                type: valType.number_,
+                init: null,
+                min: null,
+                max: null,
+                option: [],
+              },
+            ],
+          });
+          wssSend({
+            kind: Message.kind.call,
+            i: 5,
+            c: 10,
+            r: 0,
+            f: "a",
+            a: [100, 100],
+          });
+          setTimeout(() => {
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.callResponse
+            ) as Message.CallResponse;
+            assert.strictEqual(m?.s, true);
+            const m2 = wssRecv.find(
+              (m) => m.kind === Message.kind.callResult
+            ) as Message.CallResult;
+            assert.strictEqual(m2?.e, true);
+            done();
+          }, 10);
         }, 10);
       });
       it("send result with error when callback throws error", function (done) {
-        data.funcStore.setSend("a", {
-          funcImpl: () => {
-            throw new Error("aaa");
-          },
-          returnType: valType.none_,
-          args: [],
-        });
-        wssSend({
-          kind: Message.kind.call,
-          i: 5,
-          c: 10,
-          r: 0,
-          f: "a",
-          a: [],
-        });
+        wcli.start();
         setTimeout(() => {
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.callResponse
-          ) as Message.CallResponse;
-          assert.strictEqual(m?.s, true);
-          const m2 = wssRecv.find(
-            (m) => m.kind === Message.kind.callResult
-          ) as Message.CallResult;
-          assert.strictEqual(m2?.e, true);
-          assert.strictEqual(m2?.r, "Error: aaa");
-          done();
+          data.funcStore.setSend("a", {
+            funcImpl: () => {
+              throw new Error("aaa");
+            },
+            returnType: valType.none_,
+            args: [],
+          });
+          wssSend({
+            kind: Message.kind.call,
+            i: 5,
+            c: 10,
+            r: 0,
+            f: "a",
+            a: [],
+          });
+          setTimeout(() => {
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.callResponse
+            ) as Message.CallResponse;
+            assert.strictEqual(m?.s, true);
+            const m2 = wssRecv.find(
+              (m) => m.kind === Message.kind.callResult
+            ) as Message.CallResult;
+            assert.strictEqual(m2?.e, true);
+            assert.strictEqual(m2?.r, "Error: aaa");
+            done();
+          }, 10);
         }, 10);
       });
       it("send response with not started when callback not found", function (done) {
-        wssSend({
-          kind: Message.kind.call,
-          i: 5,
-          c: 10,
-          r: 0,
-          f: "a",
-          a: [],
-        });
+        wcli.start();
         setTimeout(() => {
-          const m = wssRecv.find(
-            (m) => m.kind === Message.kind.callResponse
-          ) as Message.CallResponse;
-          assert.strictEqual(m?.s, false);
-          done();
+          wssSend({
+            kind: Message.kind.call,
+            i: 5,
+            c: 10,
+            r: 0,
+            f: "a",
+            a: [],
+          });
+          setTimeout(() => {
+            const m = wssRecv.find(
+              (m) => m.kind === Message.kind.callResponse
+            ) as Message.CallResponse;
+            assert.strictEqual(m?.s, false);
+            done();
+          }, 10);
         }, 10);
       });
     });

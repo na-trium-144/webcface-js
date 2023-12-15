@@ -15,7 +15,7 @@ describe("Member Tests", function () {
   let data: ClientData;
   const member = (member: string) => new Member(new Field(data, member));
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
     data.memberIds.set("a", 1);
   });
   describe("#name", function () {
@@ -176,10 +176,9 @@ describe("Member Tests", function () {
       data.pingStatus.set(1, 10);
       assert.strictEqual(member("a").pingStatus, 10);
     });
-    it("sets pingStatusReq and pingStatusReqSend", function () {
+    it("sets pingStatusReq", function () {
       member("a").pingStatus;
       assert.isTrue(data.pingStatusReq);
-      assert.isTrue(data.pingStatusReqSend);
     });
   });
   describe("#onPing", function () {
@@ -189,10 +188,9 @@ describe("Member Tests", function () {
       data.eventEmitter.emit(eventType.ping(new FieldBase("a")));
       assert.strictEqual(called, 1);
     });
-    it("sets pingStatusReq and pingStatusReqSend", function () {
+    it("sets pingStatusReq", function () {
       member("a").onPing.on(() => undefined);
       assert.isTrue(data.pingStatusReq);
-      assert.isTrue(data.pingStatusReqSend);
     });
   });
 });
