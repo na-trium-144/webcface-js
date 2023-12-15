@@ -4,7 +4,6 @@ import { LogLine } from "./logger.js";
 import * as Message from "./message.js";
 import { Field } from "./field.js";
 import websocket from "websocket";
-const w3cwebsocket = websocket.w3cwebsocket;
 
 export class ClientData {
   selfMemberName: string;
