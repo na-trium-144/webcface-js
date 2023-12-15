@@ -150,7 +150,7 @@ export class SyncDataStore2<T, ReqT = never> {
           !isEqual(option, this.reqInfo.get(member)?.get(field))))
     ) {
       const m = this.req.get(member);
-      const newReq = this.getMaxReq() + 1;
+      const newReq = this.req.get(member)?.get(field) || this.getMaxReq() + 1;
       if (m) {
         m.set(field, newReq);
       } else {
@@ -261,8 +261,8 @@ export class SyncDataStore2<T, ReqT = never> {
     }
     return ["", ""];
   }
-  getReqInfo(member: string, field: string){
-    return this.reqInfo.get(member)?.get(field)
+  getReqInfo(member: string, field: string) {
+    return this.reqInfo.get(member)?.get(field);
   }
 }
 

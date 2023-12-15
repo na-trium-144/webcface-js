@@ -29,7 +29,7 @@ c.onMemberEntry.on((m: Member) => {
     v.on(() => {
       const img = v.get();
       console.log(
-        `image ${v.name} received ${img.data.byteLength} (${img.width}x${img.height})`
+        `image ${v.name} received ${img.data.byteLength} ${img.toBase64().length} (${img.width}x${img.height})`
       );
     });
   });
