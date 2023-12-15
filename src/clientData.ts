@@ -1,9 +1,11 @@
+import isEqual from "lodash.isequal";
 import { FuncInfo, AsyncFuncResult } from "./func.js";
 import { EventEmitter } from "eventemitter3";
 import { LogLine } from "./logger.js";
 import * as Message from "./message.js";
 import { Field } from "./field.js";
 import websocket from "websocket";
+import { ImageFrame, ImageReq } from "./image.js";
 
 export class ClientData {
   selfMemberName: string;
@@ -11,6 +13,7 @@ export class ClientData {
   textStore: SyncDataStore2<string>;
   funcStore: SyncDataStore2<FuncInfo>;
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
+  imageStore: SyncDataStore2<ImageFrame, ImageReq>;
   logStore: SyncDataStore1<LogLine[]>;
   logSentLines = 0;
   syncTimeStore: SyncDataStore1<Date>;
@@ -40,6 +43,7 @@ export class ClientData {
     this.textStore = new SyncDataStore2<string>(name);
     this.funcStore = new SyncDataStore2<FuncInfo>(name);
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
+    this.imageStore = new SyncDataStore2<ImageFrame, ImageReq>(name);
     this.logStore = new SyncDataStore1<LogLine[]>(name);
     this.logStore.setRecv(name, []);
     this.syncTimeStore = new SyncDataStore1<Date>(name);
@@ -83,12 +87,13 @@ export class ClientData {
   }
 }
 
-export class SyncDataStore2<T> {
+export class SyncDataStore2<T, ReqT = never> {
   dataSend: Map<string, T>;
   dataSendPrev: Map<string, T>;
   dataRecv: Map<string, Map<string, T>>;
   entry: Map<string, string[]>;
   req: Map<string, Map<string, number>>;
+  reqInfo: Map<string, Map<string, ReqT>>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
@@ -97,16 +102,21 @@ export class SyncDataStore2<T> {
     this.dataRecv = new Map();
     this.entry = new Map();
     this.req = new Map();
+    this.reqInfo = new Map();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
   }
-  //! 送信するデータをdata_sendとdata_recv[self_member_name]にセット
+  /**
+   * 送信するデータをdata_sendとdata_recv[self_member_name]にセット
+   */
   setSend(field: string, data: T) {
     this.dataSend.set(field, data);
     this.setRecv(this.selfMemberName, field, data);
   }
-  //! 受信したデータをdata_recvにセット
+  /**
+   * 受信したデータをdata_recvにセット
+   */
   setRecv(member: string, field: string, data: T) {
     const m = this.dataRecv.get(member);
     if (m) {
@@ -127,12 +137,18 @@ export class SyncDataStore2<T> {
     return maxReq;
   }
   /**
-   * リクエストされてなければリクエストし新しいidを返す
+   * リクエストされてなければリクエストする
    *
-   * すでにリクエストされてれば0
+   * @param option undefinedでなく前回のoptionと異なる場合すでにリクエストされてても更新する
+   * @return リクエストid, すでにリクエストされてれば0
    */
-  addReq(member: string, field: string) {
-    if (!this.isSelf(member) && !this.req.get(member)?.get(field)) {
+  addReq(member: string, field: string, option?: ReqT) {
+    if (
+      !this.isSelf(member) &&
+      (!this.req.get(member)?.get(field) ||
+        (option !== undefined &&
+          !isEqual(option, this.reqInfo.get(member)?.get(field))))
+    ) {
       const m = this.req.get(member);
       const newReq = this.getMaxReq() + 1;
       if (m) {
@@ -140,11 +156,21 @@ export class SyncDataStore2<T> {
       } else {
         this.req.set(member, new Map([[field, newReq]]));
       }
+      if (option !== undefined) {
+        const m = this.reqInfo.get(member);
+        if (m) {
+          m.set(field, option);
+        } else {
+          this.reqInfo.set(member, new Map([[field, option]]));
+        }
+      }
       return newReq;
     }
     return 0;
   }
-  //! data_recvからデータを返す
+  /**
+   * data_recvからデータを返す
+   */
   getRecv(member: string, field: string) {
     const m = this.dataRecv.get(member)?.get(field);
     if (m != undefined) {
@@ -152,30 +178,48 @@ export class SyncDataStore2<T> {
     }
     return null;
   }
-  //! data_recvからデータを削除, req,req_sendをfalseにする
+  /**
+   * dataRecvからデータを削除
+   */
+  clearRecv(member: string, field: string) {
+    this.dataRecv.get(member)?.delete(field);
+  }
+  /**
+   * data_recvからデータを削除, req,req_sendをfalseにする
+   */
   unsetRecv(member: string, field: string) {
     if (!this.isSelf(member) && !!this.req.get(member)?.get(field)) {
       this.req.get(member)?.set(field, 0);
     }
     this.dataRecv.get(member)?.delete(field);
   }
-  //! member名のりすとを取得(entryから)
+  /**
+   * member名のりすとを取得(entryから)
+   */
   getMembers() {
     return Array.from(this.entry.keys());
   }
-  //! entryを取得
+  /**
+   * entryを取得
+   */
   getEntry(member: string) {
     return this.entry.get(member) || [];
   }
-  //! entryにmember名のみ追加
+  /**
+   * entryにmember名のみ追加
+   */
   addMember(member: string) {
     this.entry.set(member, []);
   }
-  //! 受信したentryを追加
+  /**
+   * 受信したentryを追加
+   */
   setEntry(member: string, e: string) {
     this.entry.set(member, this.getEntry(member).concat([e]));
   }
-  //! data_sendを返し、data_sendをクリア
+  /**
+   * data_sendを返し、data_sendをクリア
+   */
   transferSend(isFirst: boolean) {
     if (isFirst) {
       this.dataSend = new Map();
@@ -201,7 +245,9 @@ export class SyncDataStore2<T> {
       return this.dataSendPrev;
     }
   }
-  //! req_sendを返し、req_sendをクリア
+  /**
+   * req_sendを返す
+   */
   transferReq() {
     return this.req;
   }
@@ -214,6 +260,9 @@ export class SyncDataStore2<T> {
       }
     }
     return ["", ""];
+  }
+  getReqInfo(member: string, field: string){
+    return this.reqInfo.get(member)?.get(field)
   }
 }
 

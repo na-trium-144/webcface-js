@@ -11,6 +11,13 @@ export {
   viewComponentTypes,
   viewColor,
 } from "./view.js";
+export {
+  imageColorMode,
+  imageCompressMode,
+  ImageFrame,
+  ImageReq,
+  Image,
+} from "./image.js";
 export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";

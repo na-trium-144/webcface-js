@@ -27,15 +27,19 @@ export const kind = {
   value: 0,
   text: 1,
   view: 3,
+  image: 5,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
+  imageEntry: 25,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
+  imageReq: 45,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
+  imageRes: 65,
   syncInit: 80,
   call: 81,
   callResponse: 82,
@@ -87,8 +91,19 @@ export interface View {
   d: ViewComponentsDiff;
   l: number;
 }
+
+export interface Image {
+  kind: 5;
+  f: string;
+  d: ArrayBuffer;
+  w: number;
+  h: number;
+  l: number;
+  p: number;
+}
+
 export interface Entry {
-  kind: 20 | 21 | 23;
+  kind: 20 | 21 | 23 | 25;
   m: number;
   f: string;
 }
@@ -97,6 +112,17 @@ export interface Req {
   M: string;
   f: string;
   i: number;
+}
+export interface ImageReq {
+  kind: 45;
+  M: string;
+  f: string;
+  i: number;
+  w: number | null;
+  h: number | null;
+  l: number | null;
+  p: number;
+  q: number;
 }
 export interface ValueRes {
   kind: 60;
@@ -117,7 +143,16 @@ export interface ViewRes {
   d: ViewComponentsDiff;
   l: number;
 }
-
+export interface ImageRes {
+  kind: 65;
+  i: number;
+  f: string;
+  d: ArrayBuffer;
+  w: number;
+  h: number;
+  l: number;
+  p: number;
+}
 export interface SyncInit {
   kind: 80;
   M: string;
@@ -205,11 +240,14 @@ export type AnyMessage =
   | Value
   | Text
   | View
+  | Image
   | Req
+  | ImageReq
   | Entry
   | ValueRes
   | TextRes
   | ViewRes
+  | ImageRes
   | SyncInit
   | Sync
   | SvrVersion

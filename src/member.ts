@@ -3,6 +3,7 @@ import { Text } from "./text.js";
 import { Log } from "./log.js";
 import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
 import { View } from "./view.js";
+import { Image } from "./image.js";
 import { Field } from "./field.js";
 import { EventTarget, eventType } from "./event.js";
 import * as Message from "./message.js";
@@ -45,6 +46,12 @@ export class Member extends Field {
     return new View(this, name);
   }
   /**
+   * Imageを参照する
+   */
+  image(name: string) {
+    return new Image(this, name);
+  }
+  /**
    * Funcを参照する
    */
   func(name: string): Func;
@@ -75,28 +82,41 @@ export class Member extends Field {
    * このMemberが公開しているValueのリストを返す
    */
   values() {
-    return this.dataCheck().valueStore
-      .getEntry(this.member_)
+    return this.dataCheck()
+      .valueStore.getEntry(this.member_)
       .map((n) => this.value(n));
   }
   /**
    * このMemberが公開しているTextのリストを返す
    */
   texts() {
-    return this.dataCheck().textStore.getEntry(this.member_).map((n) => this.text(n));
+    return this.dataCheck()
+      .textStore.getEntry(this.member_)
+      .map((n) => this.text(n));
   }
   /**
    * このMemberが公開しているViewのリストを返す
    */
   views() {
-    return this.dataCheck().viewStore.getEntry(this.member_).map((n) => this.view(n));
+    return this.dataCheck()
+      .viewStore.getEntry(this.member_)
+      .map((n) => this.view(n));
+  }
+  /**
+   * このMemberが公開しているImageのリストを返す
+   */
+  images() {
+    return this.dataCheck()
+      .imageStore.getEntry(this.member_)
+      .map((n) => this.view(n));
   }
   /**
    * このMemberが公開しているFuncのリストを返す
    */
-
   funcs() {
-    return this.dataCheck().funcStore.getEntry(this.member_).map((n) => this.func(n));
+    return this.dataCheck()
+      .funcStore.getEntry(this.member_)
+      .map((n) => this.func(n));
   }
   /**
    * Valueが追加された時のイベント
@@ -147,6 +167,18 @@ export class Member extends Field {
     );
   }
   /**
+   * Imageが追加された時のイベント
+   *
+   * コールバックの型は (target: View) => void
+   */
+  get onImageEntry() {
+    return new EventTarget<Image>(
+      eventType.imageEntry(this),
+      this.data,
+      this.member_
+    );
+  }
+  /**
    * Memberがsyncしたときのイベント
    *
    * コールバックの型は (target: Member) => void
@@ -176,8 +208,9 @@ export class Member extends Field {
    */
   get libVersion() {
     return (
-      this.dataCheck().memberLibVer.get(this.dataCheck().getMemberIdFromName(this.member_)) ||
-      ""
+      this.dataCheck().memberLibVer.get(
+        this.dataCheck().getMemberIdFromName(this.member_)
+      ) || ""
     );
   }
   /**
@@ -200,9 +233,11 @@ export class Member extends Field {
   get pingStatus() {
     if (!this.dataCheck().pingStatusReq) {
       this.dataCheck().pingStatusReq = true;
-      this.dataCheck().pushSend([{
-        kind: Message.kind.pingStatusReq
-      }])
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.pingStatusReq,
+        },
+      ]);
     }
     const ps = this.dataCheck().pingStatus.get(
       this.dataCheck().getMemberIdFromName(this.member_)
