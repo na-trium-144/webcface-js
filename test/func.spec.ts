@@ -4,13 +4,12 @@ import {
   AnonymousFunc,
   FuncCallback,
   FuncNotFoundError,
-  AsyncFuncResult,
-  Val,
 } from "../src/func.js";
 import { ClientData } from "../src/clientData.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
+import * as Message from "../src/message.js";
 
 describe("Func Tests", function () {
   const selfName = "test";
@@ -18,7 +17,7 @@ describe("Func Tests", function () {
   const func = (member: string, field: string) =>
     new Func(new Field(data, member, field));
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
@@ -134,17 +133,21 @@ describe("Func Tests", function () {
           done();
         });
     });
-    it("calls data.callFunc when member is not self", function (done) {
-      data.callFunc = (r: AsyncFuncResult, b: FieldBase, args: Val[]) => {
-        assert.strictEqual(r.callerId, 0);
-        assert.strictEqual(r.member.name, "a");
-        assert.strictEqual(r.name, "b");
-        assert.strictEqual(b.member_, "a");
-        assert.strictEqual(b.field_, "b");
-        assert.sameOrderedMembers(args, ["5", 123, true]);
-        done();
-      };
+    it("push call message to data.messageQueue when member is not self", function (done) {
+      data.memberIds.set("a", 10);
       func("a", "b").runAsync("5", 123, true);
+      setTimeout(() => {
+        assert.lengthOf(data.messageQueue, 1);
+        const msg = Message.unpack(data.messageQueue[0]);
+        assert.lengthOf(msg, 1);
+        const msg0 = msg[0] as Message.Call;
+        assert.strictEqual(msg0.i, 0);
+        assert.strictEqual(msg0.r, 10);
+        assert.strictEqual(msg0.f, "b");
+        assert.sameOrderedMembers(msg0.a, ["5", 123, true]);
+
+        done();
+      }, 10);
     });
   });
   describe("#returnType", function () {
@@ -221,7 +224,7 @@ describe("AnonymousFunc Tests", function () {
   const afunc2 = (func: FuncCallback) =>
     new AnonymousFunc(null, func, valType.none_, []);
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   it("constructed with data", async function () {
     let called = 0;

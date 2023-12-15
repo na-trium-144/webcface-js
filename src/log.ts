@@ -1,6 +1,7 @@
 import { Member } from "./member.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
+import * as Message from "./message.js";
 
 /**
  *  ログの送受信データを表すクラス
@@ -20,10 +21,25 @@ export class Log extends EventTarget<Log> {
     return new Member(this);
   }
   /**
+   * 値をリクエストする。
+   */
+  request() {
+    const req = this.dataCheck().logStore.addReq(this.member_);
+    if (req) {
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.logReq,
+          M: this.member_,
+        },
+      ]);
+    }
+  }
+  /**
    * ログを取得する
    */
   tryGet() {
-    return this.data.logStore.getRecv(this.member_);
+    this.request();
+    return this.dataCheck().logStore.getRecv(this.member_);
   }
   /**
    * ログを取得する
@@ -42,7 +58,7 @@ export class Log extends EventTarget<Log> {
    * リクエスト状態は解除しない
    */
   clear() {
-    this.data.logStore.setRecv(this.member_, []);
+    this.dataCheck().logStore.setRecv(this.member_, []);
     return this;
   }
 }

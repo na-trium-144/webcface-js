@@ -21,7 +21,7 @@ describe("View Tests", function () {
   const afunc1 = (func: FuncCallback) =>
     new AnonymousFunc(new Field(data, selfName, ""), func, valType.none_, []);
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {

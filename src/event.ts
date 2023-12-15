@@ -2,6 +2,7 @@ import { ClientData } from "./clientData.js";
 import { FieldBase, Field } from "./field.js";
 
 export const eventType = {
+  onWsOpen: () => "wsOpen",
   memberEntry: () => "memberEntry",
   sync: (b: FieldBase) => JSON.stringify(["sync", b.member_]),
   ping: (b: FieldBase) => JSON.stringify(["ping", b.member_]),
@@ -25,7 +26,7 @@ export class EventTarget<TargetType> extends Field {
   // onAppend: () => void;
   constructor(
     eventType: string,
-    data: ClientData,
+    data: ClientData | null,
     member: string,
     field = ""
     // onAppend: () => void = () => undefined
@@ -35,26 +36,26 @@ export class EventTarget<TargetType> extends Field {
     // this.onAppend = onAppend;
   }
   triggerEvent(arg: TargetType) {
-    this.data.eventEmitter.emit(this.eventType_, arg);
+    this.dataCheck().eventEmitter.emit(this.eventType_, arg);
   }
   addListener(listener: EventListener<TargetType>) {
-    this.data.eventEmitter.addListener(this.eventType_, listener);
+    this.dataCheck().eventEmitter.addListener(this.eventType_, listener);
     // this.onAppend();
   }
   on(listener: EventListener<TargetType>) {
     this.addListener(listener);
   }
   once(listener: EventListener<TargetType>) {
-    this.data.eventEmitter.once(this.eventType_, listener);
+    this.dataCheck().eventEmitter.once(this.eventType_, listener);
     // this.onAppend();
   }
   removeListener(listener: EventListener<TargetType>) {
-    this.data.eventEmitter.removeListener(this.eventType_, listener);
+    this.dataCheck().eventEmitter.removeListener(this.eventType_, listener);
   }
   off(listener: EventListener<TargetType>) {
     this.removeListener(listener);
   }
   removeAllListeners() {
-    this.data.eventEmitter.removeAllListeners(this.eventType_);
+    this.dataCheck().eventEmitter.removeAllListeners(this.eventType_);
   }
 }

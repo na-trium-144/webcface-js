@@ -1,10 +1,10 @@
-import * as Message from "./message.js";
 import isEqual from "lodash.isequal";
 import { Func, AnonymousFunc, FuncCallback } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field, FieldBase } from "./field.js";
+import * as Message from "./message.js";
 
 export const viewComponentTypes = {
   text: 0,
@@ -273,14 +273,31 @@ export class View extends EventTarget<View> {
   child(field: string): View {
     return new View(this, this.field_ + "." + field);
   }
+  /**
+   * 値をリクエストする。
+   */
+  request() {
+    const reqId = this.dataCheck().viewStore.addReq(this.member_, this.field_);
+    if (reqId > 0) {
+      this.dataCheck().pushSend([
+        {
+          kind: Message.kind.viewReq,
+          M: this.member_,
+          f: this.field_,
+          i: reqId,
+        },
+      ]);
+    }
+  }
 
   /**
    * Viewを返す
    */
   tryGet() {
+    this.request();
     return (
-      this.data.viewStore
-        .getRecv(this.member_, this.field_)
+      this.dataCheck()
+        .viewStore.getRecv(this.member_, this.field_)
         ?.map((v) => new ViewComponent(v, this.data)) || null
     );
   }
@@ -299,40 +316,36 @@ export class View extends EventTarget<View> {
    * Memberのsyncの時刻を返す
    */
   time() {
-    return this.data.syncTimeStore.getRecv(this.member_) || new Date(0);
+    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
   }
   /**
    * ViewComponentのリストをセットする
    */
   set(data: (ViewComponent | string | number | boolean)[]) {
-    if (this.data.viewStore.isSelf(this.member_)) {
-      const data2: ViewComponent[] = [];
-      for (let c of data) {
-        if (c instanceof ViewComponent) {
-          data2.push(c);
-        } else if (typeof c === "string") {
-          while (c.includes("\n")) {
-            const s = c.slice(0, c.indexOf("\n"));
-            data2.push(viewComponents.text(s));
-            data2.push(viewComponents.newLine());
-            c = c.slice(c.indexOf("\n") + 1);
-          }
-          if (c !== "") {
-            data2.push(viewComponents.text(c));
-          }
-        } else {
-          data2.push(viewComponents.text(String(c)));
+    const data2: ViewComponent[] = [];
+    for (let c of data) {
+      if (c instanceof ViewComponent) {
+        data2.push(c);
+      } else if (typeof c === "string") {
+        while (c.includes("\n")) {
+          const s = c.slice(0, c.indexOf("\n"));
+          data2.push(viewComponents.text(s));
+          data2.push(viewComponents.newLine());
+          c = c.slice(c.indexOf("\n") + 1);
         }
+        if (c !== "") {
+          data2.push(viewComponents.text(c));
+        }
+      } else {
+        data2.push(viewComponents.text(String(c)));
       }
-      this.data.viewStore.setSend(
-        this.field_,
-        data2.map((c, i) =>
-          c.lockTmp(this.data, `${this.field_}_${i}`).toMessage()
-        )
-      );
-      this.triggerEvent(this);
-    } else {
-      throw new Error("Cannot set data to member other than self");
     }
+    this.setCheck().viewStore.setSend(
+      this.field_,
+      data2.map((c, i) =>
+        c.lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
+      )
+    );
+    this.triggerEvent(this);
   }
 }

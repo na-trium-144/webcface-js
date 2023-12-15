@@ -1,8 +1,9 @@
-import { Val, FuncInfo, AsyncFuncResult } from "./func.js";
+import { FuncInfo, AsyncFuncResult } from "./func.js";
 import { EventEmitter } from "eventemitter3";
 import { LogLine } from "./logger.js";
 import * as Message from "./message.js";
-import { FieldBase, Field } from "./field.js";
+import { Field } from "./field.js";
+import websocket from "websocket";
 
 export class ClientData {
   selfMemberName: string;
@@ -11,39 +12,43 @@ export class ClientData {
   funcStore: SyncDataStore2<FuncInfo>;
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
   logStore: SyncDataStore1<LogLine[]>;
+  logSentLines = 0;
   syncTimeStore: SyncDataStore1<Date>;
   funcResultStore: FuncResultStore;
   memberIds: Map<string, number>;
   memberLibName: Map<number, string>;
   memberLibVer: Map<number, string>;
   memberRemoteAddr: Map<number, string>;
-  callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void;
   eventEmitter: EventEmitter;
-  logQueue: LogLine[];
   svrName = "";
   svrVersion = "";
   pingStatus: Map<number, number>;
   pingStatusReq = false;
   pingStatusReqSend = false;
-  constructor(
-    name: string,
-    callFunc: (r: AsyncFuncResult, b: FieldBase, args: Val[]) => void
-  ) {
+  host: string;
+  port: number;
+  closing = false;
+  connectionStarted = false;
+  ws: null | websocket.w3cwebsocket = null;
+  messageQueue: ArrayBuffer[] = [];
+
+  constructor(name: string, host = "", port = -1) {
     this.selfMemberName = name;
+    this.host = host;
+    this.port = port;
     this.valueStore = new SyncDataStore2<number[]>(name);
     this.textStore = new SyncDataStore2<string>(name);
     this.funcStore = new SyncDataStore2<FuncInfo>(name);
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
     this.logStore = new SyncDataStore1<LogLine[]>(name);
+    this.logStore.setRecv(name, []);
     this.syncTimeStore = new SyncDataStore1<Date>(name);
     this.funcResultStore = new FuncResultStore();
     this.memberIds = new Map<string, number>();
     this.memberLibName = new Map<number, string>();
     this.memberLibVer = new Map<number, string>();
     this.memberRemoteAddr = new Map<number, string>();
-    this.callFunc = callFunc;
     this.eventEmitter = new EventEmitter();
-    this.logQueue = [];
     this.pingStatus = new Map<number, number>();
   }
   isSelf(member: string) {
@@ -60,26 +65,38 @@ export class ClientData {
   getMemberIdFromName(name: string) {
     return this.memberIds.get(name) || 0;
   }
+  /**
+   * messageQueueを消費
+   *
+   * messageQueueになにか追加するところで呼ぶこと
+   */
+  pushSend(msgs?: Message.AnyMessage[]) {
+    if (msgs != undefined) {
+      this.messageQueue.push(Message.pack(msgs));
+    }
+    if (this.ws != null) {
+      for (const msg of this.messageQueue) {
+        this.ws.send(msg);
+      }
+      this.messageQueue = [];
+    }
+  }
 }
 
 export class SyncDataStore2<T> {
   dataSend: Map<string, T>;
   dataSendPrev: Map<string, T>;
-  dataSendHidden: Map<string, boolean>;
   dataRecv: Map<string, Map<string, T>>;
   entry: Map<string, string[]>;
   req: Map<string, Map<string, number>>;
-  reqSend: Map<string, Map<string, number>>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
     this.dataSend = new Map();
     this.dataSendPrev = new Map();
-    this.dataSendHidden = new Map();
     this.dataRecv = new Map();
     this.entry = new Map();
     this.req = new Map();
-    this.reqSend = new Map();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
@@ -88,12 +105,6 @@ export class SyncDataStore2<T> {
   setSend(field: string, data: T) {
     this.dataSend.set(field, data);
     this.setRecv(this.selfMemberName, field, data);
-  }
-  setHidden(field: string, isHidden: boolean) {
-    this.dataSendHidden.set(field, isHidden);
-  }
-  isHidden(field: string) {
-    return this.dataSendHidden.get(field) == true;
   }
   //! 受信したデータをdata_recvにセット
   setRecv(member: string, field: string, data: T) {
@@ -115,8 +126,12 @@ export class SyncDataStore2<T> {
     }
     return maxReq;
   }
-  //! data_recvからデータを返す or なければreq,req_sendをtrueにセット
-  getRecv(member: string, field: string) {
+  /**
+   * リクエストされてなければリクエストし新しいidを返す
+   *
+   * すでにリクエストされてれば0
+   */
+  addReq(member: string, field: string) {
     if (!this.isSelf(member) && !this.req.get(member)?.get(field)) {
       const m = this.req.get(member);
       const newReq = this.getMaxReq() + 1;
@@ -125,13 +140,12 @@ export class SyncDataStore2<T> {
       } else {
         this.req.set(member, new Map([[field, newReq]]));
       }
-      const m2 = this.reqSend.get(member);
-      if (m2) {
-        m2.set(field, newReq);
-      } else {
-        this.reqSend.set(member, new Map([[field, newReq]]));
-      }
+      return newReq;
     }
+    return 0;
+  }
+  //! data_recvからデータを返す
+  getRecv(member: string, field: string) {
     const m = this.dataRecv.get(member)?.get(field);
     if (m != undefined) {
       return m;
@@ -142,12 +156,6 @@ export class SyncDataStore2<T> {
   unsetRecv(member: string, field: string) {
     if (!this.isSelf(member) && !!this.req.get(member)?.get(field)) {
       this.req.get(member)?.set(field, 0);
-      const m2 = this.reqSend.get(member);
-      if (m2) {
-        m2.set(field, 0);
-      } else {
-        this.reqSend.set(member, new Map([[field, 0]]));
-      }
     }
     this.dataRecv.get(member)?.delete(field);
   }
@@ -194,15 +202,8 @@ export class SyncDataStore2<T> {
     }
   }
   //! req_sendを返し、req_sendをクリア
-  transferReq(isFirst: boolean) {
-    if (isFirst) {
-      this.reqSend = new Map();
-      return this.req;
-    } else {
-      const r = this.reqSend;
-      this.reqSend = new Map();
-      return r;
-    }
+  transferReq() {
+    return this.req;
   }
   getReq(i: number, subField: string) {
     for (const [rm, r] of this.req.entries()) {
@@ -219,13 +220,11 @@ export class SyncDataStore2<T> {
 export class SyncDataStore1<T> {
   dataRecv: Map<string, T>;
   req: Map<string, boolean>;
-  reqSend: Map<string, boolean>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
     this.dataRecv = new Map();
     this.req = new Map();
-    this.reqSend = new Map();
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
@@ -233,11 +232,14 @@ export class SyncDataStore1<T> {
   setRecv(member: string, data: T) {
     this.dataRecv.set(member, data);
   }
-  getRecv(member: string) {
+  addReq(member: string) {
     if (!this.isSelf(member) && this.req.get(member) !== true) {
       this.req.set(member, true);
-      this.reqSend.set(member, true);
+      return true;
     }
+    return false;
+  }
+  getRecv(member: string) {
     const m = this.dataRecv.get(member);
     if (m != undefined) {
       return m;
@@ -247,15 +249,8 @@ export class SyncDataStore1<T> {
   unsetRecv(member: string) {
     this.dataRecv.delete(member);
   }
-  transferReq(isFirst: boolean) {
-    if (isFirst) {
-      this.reqSend = new Map();
-      return this.req;
-    } else {
-      const r = this.reqSend;
-      this.reqSend = new Map();
-      return r;
-    }
+  transferReq() {
+    return this.req;
   }
 }
 

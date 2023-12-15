@@ -12,7 +12,7 @@ describe("Value Tests", function () {
   const value = (member: string, field: string) =>
     new Value(new Field(data, member, field));
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
@@ -157,7 +157,7 @@ describe("Text Tests", function () {
   const text = (member: string, field: string) =>
     new Text(new Field(data, member, field));
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
@@ -251,7 +251,7 @@ describe("Log Tests", function () {
   let data: ClientData;
   const log = (member: string) => new Log(new Field(data, member, ""));
   beforeEach(function () {
-    data = new ClientData(selfName, () => undefined);
+    data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
