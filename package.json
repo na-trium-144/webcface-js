@@ -12,6 +12,9 @@
     "lint": "eslint src test example",
     "typedoc": "typedoc --out ./docs/ ./src/"
   },
+  "engines": {
+    "node": ">=16"
+  },
   "files": [
     "dist/src",
     "dist/package.json"
