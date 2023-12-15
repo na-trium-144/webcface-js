@@ -4,11 +4,9 @@ import {
   AnonymousFunc,
   FuncCallback,
   FuncNotFoundError,
-  AsyncFuncResult,
-  Val,
 } from "../src/func.js";
 import { ClientData } from "../src/clientData.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
 import * as Message from "../src/message.js";

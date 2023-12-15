@@ -8,7 +8,7 @@ import { Text } from "../src/text.js";
 import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
 import log4js from "log4js";
@@ -912,7 +912,7 @@ describe("Client Tests", function () {
                 done();
               })
               .catch((e) => {
-                assert.fail(`r.result threw error ${e}`);
+                assert.fail(`r.result threw error ${String(e)}`);
                 done();
               });
           }, 10);

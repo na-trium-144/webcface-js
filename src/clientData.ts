@@ -1,8 +1,8 @@
-import { Val, FuncInfo, AsyncFuncResult } from "./func.js";
+import { FuncInfo, AsyncFuncResult } from "./func.js";
 import { EventEmitter } from "eventemitter3";
 import { LogLine } from "./logger.js";
 import * as Message from "./message.js";
-import { FieldBase, Field } from "./field.js";
+import { Field } from "./field.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
 

@@ -1,16 +1,11 @@
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
-import { Member } from "./member.js";
-import { AsyncFuncResult, runFunc, Val } from "./func.js";
-import { log4jsLevelConvert, LogLine } from "./logger.js";
+import { runFunc, Val } from "./func.js";
+import { LogLine } from "./logger.js";
 import { getViewDiff, mergeViewDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
-import util from "util";
-import { Levels, LoggingEvent, AppenderModule } from "log4js";
-import { getLogger } from "@log4js-node/log4js-api";
-import { Field, FieldBase } from "./field.js";
-import { EventTarget, eventType } from "./event.js";
+import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
 
