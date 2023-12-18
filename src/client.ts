@@ -22,9 +22,20 @@ export class Client extends Member {
    * @param host サーバーのアドレス
    * @param port サーバーのポート
    */
-  constructor(name = "", host = "127.0.0.1", port = 7530) {
-    super(new Field(new ClientData(name, host, port), name), name);
+  constructor(
+    name = "",
+    host = "127.0.0.1",
+    port = 7530,
+    logLevel?: "trace" | "verbose"
+  ) {
+    super(new Field(new ClientData(name, host, port, logLevel), name), name);
     clientWs.syncDataFirst(this.dataCheck());
+  }
+  get logLevel() : "trace" | "verbose" | undefined {
+    return this.dataCheck().logLevel;
+  }
+  set logLevel(logLevel: "trace" | "verbose") {
+    this.dataCheck().logLevel = logLevel;
   }
   /**
    * 接続を切り、今後再接続しない
@@ -64,7 +75,9 @@ export class Client extends Member {
    * 自分自身と、無名のmemberを除く。
    */
   members() {
-    return [...this.dataCheck().valueStore.getMembers()].map((n) => this.member(n));
+    return [...this.dataCheck().valueStore.getMembers()].map((n) =>
+      this.member(n)
+    );
   }
   /**
    * Memberが追加されたときのイベント

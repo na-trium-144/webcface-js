@@ -34,8 +34,13 @@ export class ClientData {
   connectionStarted = false;
   ws: null | websocket.w3cwebsocket = null;
   messageQueue: ArrayBuffer[] = [];
-
-  constructor(name: string, host = "", port = -1) {
+  logLevel: "trace" | "verbose" | undefined;
+  constructor(
+    name: string,
+    host = "",
+    port = -1,
+    logLevel: "trace" | "verbose" | undefined = "trace"
+  ) {
     this.selfMemberName = name;
     this.host = host;
     this.port = port;
@@ -54,7 +59,34 @@ export class ClientData {
     this.memberRemoteAddr = new Map<number, string>();
     this.eventEmitter = new EventEmitter();
     this.pingStatus = new Map<number, number>();
+    this.logLevel = logLevel;
   }
+  get consoleLogger() {
+    return {
+      trace: (msg: string) =>
+        (process?.env?.WEBCFACE_TRACE || this.logLevel === "trace") &&
+        console.log("webcface trace: " + msg),
+      info: (msg: string) =>
+        (process?.env?.WEBCFACE_TRACE ||
+          process?.env?.WEBCFACE_VERBOSE ||
+          this.logLevel === "trace" ||
+          this.logLevel === "verbose") &&
+        console.log("webcface info: " + msg),
+      warn: (msg: string) =>
+        (process?.env?.WEBCFACE_TRACE ||
+          process?.env?.WEBCFACE_VERBOSE ||
+          this.logLevel === "trace" ||
+          this.logLevel === "verbose") &&
+        console.warn("webcface warn: " + msg),
+      error: (msg: string) =>
+        (process?.env?.WEBCFACE_TRACE ||
+          process?.env?.WEBCFACE_VERBOSE ||
+          this.logLevel === "trace" ||
+          this.logLevel === "verbose") &&
+        console.error("webcface error: " + msg),
+    } as const;
+  }
+
   isSelf(member: string) {
     return this.selfMemberName === member;
   }
