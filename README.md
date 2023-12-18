@@ -38,11 +38,11 @@ wcli.sync();
 ```ts
 import { Client, Value } from "webcface";
 const wcli = Client("example_recv");
+wcli.start();
 
 setInterval(() => {
   console.log(`test = ${c.member("example_main").value("test").get()}`);
   console.log(`str = ${c.member("example_main").text("str").get()}`);
-  wcli.sync();
 }, 250);
 ```
 
@@ -93,11 +93,9 @@ import log4js from "log4js";
 log4js.configure({
   appenders: {
     out: { type: "stdout" },
-    wcf: { type: wcli.logAppender },
   },
   categories: {
     default: { appenders: ["out", "wcf"], level: "debug" },
-    webcface: { appenders: ["out"], level: "debug" }, // webcface internal
   },
 });
 const logger = log4js.getLogger();
