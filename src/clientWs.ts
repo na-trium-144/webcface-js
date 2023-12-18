@@ -9,6 +9,19 @@ import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
 
+const consoleLogger = {
+  trace: (msg: string) =>
+    process?.env?.WEBCFACE_TRACE && console.log("webcface trace: " + msg),
+  info: (msg: string) =>
+    (process?.env?.WEBCFACE_TRACE || process?.env?.WEBCFACE_VERBOSE) &&
+    console.log("webcface info: " + msg),
+  warn: (msg: string) =>
+    (process?.env?.WEBCFACE_TRACE || process?.env?.WEBCFACE_VERBOSE) &&
+    console.warn("webcface warn: " + msg),
+  error: (msg: string) =>
+    (process?.env?.WEBCFACE_TRACE || process?.env?.WEBCFACE_VERBOSE) &&
+    console.error("webcface error: " + msg),
+};
 export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {
     return;
@@ -17,11 +30,11 @@ export function reconnect(wcli: Client, data: ClientData) {
     // テスト用
     return;
   }
-  console.debug(`reconnecting to ws://${data.host}:${data.port}`);
+  consoleLogger.trace(`reconnecting to ws://${data.host}:${data.port}`);
   const ws = new w3cwebsocket(`ws://${data.host}:${data.port}`);
   setTimeout(() => {
     if (data.ws == null) {
-      console.warn("connection timeout");
+      consoleLogger.trace("connection timeout");
       reconnect(wcli, data);
     }
   }, 1000);
@@ -29,19 +42,27 @@ export function reconnect(wcli: Client, data: ClientData) {
   ws.onopen = () => {
     if (data.ws == null) {
       data.ws = ws;
-      console.log("connected");
-      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) =>
-        onMessage(wcli, data, event);
-      ws.onerror = () => {
-        console.warn("connection error");
+      consoleLogger.info("connected");
+      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
+        consoleLogger.trace(
+          `onMessage ${(event.data as ArrayBuffer).byteLength}`
+        );
+        try {
+          onMessage(wcli, data, event);
+        } catch (e) {
+          consoleLogger.error(`error in onMessage: ${String(e)}`);
+        }
+      };
+      ws.onerror = (e) => {
+        consoleLogger.warn(`connection error: ${String(e)}`);
         ws.close();
         data.ws = null;
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
       };
-      ws.onclose = () => {
-        console.warn("closed");
+      ws.onclose = (e) => {
+        consoleLogger.warn(`closed: ${String(e.reason)}`);
         data.ws = null;
         syncDataFirst(data);
         if (!data.closing) {
@@ -302,7 +323,7 @@ export function onMessage(
         if (r !== undefined) {
           r.resolveStarted(dataR.s);
         } else {
-          console.error(`error receiving call result id=${dataR.i}`);
+          consoleLogger.error(`error receiving call result id=${dataR.i}`);
         }
         break;
       }
@@ -316,7 +337,7 @@ export function onMessage(
             r.resolveResult(dataR.r);
           }
         } else {
-          console.error(`error receiving call result id=${dataR.i}`);
+          consoleLogger.error(`error receiving call result id=${dataR.i}`);
         }
         break;
       }
@@ -380,7 +401,7 @@ export function onMessage(
         break;
       }
       default: {
-        console.error("invalid message kind", msg.kind);
+        consoleLogger.error(`invalid message kind ${msg.kind}`);
       }
     }
   }
