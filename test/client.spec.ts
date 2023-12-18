@@ -32,7 +32,7 @@ describe("Client Tests", function () {
       wssSend = (msg) => ws.send(Message.pack([msg]));
     });
     setTimeout(() => {
-      wcli = new Client(selfName, "127.0.0.1", 37530);
+      wcli = new Client(selfName, "127.0.0.1", 37530, "trace");
       data = wcli.dataCheck();
       setTimeout(done, 10);
     }, 10);

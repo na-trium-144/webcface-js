@@ -18,6 +18,7 @@ describe("Func Tests", function () {
     new Func(new Field(data, member, field));
   beforeEach(function () {
     data = new ClientData(selfName);
+    data.logLevel = "trace";
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
