@@ -17,11 +17,11 @@ export function reconnect(wcli: Client, data: ClientData) {
     // テスト用
     return;
   }
-  console.debug(`reconnecting to ws://${data.host}:${data.port}`);
+  data.consoleLogger.trace(`reconnecting to ws://${data.host}:${data.port}`);
   const ws = new w3cwebsocket(`ws://${data.host}:${data.port}`);
   setTimeout(() => {
-    if (data.ws == null) {
-      console.warn("connection timeout");
+    if (data.ws == null && !data.closing) {
+      data.consoleLogger.trace("connection timeout");
       reconnect(wcli, data);
     }
   }, 1000);
@@ -29,19 +29,27 @@ export function reconnect(wcli: Client, data: ClientData) {
   ws.onopen = () => {
     if (data.ws == null) {
       data.ws = ws;
-      console.log("connected");
-      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) =>
-        onMessage(wcli, data, event);
-      ws.onerror = () => {
-        console.warn("connection error");
+      data.consoleLogger.info("connected");
+      ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
+        data.consoleLogger.trace(
+          `onMessage ${(event.data as ArrayBuffer).byteLength}`
+        );
+        try {
+          onMessage(wcli, data, event);
+        } catch (e) {
+          data.consoleLogger.error(`error in onMessage: ${String(e)}`);
+        }
+      };
+      ws.onerror = (e) => {
+        data.consoleLogger.warn(`connection error: ${String(e)}`);
         ws.close();
         data.ws = null;
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
       };
-      ws.onclose = () => {
-        console.warn("closed");
+      ws.onclose = (e) => {
+        data.consoleLogger.warn(`closed: ${String(e.reason)}`);
         data.ws = null;
         syncDataFirst(data);
         if (!data.closing) {
@@ -302,7 +310,7 @@ export function onMessage(
         if (r !== undefined) {
           r.resolveStarted(dataR.s);
         } else {
-          console.error(`error receiving call result id=${dataR.i}`);
+          data.consoleLogger.error(`error receiving call result id=${dataR.i}`);
         }
         break;
       }
@@ -316,7 +324,7 @@ export function onMessage(
             r.resolveResult(dataR.r);
           }
         } else {
-          console.error(`error receiving call result id=${dataR.i}`);
+          data.consoleLogger.error(`error receiving call result id=${dataR.i}`);
         }
         break;
       }
@@ -380,7 +388,7 @@ export function onMessage(
         break;
       }
       default: {
-        console.error("invalid message kind", msg.kind);
+        data.consoleLogger.error(`invalid message kind ${msg.kind}`);
       }
     }
   }
