@@ -12,6 +12,7 @@ describe("ClientData Tests", function () {
   let data: ClientData;
   beforeEach(function () {
     data = new ClientData(selfName);
+    data.logLevel = "trace";
   });
   describe("SyncDataStore2 Tests", function () {
     let s2: SyncDataStore2<string>;

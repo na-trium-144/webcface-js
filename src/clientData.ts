@@ -39,7 +39,7 @@ export class ClientData {
     name: string,
     host = "",
     port = -1,
-    logLevel: "trace" | "verbose" | undefined = "trace"
+    logLevel?: "trace" | "verbose"
   ) {
     this.selfMemberName = name;
     this.host = host;

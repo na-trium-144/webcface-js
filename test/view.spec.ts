@@ -22,6 +22,7 @@ describe("View Tests", function () {
     new AnonymousFunc(new Field(data, selfName, ""), func, valType.none_, []);
   beforeEach(function () {
     data = new ClientData(selfName);
+    data.logLevel = "trace";
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {

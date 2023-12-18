@@ -16,6 +16,7 @@ describe("Member Tests", function () {
   const member = (member: string) => new Member(new Field(data, member));
   beforeEach(function () {
     data = new ClientData(selfName);
+    data.logLevel = "trace";
     data.memberIds.set("a", 1);
   });
   describe("#name", function () {
