@@ -26,15 +26,15 @@ export class Client extends Member {
     name = "",
     host = "127.0.0.1",
     port = 7530,
-    logLevel?: "trace" | "verbose"
+    logLevel: "trace" | "verbose" | "none" = "none"
   ) {
     super(new Field(new ClientData(name, host, port, logLevel), name), name);
     clientWs.syncDataFirst(this.dataCheck());
   }
-  get logLevel() : "trace" | "verbose" | undefined {
+  get logLevel() {
     return this.dataCheck().logLevel;
   }
-  set logLevel(logLevel: "trace" | "verbose") {
+  set logLevel(logLevel: "trace" | "verbose" | "none") {
     this.dataCheck().logLevel = logLevel;
   }
   /**
