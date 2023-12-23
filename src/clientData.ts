@@ -31,12 +31,12 @@ export class ClientData {
   connectionStarted = false;
   ws: null | websocket.w3cwebsocket = null;
   messageQueue: ArrayBuffer[] = [];
-  logLevel: "trace" | "verbose" | undefined;
+  logLevel: "trace" | "verbose" | "none";
   constructor(
     name: string,
     host = "",
     port = -1,
-    logLevel?: "trace" | "verbose"
+    logLevel: "trace" | "verbose" | "none" = "none"
   ) {
     this.selfMemberName = name;
     this.host = host;
@@ -58,28 +58,22 @@ export class ClientData {
     this.logLevel = logLevel;
   }
   get consoleLogger() {
+    const traceEnabled =
+      (typeof process !== "undefined" && process?.env?.WEBCFACE_TRACE) ||
+      this.logLevel === "trace";
+    const verboseEnabled =
+      traceEnabled ||
+      (typeof process !== "undefined" && process?.env?.WEBCFACE_VERBOSE) ||
+      this.logLevel === "verbose";
     return {
       trace: (msg: string) =>
-        (process?.env?.WEBCFACE_TRACE || this.logLevel === "trace") &&
-        console.log("webcface trace: " + msg),
+        traceEnabled && console.log("webcface trace: " + msg),
       info: (msg: string) =>
-        (process?.env?.WEBCFACE_TRACE ||
-          process?.env?.WEBCFACE_VERBOSE ||
-          this.logLevel === "trace" ||
-          this.logLevel === "verbose") &&
-        console.log("webcface info: " + msg),
+        verboseEnabled && console.log("webcface info: " + msg),
       warn: (msg: string) =>
-        (process?.env?.WEBCFACE_TRACE ||
-          process?.env?.WEBCFACE_VERBOSE ||
-          this.logLevel === "trace" ||
-          this.logLevel === "verbose") &&
-        console.warn("webcface warn: " + msg),
+        verboseEnabled && console.warn("webcface warn: " + msg),
       error: (msg: string) =>
-        (process?.env?.WEBCFACE_TRACE ||
-          process?.env?.WEBCFACE_VERBOSE ||
-          this.logLevel === "trace" ||
-          this.logLevel === "verbose") &&
-        console.error("webcface error: " + msg),
+        verboseEnabled && console.error("webcface error: " + msg),
     } as const;
   }
 
