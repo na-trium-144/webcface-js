@@ -1,4 +1,12 @@
-import { Client, Member, Value, Text, Func } from "../src/index.js";
+import {
+  Client,
+  Member,
+  Value,
+  Text,
+  Func,
+  Image,
+  imageCompressMode,
+} from "../src/index.js";
 
 const c = new Client("example_recv");
 
@@ -9,6 +17,21 @@ c.onMemberEntry.on((m: Member) => {
   });
   m.onTextEntry.on((v: Text) => {
     console.log(`text ${v.name}`);
+  });
+  m.onImageEntry.on((v: Image) => {
+    console.log(`image ${v.name}`);
+    v.request({
+      width: 100,
+      height: 100,
+      compressMode: imageCompressMode.webp,
+      quality: 90,
+    });
+    v.on(() => {
+      const img = v.get();
+      console.log(
+        `image ${v.name} received ${img.data.byteLength} ${img.toBase64().length} (${img.width}x${img.height})`
+      );
+    });
   });
   m.onFuncEntry.on((v: Func) => {
     console.log(`func  ${v.name} ${v.args.length} args, ret: ${v.returnType}`);

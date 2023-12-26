@@ -8,6 +8,7 @@ const w3cwebsocket = websocket.w3cwebsocket;
 import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
+import { ImageFrame, imageCompressMode } from "./image.js";
 
 export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {
@@ -31,9 +32,7 @@ export function reconnect(wcli: Client, data: ClientData) {
       data.ws = ws;
       data.consoleLogger.info("connected");
       ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
-        data.consoleLogger.trace(
-          `onMessage ${(event.data as ArrayBuffer).byteLength}`
-        );
+        data.consoleLogger.trace(`onMessage ${(event.data as ArrayBuffer).byteLength}`);
         try {
           onMessage(wcli, data, event);
         } catch (e) {
@@ -92,6 +91,22 @@ export function syncDataFirst(data: ClientData) {
       msg.push({ kind: Message.kind.viewReq, M: k, f: k2, i: v2 });
     }
   }
+  for (const [k, v] of data.imageStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      const reqOption = data.imageStore.getReqInfo(k, k2);
+      msg.push({
+        kind: Message.kind.imageReq,
+        M: k,
+        f: k2,
+        i: v2,
+        w: reqOption?.width || null,
+        h: reqOption?.height || null,
+        l: reqOption?.colorMode || null,
+        p: reqOption?.compressMode || imageCompressMode.raw,
+        q: reqOption?.quality || 0,
+      });
+    }
+  }
 
   for (const [k] of data.logStore.transferReq().entries()) {
     msg.push({ kind: Message.kind.logReq, M: k });
@@ -122,6 +137,17 @@ export function syncData(data: ClientData, isFirst: boolean) {
     const vPrev = viewPrev.get(k) || [];
     const diff = getViewDiff(v, vPrev);
     msg.push({ kind: Message.kind.view, f: k, d: diff, l: v.length });
+  }
+  for (const [k, v] of data.imageStore.transferSend(isFirst).entries()) {
+    msg.push({
+      kind: Message.kind.image,
+      f: k,
+      w: v.width,
+      h: v.height,
+      d: v.data,
+      l: v.colorMode,
+      p: v.compressMode,
+    });
   }
 
   for (const [k, v] of data.funcStore.transferSend(isFirst).entries()) {
@@ -224,6 +250,18 @@ export function onMessage(
         data.viewStore.setRecv(member, field, current);
         const target = wcli.member(member).view(field);
         data.eventEmitter.emit(eventType.viewChange(target), target);
+        break;
+      }
+      case Message.kind.imageRes: {
+        const dataR = msg as Message.ImageRes;
+        const [member, field] = data.imageStore.getReq(dataR.i, dataR.f);
+        data.imageStore.setRecv(
+          member,
+          field,
+          new ImageFrame(dataR.w, dataR.h, dataR.d, dataR.l, dataR.p)
+        );
+        const target = wcli.member(member).image(field);
+        data.eventEmitter.emit(eventType.imageChange(target), target);
         break;
       }
       case Message.kind.log: {
@@ -366,6 +404,14 @@ export function onMessage(
         data.viewStore.setEntry(member, dataR.f);
         const target = wcli.member(member).view(dataR.f);
         data.eventEmitter.emit(eventType.viewEntry(target), target);
+        break;
+      }
+      case Message.kind.imageEntry: {
+        const dataR = msg as Message.Entry;
+        const member = data.getMemberNameFromId(dataR.m);
+        data.imageStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).image(dataR.f);
+        data.eventEmitter.emit(eventType.imageEntry(target), target);
         break;
       }
       case Message.kind.funcInfo: {
