@@ -1,3 +1,7 @@
+## [1.2.0] - 2023-12-26
+### Added
+* Image, ImageFrame, ImageReq (#54)
+
 ## [1.1.1] - 2023-12-23
 ### Fixed
 * ブラウザーでprocess is not definedエラーになるのを修正 (#62)
