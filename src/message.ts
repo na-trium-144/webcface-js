@@ -28,18 +28,22 @@ export const kind = {
   text: 1,
   view: 3,
   image: 5,
+  robotModel: 6,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
   imageEntry: 25,
+  robotModelEntry: 26,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
   imageReq: 45,
+  robotModelReq: 46,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
   imageRes: 65,
+  robotModelRes: 66,
   syncInit: 80,
   call: 81,
   callResponse: 82,
@@ -102,13 +106,32 @@ export interface Image {
   p: number;
 }
 
+export interface RobotLink {
+  n: string;
+  jn: string;
+  jp: number;
+  jt: number;
+  js: number[];
+  jr: number[];
+  ja: number;
+  gt: number;
+  gs: number[];
+  gr: number[];
+  gp: number[];
+  c: number;
+}
+export interface RobotModel {
+  kind: 6;
+  f: string;
+  d: RobotLink[];
+}
 export interface Entry {
-  kind: 20 | 21 | 23 | 25;
+  kind: 20 | 21 | 23 | 25 | 26;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 40 | 41 | 43;
+  kind: 40 | 41 | 43 | 46;
   M: string;
   f: string;
   i: number;
@@ -152,6 +175,12 @@ export interface ImageRes {
   h: number;
   l: number;
   p: number;
+}
+export interface RobotModelRes {
+  kind: 66;
+  i: number;
+  f: string;
+  d: RobotLink[];
 }
 export interface SyncInit {
   kind: 80;
@@ -241,6 +270,7 @@ export type AnyMessage =
   | Text
   | View
   | Image
+  | RobotModel
   | Req
   | ImageReq
   | Entry
@@ -248,6 +278,7 @@ export type AnyMessage =
   | TextRes
   | ViewRes
   | ImageRes
+  | RobotModelRes
   | SyncInit
   | Sync
   | SvrVersion
