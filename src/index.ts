@@ -18,6 +18,13 @@ export {
   ImageReq,
   Image,
 } from "./image.js";
+export {
+  RobotModel,
+  RobotLink,
+  RobotJoint,
+  RobotGeometry,
+  Transform,
+} from "./robotModel.js";
 export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";
