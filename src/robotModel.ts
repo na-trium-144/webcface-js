@@ -36,22 +36,24 @@ export class RobotLink {
     this.color = color;
   }
   static fromMessage(msg: Message.RobotLink, linkNames: string[]) {
-    this.name = msg.n;
-    this.joint = {
-      name: msg.jn,
-      paremtName: linkNames[msg.jp] || "",
-      type: msg.jt,
-      origin: { pos: msg.js, rot: msg.jr },
-      angle: msg.ja,
-    };
-    this.geometry = {
-      type: msg.gt,
-      origin: { pos: msg.gs, rot: msg.gr },
-      properties: msg.gp,
-    };
-    this.color = msg.c;
+    return new RobotLink(
+      msg.n,
+      {
+        name: msg.jn,
+        parentName: linkNames[msg.jp] || "",
+        type: msg.jt,
+        origin: { pos: msg.js, rot: msg.jr },
+        angle: msg.ja,
+      },
+      {
+        type: msg.gt,
+        origin: { pos: msg.gs, rot: msg.gr },
+        properties: msg.gp,
+      },
+      msg.c
+    );
   }
-  toMessage(linkNames: string[]) {
+  toMessage(linkNames: string[]): Message.RobotLink {
     return {
       n: this.name,
       jn: this.joint.name,
@@ -123,13 +125,17 @@ export class RobotModel extends EventTarget<RobotModel> {
       this.member_,
       this.field_
     );
-    const retLinks: RobotLink[] = [];
-    const linkNames: string[] = [];
-    for (const ln of msgLinks) {
-      retLinks.push(RobotLink.fromMessage(ln, linkNames));
-      linkNames.push(ln.n);
+    if (msgLinks === null) {
+      return null;
+    } else {
+      const retLinks: RobotLink[] = [];
+      const linkNames: string[] = [];
+      for (const ln of msgLinks) {
+        retLinks.push(RobotLink.fromMessage(ln, linkNames));
+        linkNames.push(ln.n);
+      }
+      return retLinks;
     }
-    return retLinks;
   }
   /**
    * modelを返す
