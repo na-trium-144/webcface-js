@@ -5,7 +5,7 @@ import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
-import { RobotModel, RobotLink } from "../src/robotModel.js";
+import { RobotModel, RobotLink, Transform } from "../src/robotModel.js";
 import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
@@ -471,12 +471,12 @@ describe("Client Tests", function () {
               name: "a",
               parentName: "",
               type: 0,
-              origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+              origin: new Transform([0, 0, 0], [0, 0, 0]),
               angle: 0,
             },
             {
               type: 0,
-              origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+              origin: new Transform([0, 0, 0], [0, 0, 0]),
               properties: [],
             },
             0
@@ -680,12 +680,12 @@ describe("Client Tests", function () {
                 name: "a",
                 parentName: "",
                 type: 0,
-                origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                origin: new Transform([0, 0, 0], [0, 0, 0]),
                 angle: 0,
               },
               {
                 type: 0,
-                origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                origin: new Transform([0, 0, 0], [0, 0, 0]),
                 properties: [],
               },
               0

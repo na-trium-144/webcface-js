@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { ClientData } from "../src/clientData.js";
 import { Field } from "../src/field.js";
-import { RobotModel, RobotLink } from "../src/robotModel.js";
+import { RobotModel, RobotLink, Transform } from "../src/robotModel.js";
 import { Member } from "../src/member.js";
 
 describe("RobotModel Tests", function () {
@@ -41,12 +41,12 @@ describe("RobotModel Tests", function () {
                   name: "a",
                   parentName: "",
                   type: 0,
-                  origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                  origin: new Transform([0, 0, 0], [0, 0, 0]),
                   angle: 0,
                 },
                 {
                   type: 0,
-                  origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                  origin: new Transform([0, 0, 0], [0, 0, 0]),
                   properties: [],
                 },
                 0
@@ -84,12 +84,12 @@ describe("RobotModel Tests", function () {
                   name: "a",
                   parentName: "",
                   type: 0,
-                  origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                  origin: new Transform([0, 0, 0], [0, 0, 0]),
                   angle: 0,
                 },
                 {
                   type: 0,
-                  origin: { pos: [0, 0, 0], rot: [0, 0, 0] },
+                  origin: new Transform([0, 0, 0], [0, 0, 0]),
                   properties: [],
                 },
                 0
