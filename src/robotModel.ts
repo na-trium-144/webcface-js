@@ -3,11 +3,11 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
 
-export class Transform {
-  private _pos: number[];
-  private _rot: number[];
+export interface Transform {
+  pos: number[];
+  rot: number[];
 }
-export class RobotGeometry{
+export interface RobotGeometry {
   type: number;
   origin: Transform;
   properties: number[];
@@ -24,11 +24,48 @@ export class RobotLink {
   joint: RobotJoint;
   geometry: RobotGeometry;
   color: number;
-  static fromMessage(msg: Message.RobotLink, linkNames: string[]){
-
+  constructor(
+    name: string,
+    joint: RobotJoint,
+    geometry: RobotGeometry,
+    color: number
+  ) {
+    this.name = name;
+    this.joint = joint;
+    this.geometry = geometry;
+    this.color = color;
   }
-  toMessage(linkNames: string[]){
-
+  static fromMessage(msg: Message.RobotLink, linkNames: string[]) {
+    this.name = msg.n;
+    this.joint = {
+      name: msg.jn,
+      paremtName: linkNames[msg.jp] || "",
+      type: msg.jt,
+      origin: { pos: msg.js, rot: msg.jr },
+      angle: msg.ja,
+    };
+    this.geometry = {
+      type: msg.gt,
+      origin: { pos: msg.gs, rot: msg.gr },
+      properties: msg.gp,
+    };
+    this.color = msg.c;
+  }
+  toMessage(linkNames: string[]) {
+    return {
+      n: this.name,
+      jn: this.joint.name,
+      jp: linkNames.indexOf(this.joint.parentName),
+      jt: this.joint.type,
+      js: this.joint.origin.pos,
+      jr: this.joint.origin.rot,
+      ja: this.joint.angle,
+      gt: this.geometry.type,
+      gs: this.geometry.origin.pos,
+      gr: this.geometry.origin.rot,
+      gp: this.geometry.properties,
+      c: this.color,
+    };
   }
 }
 /**
@@ -62,7 +99,10 @@ export class RobotModel extends EventTarget<RobotModel> {
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().robotModelStore.addReq(this.member_, this.field_);
+    const reqId = this.dataCheck().robotModelStore.addReq(
+      this.member_,
+      this.field_
+    );
     if (reqId > 0) {
       this.dataCheck().pushSend([
         {
@@ -79,10 +119,13 @@ export class RobotModel extends EventTarget<RobotModel> {
    */
   tryGet() {
     this.request();
-    const msgLinks = this.dataCheck().robotModelStore.getRecv(this.member_, this.field_);
+    const msgLinks = this.dataCheck().robotModelStore.getRecv(
+      this.member_,
+      this.field_
+    );
     const retLinks: RobotLink[] = [];
     const linkNames: string[] = [];
-    for(const ln of msgLinks){
+    for (const ln of msgLinks) {
       retLinks.push(RobotLink.fromMessage(ln, linkNames));
       linkNames.push(ln.n);
     }

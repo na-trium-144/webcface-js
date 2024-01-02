@@ -32,7 +32,9 @@ export function reconnect(wcli: Client, data: ClientData) {
       data.ws = ws;
       data.consoleLogger.info("connected");
       ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
-        data.consoleLogger.trace(`onMessage ${(event.data as ArrayBuffer).byteLength}`);
+        data.consoleLogger.trace(
+          `onMessage ${(event.data as ArrayBuffer).byteLength}`
+        );
         try {
           onMessage(wcli, data, event);
         } catch (e) {
@@ -86,6 +88,11 @@ export function syncDataFirst(data: ClientData) {
       msg.push({ kind: Message.kind.textReq, M: k, f: k2, i: v2 });
     }
   }
+  for (const [k, v] of data.robotModelStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      msg.push({ kind: Message.kind.robotModelReq, M: k, f: k2, i: v2 });
+    }
+  }
   for (const [k, v] of data.viewStore.transferReq().entries()) {
     for (const [k2, v2] of v.entries()) {
       msg.push({ kind: Message.kind.viewReq, M: k, f: k2, i: v2 });
@@ -131,6 +138,9 @@ export function syncData(data: ClientData, isFirst: boolean) {
   }
   for (const [k, v] of data.textStore.transferSend(isFirst).entries()) {
     msg.push({ kind: Message.kind.text, f: k, d: v });
+  }
+  for (const [k, v] of data.robotModelStore.transferSend(isFirst).entries()) {
+    msg.push({ kind: Message.kind.robotModel, f: k, d: v });
   }
   const viewPrev = data.viewStore.getSendPrev(isFirst);
   for (const [k, v] of data.viewStore.transferSend(isFirst).entries()) {
@@ -236,6 +246,14 @@ export function onMessage(
         data.textStore.setRecv(member, field, dataR.d);
         const target = wcli.member(member).text(field);
         data.eventEmitter.emit(eventType.textChange(target), target);
+        break;
+      }
+      case Message.kind.robotModelRes: {
+        const dataR = msg as Message.RobotModelRes;
+        const [member, field] = data.robotModelStore.getReq(dataR.i, dataR.f);
+        data.robotModelStore.setRecv(member, field, dataR.d);
+        const target = wcli.member(member).robotModel(field);
+        data.eventEmitter.emit(eventType.robotModelChange(target), target);
         break;
       }
       case Message.kind.viewRes: {
@@ -396,6 +414,14 @@ export function onMessage(
         data.textStore.setEntry(member, dataR.f);
         const target = wcli.member(member).text(dataR.f);
         data.eventEmitter.emit(eventType.textEntry(target), target);
+        break;
+      }
+      case Message.kind.robotModelEntry: {
+        const dataR = msg as Message.Entry;
+        const member = data.getMemberNameFromId(dataR.m);
+        data.robotModelStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).robotModel(dataR.f);
+        data.eventEmitter.emit(eventType.robotModelEntry(target), target);
         break;
       }
       case Message.kind.viewEntry: {

@@ -5,6 +5,7 @@ import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
 import { View } from "./view.js";
 import { Image } from "./image.js";
 import { Field } from "./field.js";
+import { RobotModel } from "./robotModel.js";
 import { EventTarget, eventType } from "./event.js";
 import * as Message from "./message.js";
 
@@ -38,6 +39,12 @@ export class Member extends Field {
    */
   text(name: string) {
     return new Text(this, name);
+  }
+  /**
+   * RobotModelを参照する
+   */
+  robotModel(name: string) {
+    return new RobotModel(this, name);
   }
   /**
    * Viewを参照する
@@ -95,6 +102,14 @@ export class Member extends Field {
       .map((n) => this.text(n));
   }
   /**
+   * このMemberが公開しているRobotModelのリストを返す
+   */
+  robotModels() {
+    return this.dataCheck()
+      .robotModelStore.getEntry(this.member_)
+      .map((n) => this.robotModel(n));
+  }
+  /**
    * このMemberが公開しているViewのリストを返す
    */
   views() {
@@ -138,6 +153,18 @@ export class Member extends Field {
   get onTextEntry() {
     return new EventTarget<Text>(
       eventType.textEntry(this),
+      this.data,
+      this.member_
+    );
+  }
+  /**
+   * RobotModelが追加された時のイベント
+   *
+   * コールバックの型は (target: RobotModel) => void
+   */
+  get onRobotModelEntry() {
+    return new EventTarget<RobotModel>(
+      eventType.robotModelEntry(this),
       this.data,
       this.member_
     );
