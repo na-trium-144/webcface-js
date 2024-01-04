@@ -2,6 +2,7 @@ import { Member } from "./member.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
+import isEqual from "lodash.isequal";
 
 export type Vec3 = [number, number, number];
 export type Vec4 = [number, number, number, number];
@@ -35,7 +36,7 @@ function rotEulerToMat(e: Vec3): Mat3 {
     [
       c[0] * c[1],
       c[0] * s[1] * s[2] - s[0] * c[2],
-      c[0] * s[1] * c[2] - s[0] * s[2],
+      c[0] * s[1] * c[2] + s[0] * s[2],
     ],
     [
       s[0] * c[1],
@@ -45,42 +46,93 @@ function rotEulerToMat(e: Vec3): Mat3 {
     [-s[1], c[1] * s[2], c[1] * c[2]],
   ];
 }
+/**
+ * 座標変換
+ *
+ * 内部ではx, y, zの座標とz-y-x系のオイラー角で保持している。
+ */
 export class Transform {
   _pos: Vec3 = [0, 0, 0];
   _rot: Vec3 = [0, 0, 0];
-  constructor(pos: number[], rot: number[] | number[][]) {
+  /**
+   * @param pos 座標[x, y, z] または 4x4の同次変換行列
+   * @param rot z-y-xのオイラー角、または3x3の回転行列
+   * posに同次変換行列を渡した場合rotは不要
+   */
+  constructor(pos: number[] | number[][], rot?: number[] | number[][]) {
     this.pos = pos;
-    this.rot = rot;
+    if (rot !== undefined) {
+      this.rot = rot;
+    }
   }
-  get pos() {
+  /**
+   * 平行移動(x, y, z)
+   */
+  get pos(): Vec3 {
     return this._pos;
   }
-  set pos(pos: number[]) {
-    if (pos.length == 3) {
+  /**
+   * @param pos 座標[x, y, z] または 4x4の同次変換行列
+   */
+  set pos(pos: number[] | number[][]) {
+    if (
+      pos.length == 4 &&
+      !pos.map((r) => Array.isArray(r) && r.length == 4).includes(false)
+    ) {
+      this.tfMatrix = pos as number[][];
+    } else if (pos.length == 3) {
       this._pos = pos.slice() as Vec3;
     } else {
       throw Error("invalid pos format for Transform");
     }
   }
+  /**
+   * 回転をz-y-x回転のオイラー角で表す。
+   * @return [z, y, x]
+   */
   get rot(): Vec3 {
     return this._rot;
   }
+  /**
+   * @param rot z-y-xのオイラー角、または3x3の回転行列
+   */
   set rot(rot: number[] | number[][]) {
     if (
-      Array.isArray(rot) &&
       rot.length == 3 &&
       !rot.map((r) => Array.isArray(r) && r.length == 3).includes(false)
     ) {
-      this._rot = rotMatToEuler(rot as Mat3);
-    } else if (Array.isArray(rot) && rot.length == 3) {
+      this.rotMatrix = rot as number[][];
+    } else if (rot.length == 3) {
       this._rot = rot.slice() as Vec3;
     } else {
       throw Error("invalid rot format for Transform");
     }
   }
+  /**
+   * 回転行列を返す。
+   * @return 3x3の行列 (numberの2次元配列)
+   */
   get rotMatrix(): Mat3 {
     return rotEulerToMat(this.rot);
   }
+  /**
+   * 回転行列で回転を指定。
+   * @param rot 3x3の行列 (numberの2次元配列)
+   */
+  set rotMatrix(rot: number[][]) {
+    if (
+      rot.length == 3 &&
+      !rot.map((r) => Array.isArray(r) && r.length == 3).includes(false)
+    ) {
+      this.rot = rotMatToEuler(rot as Mat3);
+    } else {
+      throw Error("invalid rot format for Transform");
+    }
+  }
+  /**
+   * 同次変換行列を返す。
+   * @return 4x4の行列 (numberの2次元配列)
+   */
   get tfMatrix(): Mat4 {
     const r = this.rotMatrix;
     return [
@@ -89,6 +141,22 @@ export class Transform {
       r[2].concat(this.pos[2]) as Vec4,
       [0, 0, 0, 1],
     ];
+  }
+  /**
+   * 同次変換行列で座標と回転を指定。
+   * @param m 4x4の行列 (numberの2次元配列)
+   */
+  set tfMatrix(pos: number[][]) {
+    if (
+      pos.length == 4 &&
+      !pos.map((r) => Array.isArray(r) && r.length == 4).includes(false) &&
+      isEqual(pos[3], [0, 0, 0, 1])
+    ) {
+      this.pos = pos.slice(0, 3).map((r) => r[3]);
+      this.rotMatrix = pos.slice(0, 3).map((r) => r.slice(0, 3));
+    } else {
+      throw Error("invalid matrix format for Transform");
+    }
   }
 }
 export interface RobotGeometry {
