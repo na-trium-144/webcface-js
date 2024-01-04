@@ -3,6 +3,7 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
 import isEqual from "lodash.isequal";
+import { multiply } from "mathjs";
 
 export type Vec3 = [number, number, number];
 export type Vec4 = [number, number, number, number];
@@ -59,8 +60,10 @@ export class Transform {
    * @param rot z-y-xのオイラー角、または3x3の回転行列
    * posに同次変換行列を渡した場合rotは不要
    */
-  constructor(pos: number[] | number[][], rot?: number[] | number[][]) {
-    this.pos = pos;
+  constructor(pos?: number[] | number[][], rot?: number[] | number[][]) {
+    if (pos !== undefined) {
+      this.pos = pos;
+    }
     if (rot !== undefined) {
       this.rot = rot;
     }
@@ -161,13 +164,22 @@ export class Transform {
 }
 export interface RobotGeometry {
   type: number;
+  /**
+   * このリンクの座標系でgeometryの基準座標
+   */
   origin: Transform;
   properties: number[];
 }
 export interface RobotJoint {
   name: string;
+  /**
+   * 親linkの名前
+   */
   parentName: string;
   type: number;
+  /**
+   * 親linkの座標系でこのjointの位置(=このlinkの座標系の原点)
+   */
   origin: Transform;
   angle: number;
 }
@@ -176,23 +188,48 @@ export class RobotLink {
   joint: RobotJoint;
   geometry: RobotGeometry;
   color: number;
+  private model?: RobotLink[];
   constructor(
     name: string,
     joint: RobotJoint,
     geometry: RobotGeometry,
-    color: number
+    color: number,
+    model?: RobotLink[]
   ) {
     this.name = name;
     this.joint = joint;
     this.geometry = geometry;
     this.color = color;
+    this.model = model;
   }
-  static fromMessage(msg: Message.RobotLink, linkNames: string[]) {
+  get isBase() {
+    return this.model === undefined || this.model[0] === this;
+  }
+  /**
+   * ベースリンク座標系でのこのlinkの位置
+   */
+  get originFromBase(): Transform {
+    if (!this.isBase) {
+      const parentLink = this.model?.find(
+        (ln) => ln.name === this.joint.parentName
+      );
+      if (parentLink !== undefined) {
+        return new Transform(
+          multiply(
+            parentLink.originFromBase.tfMatrix,
+            this.joint.origin.tfMatrix
+          )
+        );
+      }
+    }
+    return new Transform();
+  }
+  static fromMessage(msg: Message.RobotLink, model: RobotLink[]) {
     return new RobotLink(
       msg.n,
       {
         name: msg.jn,
-        parentName: linkNames[msg.jp] || "",
+        parentName: model[msg.jp]?.name || "",
         type: msg.jt,
         origin: new Transform(msg.js, msg.jr),
         angle: msg.ja,
@@ -202,7 +239,8 @@ export class RobotLink {
         origin: new Transform(msg.gs, msg.gr),
         properties: msg.gp,
       },
-      msg.c
+      msg.c,
+      model
     );
   }
   toMessage(linkNames: string[]): Message.RobotLink {
@@ -281,10 +319,8 @@ export class RobotModel extends EventTarget<RobotModel> {
       return null;
     } else {
       const retLinks: RobotLink[] = [];
-      const linkNames: string[] = [];
       for (const ln of msgLinks) {
-        retLinks.push(RobotLink.fromMessage(ln, linkNames));
-        linkNames.push(ln.n);
+        retLinks.push(RobotLink.fromMessage(ln, retLinks));
       }
       return retLinks;
     }
