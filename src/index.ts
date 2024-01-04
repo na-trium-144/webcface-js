@@ -23,6 +23,7 @@ export {
   RobotLink,
   RobotJoint,
   RobotGeometry,
+  robotGeometryType,
   Transform,
 } from "./robotModel.js";
 export { LogLine } from "./logger.js";

@@ -162,6 +162,13 @@ export class Transform {
     }
   }
 }
+
+export const robotGeometryType = {
+  none: 0,
+  line: 1,
+  plane: 2
+} as const;
+
 export class RobotGeometry {
   type: number;
   /**
@@ -177,6 +184,13 @@ export class RobotGeometry {
   get asLine(): RobotGeometry & { end: Transform } {
     if (this.properties.length === 3) {
       return { ...this, end: new Transform(this.properties) };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asPlane(): RobotGeometry & { width: number, height: number } {
+    if(this.properties.length === 2){
+      return {...this, width: this.properties[0], height: this.properties[1]}
     } else {
       throw new Error("number of properties does not match");
     }
