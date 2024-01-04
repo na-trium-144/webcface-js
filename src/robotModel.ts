@@ -162,13 +162,25 @@ export class Transform {
     }
   }
 }
-export interface RobotGeometry {
+export class RobotGeometry {
   type: number;
   /**
    * このリンクの座標系でgeometryの基準座標
    */
   origin: Transform;
   properties: number[];
+  constructor(type: number, origin: Transform, properties: number[]) {
+    this.type = type;
+    this.origin = origin;
+    this.properties = properties;
+  }
+  get asLine(): RobotGeometry & { end: Transform } {
+    if (this.properties.length === 3) {
+      return { ...this, end: new Transform(this.properties) };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
 }
 export interface RobotJoint {
   name: string;
@@ -234,11 +246,7 @@ export class RobotLink {
         origin: new Transform(msg.js, msg.jr),
         angle: msg.ja,
       },
-      {
-        type: msg.gt,
-        origin: new Transform(msg.gs, msg.gr),
-        properties: msg.gp,
-      },
+      new RobotGeometry(msg.gt, new Transform(msg.gs, msg.gr), msg.gp),
       msg.c,
       model
     );
