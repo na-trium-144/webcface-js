@@ -318,7 +318,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").values(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").values(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -343,7 +354,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").texts(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").texts(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -368,7 +390,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").robotModels(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").robotModels(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -393,7 +426,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").views(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").views(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -435,7 +479,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").funcs(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").funcs(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
