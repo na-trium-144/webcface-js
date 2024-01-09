@@ -15,6 +15,7 @@ export class ClientData {
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
   imageStore: SyncDataStore2<ImageFrame, ImageReq>;
   robotModelStore: SyncDataStore2<Message.RobotLink[]>;
+  canvas3DStore: SyncDataStore2<Message.Canvas3DComponent[]>;
   logStore: SyncDataStore1<LogLine[]>;
   logSentLines = 0;
   syncTimeStore: SyncDataStore1<Date>;
@@ -51,6 +52,7 @@ export class ClientData {
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
     this.imageStore = new SyncDataStore2<ImageFrame, ImageReq>(name);
     this.robotModelStore = new SyncDataStore2<Message.RobotLink[]>(name);
+    this.canvas3DStore = new SyncDataStore2<Message.Canvas3DComponent[]>(name);
     this.logStore = new SyncDataStore1<LogLine[]>(name);
     this.logStore.setRecv(name, []);
     this.syncTimeStore = new SyncDataStore1<Date>(name);

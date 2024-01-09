@@ -11,6 +11,7 @@ export const eventType = {
   funcEntry: (b: FieldBase) => JSON.stringify(["funcEntry", b.member_]),
   viewEntry: (b: FieldBase) => JSON.stringify(["viewEntry", b.member_]),
   imageEntry: (b: FieldBase) => JSON.stringify(["imageEntry", b.member_]),
+  canvas3DEntry: (b: FieldBase) => JSON.stringify(["canvas3DEntry", b.member_]),
   robotModelEntry: (b: FieldBase) =>
     JSON.stringify(["robotModelEntry", b.member_]),
   valueChange: (b: FieldBase) =>
@@ -23,6 +24,8 @@ export const eventType = {
     JSON.stringify(["imageChange", b.member_, b.field_]),
   robotModelChange: (b: FieldBase) =>
     JSON.stringify(["robotModelChange", b.member_, b.field_]),
+  canvas3DChange: (b: FieldBase) =>
+    JSON.stringify(["canvas3DChange", b.member_, b.field_]),
   logAppend: (b: FieldBase) => JSON.stringify(["logAppend", b.member_]),
 };
 

@@ -29,21 +29,25 @@ export const kind = {
   view: 3,
   image: 5,
   robotModel: 6,
+  canvas3D: 7,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
   imageEntry: 25,
   robotModelEntry: 26,
+  canvas3DEntry: 27,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
   imageReq: 45,
   robotModelReq: 46,
+  canvas3DReq: 47,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
   imageRes: 65,
   robotModelRes: 66,
+  canvas3DRes: 67,
   syncInit: 80,
   call: 81,
   callResponse: 82,
@@ -95,6 +99,26 @@ export interface View {
   d: ViewComponentsDiff;
   l: number;
 }
+export type Canvas3DComponentsDiff = {
+  [key in string]: Canvas3DComponent;
+};
+export interface Canvas3DComponent {
+  t: number;
+  op: number[];
+  or: number[];
+  c: number;
+  gt: number | null;
+  gp: number[];
+  fm: string | null;
+  ff: string | null;
+  a: { [key in string]: number };
+}
+export interface Canvas3D {
+  kind: 7;
+  f: string;
+  d: Canvas3DComponentsDiff;
+  l: number;
+}
 
 export interface Image {
   kind: 5;
@@ -115,8 +139,6 @@ export interface RobotLink {
   jr: number[];
   ja: number;
   gt: number;
-  gs: number[];
-  gr: number[];
   gp: number[];
   c: number;
 }
@@ -126,12 +148,12 @@ export interface RobotModel {
   d: RobotLink[];
 }
 export interface Entry {
-  kind: 20 | 21 | 23 | 25 | 26;
+  kind: 20 | 21 | 23 | 25 | 26 | 27;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 40 | 41 | 43 | 46;
+  kind: 40 | 41 | 43 | 46 | 47;
   M: string;
   f: string;
   i: number;
@@ -164,6 +186,13 @@ export interface ViewRes {
   i: number;
   f: string;
   d: ViewComponentsDiff;
+  l: number;
+}
+export interface Canvas3DRes {
+  kind: 67;
+  i: number;
+  f: string;
+  d: Canvas3DComponentsDiff;
   l: number;
 }
 export interface ImageRes {
@@ -271,6 +300,7 @@ export type AnyMessage =
   | View
   | Image
   | RobotModel
+  | Canvas3D
   | Req
   | ImageReq
   | Entry
@@ -279,6 +309,7 @@ export type AnyMessage =
   | ViewRes
   | ImageRes
   | RobotModelRes
+  | Canvas3DRes
   | SyncInit
   | Sync
   | SvrVersion

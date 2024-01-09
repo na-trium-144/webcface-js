@@ -4,9 +4,9 @@ import { Field } from "../src/field.js";
 import {
   RobotModel,
   RobotLink,
-  Transform,
-  RobotGeometry,
 } from "../src/robotModel.js";
+import { Transform } from "../src/transform.js";
+import { Geometry } from "../src/canvas3d.js";
 import { Member } from "../src/member.js";
 
 describe("RobotModel Tests", function () {
@@ -49,7 +49,7 @@ describe("RobotModel Tests", function () {
                   origin: new Transform([0, 0, 0], [0, 0, 0]),
                   angle: 0,
                 },
-                new RobotGeometry(0, new Transform([0, 0, 0], [0, 0, 0]), []),
+                new Geometry(0, []),
                 0
               ).toMessage([]),
             ],
@@ -88,7 +88,7 @@ describe("RobotModel Tests", function () {
                   origin: new Transform([0, 0, 0], [0, 0, 0]),
                   angle: 0,
                 },
-                new RobotGeometry(0, new Transform([0, 0, 0], [0, 0, 0]), []),
+                new Geometry(0, []),
                 0
               ).toMessage([]),
             ],

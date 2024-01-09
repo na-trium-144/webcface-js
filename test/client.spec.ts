@@ -5,12 +5,9 @@ import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
-import {
-  RobotModel,
-  RobotLink,
-  Transform,
-  RobotGeometry,
-} from "../src/robotModel.js";
+import { RobotModel, RobotLink } from "../src/robotModel.js";
+import { Transform } from "../src/transform.js";
+import { Geometry } from "../src/canvas3d.js";
 import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
@@ -479,7 +476,7 @@ describe("Client Tests", function () {
               origin: new Transform([0, 0, 0], [0, 0, 0]),
               angle: 0,
             },
-            new RobotGeometry(0, new Transform([0, 0, 0], [0, 0, 0]), []),
+            new Geometry(0, []),
             0
           ).toMessage([]),
         ]);
@@ -684,7 +681,7 @@ describe("Client Tests", function () {
                 origin: new Transform([0, 0, 0], [0, 0, 0]),
                 angle: 0,
               },
-              new RobotGeometry(0, new Transform([0, 0, 0], [0, 0, 0]), []),
+              new Geometry(0, []),
               0
             ).toMessage([]),
           ];
