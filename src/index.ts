@@ -19,7 +19,7 @@ export {
   Image,
 } from "./image.js";
 export { RobotModel, RobotLink, RobotJoint } from "./robotModel.js";
-export { Transform } from "./transform.js";
+export { Transform, Point } from "./transform.js";
 export {
   geometryType,
   geometries,

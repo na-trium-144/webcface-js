@@ -1,4 +1,4 @@
-import { Transform } from "./transform.js";
+import { Transform, Point } from "./transform.js";
 import { FieldBase, Field } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
@@ -10,6 +10,10 @@ export const geometryType = {
   none: 0,
   line: 1,
   plane: 2,
+  box: 3,
+  circle: 4,
+  cylinder: 5,
+  sphere: 6,
 } as const;
 
 export class Geometry {
@@ -19,12 +23,12 @@ export class Geometry {
     this.type = type;
     this.properties = properties;
   }
-  get asLine(): Geometry & { begin: Transform; end: Transform } {
+  get asLine(): Geometry & { begin: Point; end: Point } {
     if (this.properties.length === 6) {
       return {
         ...this,
-        begin: new Transform(this.properties.slice(0, 3)),
-        end: new Transform(this.properties.slice(3, 6)),
+        begin: new Point(this.properties.slice(0, 3)),
+        end: new Point(this.properties.slice(3, 6)),
       };
     } else {
       throw new Error("number of properties does not match");
@@ -38,9 +42,73 @@ export class Geometry {
     if (this.properties.length === 8) {
       return {
         ...this,
-        origin: new Transform(this.properties.slice(0, 6)),
-        width: this.properties[7],
-        height: this.properties[8],
+        origin: new Transform(
+          this.properties.slice(0, 3),
+          this.properties.slice(3, 6)
+        ),
+        width: this.properties[6],
+        height: this.properties[7],
+      };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asBox(): Geometry & { vertex1: Point; vertex2: Point } {
+    if (this.properties.length === 6) {
+      return {
+        ...this,
+        vertex1: new Point(this.properties.slice(0, 3)),
+        vertex2: new Point(this.properties.slice(3, 6)),
+      };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asCircle(): Geometry & {
+    origin: Transform;
+    radius: number;
+  } {
+    if (this.properties.length === 7) {
+      return {
+        ...this,
+        origin: new Transform(
+          this.properties.slice(0, 3),
+          this.properties.slice(3, 6)
+        ),
+        radius: this.properties[6],
+      };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asCylinder(): Geometry & {
+    origin: Transform;
+    radius: number;
+    length: number;
+  } {
+    if (this.properties.length === 8) {
+      return {
+        ...this,
+        origin: new Transform(
+          this.properties.slice(0, 3),
+          this.properties.slice(3, 6)
+        ),
+        radius: this.properties[6],
+        length: this.properties[7],
+      };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asSphere(): Geometry & {
+    origin: Point;
+    radius: number;
+  } {
+    if (this.properties.length === 4) {
+      return {
+        ...this,
+        origin: new Point(this.properties.slice(0, 3)),
+        radius: this.properties[3],
       };
     } else {
       throw new Error("number of properties does not match");
@@ -49,7 +117,7 @@ export class Geometry {
 }
 
 export const geometries = {
-  line: (begin: Transform, end: Transform) =>
+  line: (begin: Point, end: Point) =>
     new Geometry(geometryType.line, [
       begin.pos[0],
       begin.pos[1],
@@ -68,6 +136,43 @@ export const geometries = {
       origin.rot[2],
       width,
       height,
+    ]),
+  box: (vertex1: Point, vertex2: Point) =>
+    new Geometry(geometryType.box, [
+      vertex1.pos[0],
+      vertex1.pos[1],
+      vertex1.pos[2],
+      vertex2.pos[0],
+      vertex2.pos[1],
+      vertex2.pos[2],
+    ]),
+  circle: (origin: Transform, radius: number) =>
+    new Geometry(geometryType.circle, [
+      origin.pos[0],
+      origin.pos[1],
+      origin.pos[2],
+      origin.rot[0],
+      origin.rot[1],
+      origin.rot[2],
+      radius,
+    ]),
+  cylinder: (origin: Transform, radius: number, length: number) =>
+    new Geometry(geometryType.cylinder, [
+      origin.pos[0],
+      origin.pos[1],
+      origin.pos[2],
+      origin.rot[0],
+      origin.rot[1],
+      origin.rot[2],
+      radius,
+      length,
+    ]),
+  sphere: (origin: Point, radius: number) =>
+    new Geometry(geometryType.sphere, [
+      origin.pos[0],
+      origin.pos[1],
+      origin.pos[2],
+      radius,
     ]),
 };
 

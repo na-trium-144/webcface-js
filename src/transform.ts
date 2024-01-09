@@ -43,19 +43,49 @@ function rotEulerToMat(e: Vec3): Mat3 {
   ];
 }
 /**
+ * x,y,zの3次元座標
+ */
+export class Point {
+  protected _pos: Vec3 = [0, 0, 0];
+  /**
+   * @param pos 座標[x, y, z]
+   */
+  constructor(pos?: number[]) {
+    if (pos != undefined) {
+      this.pos = pos;
+    }
+  }
+  /**
+   * 平行移動(x, y, z)
+   */
+  get pos(): Vec3 {
+    return this._pos;
+  }
+  /**
+   * @param pos 座標[x, y, z]
+   */
+  set pos(pos: number[]) {
+    if (pos.length == 3) {
+      this._pos = pos.slice() as Vec3;
+    } else {
+      throw Error("invalid pos format for Point");
+    }
+  }
+}
+/**
  * 座標変換
  *
  * 内部ではx, y, zの座標とz-y-x系のオイラー角で保持している。
  */
-export class Transform {
-  _pos: Vec3 = [0, 0, 0];
-  _rot: Vec3 = [0, 0, 0];
+export class Transform extends Point {
+  private _rot: Vec3 = [0, 0, 0];
   /**
    * @param pos 座標[x, y, z] または 4x4の同次変換行列
    * @param rot z-y-xのオイラー角、または3x3の回転行列
    * posに同次変換行列を渡した場合rotは不要
    */
   constructor(pos?: number[] | number[][], rot?: number[] | number[][]) {
+    super();
     if (pos !== undefined) {
       this.pos = pos;
     }
