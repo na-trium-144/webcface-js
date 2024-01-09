@@ -96,6 +96,30 @@ export class Canvas3DComponent {
     this._fieldBase = fieldBase;
     this._angles = angles;
   }
+  get type() {
+    return this._type;
+  }
+  get origin() {
+    return this._origin;
+  }
+  get color() {
+    return this._color;
+  }
+  get geometry(): Geometry {
+    return this._geometry || new Geometry(0, []);
+  }
+  get robotModel() {
+    if (this._fieldBase != null) {
+      return new RobotModel(
+        new Field(this.data, this._fieldBase.member_, this._fieldBase.field_)
+      );
+    } else {
+      throw new Error("robotModel is null");
+    }
+  }
+  get angles() {
+    return this._angles;
+  }
   static fromMessage(data: ClientData | null, msg: Message.Canvas3DComponent) {
     const a = new Map<number, number>();
     for (const [k, v] of Object.entries(msg.a)) {
