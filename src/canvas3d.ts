@@ -223,7 +223,14 @@ export class Canvas3DComponent {
     }
   }
   get angles() {
-    return this._angles;
+    const anglesWithName = new Map<string, number>();
+    const model = this.robotModel.get();
+    for (const [li, v] of this._angles.entries()) {
+      if (li >= 0 && li < model.length) {
+        anglesWithName.set(model[li].joint.name, v);
+      }
+    }
+    return anglesWithName;
   }
   static fromMessage(data: ClientData | null, msg: Message.Canvas3DComponent) {
     const a = new Map<number, number>();
