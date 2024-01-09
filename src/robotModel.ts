@@ -6,6 +6,11 @@ import { multiply } from "mathjs";
 import { Transform } from "./transform.js";
 import { Geometry } from "./canvas3d.js";
 
+export const robotJointType = {
+  fixed: 0,
+  rotational: 1,
+  prismatic: 2,
+} as const;
 export interface RobotJoint {
   name: string;
   /**

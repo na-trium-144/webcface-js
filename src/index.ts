@@ -18,7 +18,12 @@ export {
   ImageReq,
   Image,
 } from "./image.js";
-export { RobotModel, RobotLink, RobotJoint } from "./robotModel.js";
+export {
+  RobotModel,
+  RobotLink,
+  RobotJoint,
+  robotJointType,
+} from "./robotModel.js";
 export { Transform, Point } from "./transform.js";
 export {
   geometryType,
