@@ -39,11 +39,8 @@ export const viewColor = {
   // rose : 24,
 } as const;
 
-export function getViewDiff(
-  current: Message.ViewComponent[],
-  prev: Message.ViewComponent[]
-) {
-  const diff: Message.ViewComponentsDiff = {};
+export function getDiff<T>(current: T[], prev: T[]) {
+  const diff: { [key in string]: T } = {};
   for (let i = 0; i < current.length; i++) {
     if (!isEqual(current[i], prev[i])) {
       diff[i] = current[i];
@@ -51,10 +48,10 @@ export function getViewDiff(
   }
   return diff;
 }
-export function mergeViewDiff(
-  diff: Message.ViewComponentsDiff,
+export function mergeDiff<T>(
+  diff: { [key in string]: T },
   size: number,
-  prev: Message.ViewComponent[]
+  prev: T[]
 ) {
   for (let i = 0; i < size; i++) {
     if (diff[i] !== undefined) {

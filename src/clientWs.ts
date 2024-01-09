@@ -2,7 +2,7 @@ import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { runFunc, Val } from "./func.js";
 import { LogLine } from "./logger.js";
-import { getViewDiff, mergeViewDiff } from "./view.js";
+import { getDiff, mergeDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
 import { eventType } from "./event.js";
@@ -98,6 +98,11 @@ export function syncDataFirst(data: ClientData) {
       msg.push({ kind: Message.kind.viewReq, M: k, f: k2, i: v2 });
     }
   }
+  for (const [k, v] of data.canvas3DStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      msg.push({ kind: Message.kind.canvas3DReq, M: k, f: k2, i: v2 });
+    }
+  }
   for (const [k, v] of data.imageStore.transferReq().entries()) {
     for (const [k2, v2] of v.entries()) {
       const reqOption = data.imageStore.getReqInfo(k, k2);
@@ -145,8 +150,14 @@ export function syncData(data: ClientData, isFirst: boolean) {
   const viewPrev = data.viewStore.getSendPrev(isFirst);
   for (const [k, v] of data.viewStore.transferSend(isFirst).entries()) {
     const vPrev = viewPrev.get(k) || [];
-    const diff = getViewDiff(v, vPrev);
+    const diff = getDiff<Message.ViewComponent>(v, vPrev);
     msg.push({ kind: Message.kind.view, f: k, d: diff, l: v.length });
+  }
+  const canvas3DPrev = data.canvas3DStore.getSendPrev(isFirst);
+  for (const [k, v] of data.canvas3DStore.transferSend(isFirst).entries()) {
+    const vPrev = canvas3DPrev.get(k) || [];
+    const diff = getDiff<Message.Canvas3DComponent>(v, vPrev);
+    msg.push({ kind: Message.kind.canvas3D, f: k, d: diff, l: v.length });
   }
   for (const [k, v] of data.imageStore.transferSend(isFirst).entries()) {
     msg.push({
@@ -264,10 +275,24 @@ export function onMessage(
         for (const k of Object.keys(dataR.d)) {
           diff[k] = dataR.d[k];
         }
-        mergeViewDiff(diff, dataR.l, current);
+        mergeDiff<Message.ViewComponent>(diff, dataR.l, current);
         data.viewStore.setRecv(member, field, current);
         const target = wcli.member(member).view(field);
         data.eventEmitter.emit(eventType.viewChange(target), target);
+        break;
+      }
+      case Message.kind.canvas3DRes: {
+        const dataR = msg as Message.Canvas3DRes;
+        const [member, field] = data.canvas3DStore.getReq(dataR.i, dataR.f);
+        const current = data.canvas3DStore.getRecv(member, field) || [];
+        const diff: Message.Canvas3DComponentsDiff = {};
+        for (const k of Object.keys(dataR.d)) {
+          diff[k] = dataR.d[k];
+        }
+        mergeDiff<Message.Canvas3DComponent>(diff, dataR.l, current);
+        data.canvas3DStore.setRecv(member, field, current);
+        const target = wcli.member(member).canvas3D(field);
+        data.eventEmitter.emit(eventType.canvas3DChange(target), target);
         break;
       }
       case Message.kind.imageRes: {
@@ -430,6 +455,14 @@ export function onMessage(
         data.viewStore.setEntry(member, dataR.f);
         const target = wcli.member(member).view(dataR.f);
         data.eventEmitter.emit(eventType.viewEntry(target), target);
+        break;
+      }
+      case Message.kind.canvas3DEntry: {
+        const dataR = msg as Message.Entry;
+        const member = data.getMemberNameFromId(dataR.m);
+        data.canvas3DStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).canvas3D(dataR.f);
+        data.eventEmitter.emit(eventType.canvas3DEntry(target), target);
         break;
       }
       case Message.kind.imageEntry: {
