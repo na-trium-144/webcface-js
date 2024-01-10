@@ -1,3 +1,9 @@
+## [1.3.0] - 2024-01-10
+### Added
+* RobotModel, Canvas3D (#67)
+### Fixed
+* Imageのentryが再接続で重複するバグを修正 (#67)
+
 ## [1.2.0] - 2023-12-26
 ### Added
 * Image, ImageFrame, ImageReq (#54)
