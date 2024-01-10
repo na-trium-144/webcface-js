@@ -6,6 +6,7 @@ import { Log } from "../src/log.js";
 import { Func, AnonymousFunc } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View } from "../src/view.js";
+import { RobotModel } from "../src/robotModel.js";
 import { Field, FieldBase } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
@@ -36,6 +37,14 @@ describe("Member Tests", function () {
     it("returns Text object", function () {
       const v = member("a").text("b");
       assert.instanceOf(v, Text);
+      assert.strictEqual(v.member.name, "a");
+      assert.strictEqual(v.name, "b");
+    });
+  });
+  describe("#robotModel()", function () {
+    it("returns RobotModel object", function () {
+      const v = member("a").robotModel("b");
+      assert.instanceOf(v, RobotModel);
       assert.strictEqual(v.member.name, "a");
       assert.strictEqual(v.name, "b");
     });
@@ -92,6 +101,17 @@ describe("Member Tests", function () {
       assert.isEmpty(member("a").texts());
     });
   });
+  describe("#robotModels()", function () {
+    it("returns list of entries in data.robotModelStore.entry", function () {
+      data.robotModelStore.entry.set("a", ["b", "c", "d"]);
+      assert.isArray(member("a").robotModels());
+      assert.lengthOf(member("a").robotModels(), 3);
+    });
+    it("returns empty array by default", function () {
+      assert.isArray(member("a").robotModels());
+      assert.isEmpty(member("a").robotModels());
+    });
+  });
   describe("#views()", function () {
     it("returns list of entries in data.viewStore.entry", function () {
       data.viewStore.entry.set("a", ["b", "c", "d"]);
@@ -127,6 +147,14 @@ describe("Member Tests", function () {
       let called = 0;
       member("a").onTextEntry.on(() => ++called);
       data.eventEmitter.emit(eventType.textEntry(new FieldBase("a")));
+      assert.strictEqual(called, 1);
+    });
+  });
+  describe("#onRobotModelEntry", function () {
+    it("handles robotModel entry event", function () {
+      let called = 0;
+      member("a").onRobotModelEntry.on(() => ++called);
+      data.eventEmitter.emit(eventType.robotModelEntry(new FieldBase("a")));
       assert.strictEqual(called, 1);
     });
   });

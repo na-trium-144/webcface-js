@@ -18,6 +18,22 @@ export {
   ImageReq,
   Image,
 } from "./image.js";
+export {
+  RobotModel,
+  RobotLink,
+  RobotJoint,
+  robotJointType,
+} from "./robotModel.js";
+export { Transform, Point } from "./transform.js";
+export {
+  geometryType,
+  geometries,
+  Geometry,
+  canvas3DComponentType,
+  Canvas3DComponent,
+  Canvas3DComponentProps,
+  Canvas3D,
+} from "./canvas3d.js";
 export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";

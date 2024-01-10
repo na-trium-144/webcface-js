@@ -5,6 +5,9 @@ import * as Message from "../src/message.js";
 import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
+import { RobotModel, RobotLink } from "../src/robotModel.js";
+import { Transform } from "../src/transform.js";
+import { Geometry } from "../src/canvas3d.js";
 import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
@@ -315,7 +318,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").values(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").values(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -340,7 +354,54 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").texts(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").texts(), 0);
+              done();
+            }, 10);
+          }, 10);
+        }, 10);
+      });
+      it("robot model entry", function (done) {
+        wcli.start();
+        setTimeout(() => {
+          let called = 0;
+          wcli.member("a").onRobotModelEntry.on((v: RobotModel) => {
+            ++called;
+            assert.strictEqual(v.member.name, "a");
+            assert.strictEqual(v.name, "b");
+          });
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({ kind: Message.kind.robotModelEntry, m: 10, f: "b" });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").robotModels(), 1);
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").robotModels(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -365,7 +426,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").views(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").views(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -407,7 +479,18 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").funcs(), 1);
-            done();
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.lengthOf(wcli.member("a").funcs(), 0);
+              done();
+            }, 10);
           }, 10);
         }, 10);
       });
@@ -434,6 +517,31 @@ describe("Client Tests", function () {
           ) as Message.Text;
           assert.strictEqual(m?.f, "a");
           assert.strictEqual(m?.d, "b");
+          done();
+        }, 10);
+      });
+      it("robotModel", function (done) {
+        data.robotModelStore.setSend("a", [
+          new RobotLink(
+            "a",
+            {
+              name: "a",
+              parentName: "",
+              type: 0,
+              origin: new Transform([0, 0, 0], [0, 0, 0]),
+              angle: 0,
+            },
+            new Geometry(0, []),
+            0
+          ).toMessage([]),
+        ]);
+        wcli.sync();
+        setTimeout(() => {
+          const m = wssRecv.find(
+            (m) => m.kind === Message.kind.robotModel
+          ) as Message.RobotModel;
+          assert.strictEqual(m?.f, "a");
+          assert.lengthOf(m?.d, 1);
           done();
         }, 10);
       });
@@ -597,6 +705,53 @@ describe("Client Tests", function () {
             assert.strictEqual(
               data.textStore.dataRecv.get("a")?.get("b.c"),
               "z"
+            );
+            done();
+          }, 10);
+        }, 10);
+      });
+      it("robotModel", function (done) {
+        wcli.start();
+        wcli.member("a").robotModel("b").request();
+        setTimeout(() => {
+          const m = wssRecv.find(
+            (m) => m.kind === Message.kind.robotModelReq
+          ) as Message.Req;
+          assert.strictEqual(m?.M, "a");
+          assert.strictEqual(m?.f, "b");
+          assert.strictEqual(m?.i, 1);
+
+          let called = 0;
+          wcli
+            .member("a")
+            .robotModel("b")
+            .on(() => ++called);
+          const rm = [
+            new RobotLink(
+              "a",
+              {
+                name: "a",
+                parentName: "",
+                type: 0,
+                origin: new Transform([0, 0, 0], [0, 0, 0]),
+                angle: 0,
+              },
+              new Geometry(0, []),
+              0
+            ).toMessage([]),
+          ];
+
+          wssSend({ kind: Message.kind.robotModelRes, i: 1, f: "", d: rm });
+          wssSend({ kind: Message.kind.robotModelRes, i: 1, f: "c", d: rm });
+          setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(
+              data.robotModelStore.dataRecv.get("a")?.get("b") || [],
+              1
+            );
+            assert.lengthOf(
+              data.robotModelStore.dataRecv.get("a")?.get("b.c") || [],
+              1
             );
             done();
           }, 10);
