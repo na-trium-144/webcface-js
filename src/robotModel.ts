@@ -7,9 +7,10 @@ import { Transform } from "./transform.js";
 import { Geometry } from "./canvas3d.js";
 
 export const robotJointType = {
-  fixed: 0,
-  rotational: 1,
-  prismatic: 2,
+  fixedAbsolute: 0,
+  fixed: 1,
+  rotational: 2,
+  prismatic: 3,
 } as const;
 export interface RobotJoint {
   name: string;
@@ -55,12 +56,16 @@ export class RobotLink {
         (ln) => ln.name === this.joint.parentName
       );
       if (parentLink !== undefined) {
-        return new Transform(
-          multiply(
-            parentLink.originFromBase.tfMatrix,
-            this.joint.origin.tfMatrix
-          )
-        );
+        if (this.joint.type === robotJointType.fixedAbsolute) {
+          return new Transform();
+        } else {
+          return new Transform(
+            multiply(
+              parentLink.originFromBase.tfMatrix,
+              this.joint.origin.tfMatrix
+            )
+          );
+        }
       }
     }
     return new Transform();
