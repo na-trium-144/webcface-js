@@ -2,7 +2,7 @@ import { Member } from "./member.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
-import { multiply } from "mathjs";
+import { multiply } from "./math.js";
 import { Transform } from "./transform.js";
 import { Geometry } from "./canvas3d.js";
 
@@ -51,24 +51,42 @@ export class RobotLink {
    * ベースリンク座標系でのこのlinkの位置
    */
   get originFromBase(): Transform {
-    if (!this.isBase) {
-      const parentLink = this.model?.find(
-        (ln) => ln.name === this.joint.parentName
-      );
-      if (parentLink !== undefined) {
-        if (this.joint.type === robotJointType.fixedAbsolute) {
-          return new Transform();
-        } else {
-          return new Transform(
-            multiply(
-              parentLink.originFromBase.tfMatrix,
-              this.joint.origin.tfMatrix
-            )
-          );
-        }
-      }
+    return this.getOriginFromBase();
+  }
+  /**
+   * ベースリンク座標系でのこのlinkの位置を計算する
+   *
+   * @param angles それぞれのjointの角度を指定 (省略した場合それぞれ0)
+   *
+   */
+  getOriginFromBase(angles?: Map<string, number>): Transform {
+    let jointTf = new Transform();
+    const a = angles?.get(this.joint.name) || 0;
+    switch (this.joint.type) {
+      case robotJointType.rotational:
+        jointTf = new Transform([0, 0, 0], [a - this.joint.angle, 0, 0]);
+        break;
+      case robotJointType.prismatic:
+        jointTf = new Transform([0, 0, a - this.joint.angle], [0, 0, 0]);
+        break;
     }
-    return new Transform();
+
+    const parentLink = this.model?.find(
+      (ln) => ln.name === this.joint.parentName
+    );
+    if (parentLink === undefined) {
+      return new Transform(
+        multiply(this.joint.origin.tfMatrix, jointTf.tfMatrix)
+      );
+    } else {
+      return new Transform(
+        multiply(
+          parentLink.getOriginFromBase(angles).tfMatrix,
+          this.joint.origin.tfMatrix,
+          jointTf.tfMatrix
+        )
+      );
+    }
   }
   static fromMessage(msg: Message.RobotLink, model: RobotLink[]) {
     return new RobotLink(
