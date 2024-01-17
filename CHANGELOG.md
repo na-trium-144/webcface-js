@@ -1,3 +1,10 @@
+## [1.3.1] - 2024-01-17
+### Fixed
+* jointがfixedAbsoluteのときのRobotLink.originFromBaseを修正 (#81)
+### Added
+* anglesを適用したあとの座標変換を計算するRobotLink.getOriginFromBase()を追加 (#81)
+* imageのリクエストオプションにframeRateを追加 (#82)
+
 ## [1.3.0] - 2024-01-10
 ### Added
 * RobotModel, Canvas3D (#67)
