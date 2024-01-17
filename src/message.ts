@@ -168,6 +168,7 @@ export interface ImageReq {
   l: number | null;
   p: number;
   q: number;
+  r: number | null;
 }
 export interface ValueRes {
   kind: 60;
