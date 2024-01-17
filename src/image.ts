@@ -54,6 +54,7 @@ export interface ImageReq {
   colorMode?: number;
   compressMode?: number;
   quality?: number;
+  frameRate?: number;
 }
 
 /**
@@ -110,6 +111,7 @@ export class Image extends EventTarget<Image> {
           l: reqOption?.colorMode || null,
           p: reqOption?.compressMode || imageCompressMode.raw,
           q: reqOption?.quality || 0,
+          r: reqOption?.frameRate || null,
         },
       ]);
     }
