@@ -77,6 +77,8 @@ export const canvas2DComponentType = {
  * を参照
  */
 export class Canvas2D extends EventTarget<Canvas2D> {
+  private _width: number;
+  private _height: number;
   /**
    * このコンストラクタは直接使わず、
    * Member.canvas2D(), Member.canvas2DEntries(), Member.onCanvas2DEntry などを使うこと
@@ -84,6 +86,8 @@ export class Canvas2D extends EventTarget<Canvas2D> {
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.canvas2DChange(this);
+    this._width = 0;
+    this._height = 0;
   }
   /**
    * Memberを返す
@@ -132,7 +136,8 @@ export class Canvas2D extends EventTarget<Canvas2D> {
     return (
       this.dataCheck()
         .canvas2DStore.getRecv(this.member_, this.field_)
-        ?.map((v) => Canvas2DComponent.fromMessage(this.data, v)) || null
+        ?.components.map((v) => Canvas2DComponent.fromMessage(this.data, v)) ||
+      null
     );
   }
   /**
@@ -168,7 +173,11 @@ export class Canvas2D extends EventTarget<Canvas2D> {
         throw new Error(`Type error in Canvas2D.set() at index=${ci}`);
       }
     }
-    this.setCheck().canvas2DStore.setSend(this.field_, data2);
+    this.setCheck().canvas2DStore.setSend(this.field_, {
+      width: this._width,
+      height: this._height,
+      components: data2,
+    });
     this.triggerEvent(this);
   }
 }

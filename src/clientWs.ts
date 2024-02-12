@@ -166,18 +166,15 @@ export function syncData(data: ClientData, isFirst: boolean) {
   }
   const canvas2DPrev = data.canvas2DStore.getSendPrev(isFirst);
   for (const [k, v] of data.canvas2DStore.transferSend(isFirst).entries()) {
-    const vPrev = canvas2DPrev.get(k) || [];
-    const diff = getDiff<Message.Canvas2DComponent>(
-      v.components,
-      vPrev.components
-    );
+    const vPrev = canvas2DPrev.get(k)?.components || [];
+    const diff = getDiff<Message.Canvas2DComponent>(v.components, vPrev);
     msg.push({
       kind: Message.kind.canvas2D,
       f: k,
       w: v.width,
       h: v.height,
       d: diff,
-      l: v.length,
+      l: v.components.length,
     });
   }
   for (const [k, v] of data.imageStore.transferSend(isFirst).entries()) {
