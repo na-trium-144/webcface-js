@@ -27,24 +27,28 @@ export const kind = {
   value: 0,
   text: 1,
   view: 3,
+  canvas2D: 4,
   image: 5,
   robotModel: 6,
   canvas3D: 7,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
+  canvas2DEntry: 24,
   imageEntry: 25,
   robotModelEntry: 26,
   canvas3DEntry: 27,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
+  canvas2DReq: 44,
   imageReq: 45,
   robotModelReq: 46,
   canvas3DReq: 47,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
+  canvas2DRes: 64,
   imageRes: 65,
   robotModelRes: 66,
   canvas3DRes: 67,
@@ -119,6 +123,25 @@ export interface Canvas3D {
   d: Canvas3DComponentsDiff;
   l: number;
 }
+export type Canvas2DComponentsDiff = {
+  [key in string]: Canvas2DComponent;
+};
+export interface Canvas2DComponent {
+  t: number;
+  c: number;
+  f: number;
+  s: number;
+  gt: number | null;
+  gp: number[];
+}
+export interface Canvas2D {
+  kind: 4;
+  f: string;
+  w: number;
+  h: number;
+  d: Canvas2DComponentsDiff;
+  l: number;
+}
 
 export interface Image {
   kind: 5;
@@ -148,12 +171,12 @@ export interface RobotModel {
   d: RobotLink[];
 }
 export interface Entry {
-  kind: 20 | 21 | 23 | 25 | 26 | 27;
+  kind: 20 | 21 | 23 | 24 | 25 | 26 | 27;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 40 | 41 | 43 | 46 | 47;
+  kind: 40 | 41 | 43 | 44 | 46 | 47;
   M: string;
   f: string;
   i: number;
@@ -194,6 +217,15 @@ export interface Canvas3DRes {
   i: number;
   f: string;
   d: Canvas3DComponentsDiff;
+  l: number;
+}
+export interface Canvas2DRes {
+  kind: 64;
+  i: number;
+  f: string;
+  w: number;
+  h: number;
+  d: Canvas2DComponentsDiff;
   l: number;
 }
 export interface ImageRes {
@@ -302,6 +334,7 @@ export type AnyMessage =
   | Image
   | RobotModel
   | Canvas3D
+  | Canvas2D
   | Req
   | ImageReq
   | Entry
@@ -311,6 +344,7 @@ export type AnyMessage =
   | ImageRes
   | RobotModelRes
   | Canvas3DRes
+  | Canvas2DRes
   | SyncInit
   | Sync
   | SvrVersion
