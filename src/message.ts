@@ -128,6 +128,8 @@ export type Canvas2DComponentsDiff = {
 };
 export interface Canvas2DComponent {
   t: number;
+  op: number[];
+  or: number;
   c: number;
   f: number;
   s: number;

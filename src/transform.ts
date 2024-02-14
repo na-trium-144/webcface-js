@@ -67,6 +67,8 @@ export class Point {
   set pos(pos: number[]) {
     if (pos.length == 3) {
       this._pos = pos.slice() as Vec3;
+    } else if (pos.length == 2) {
+      this._pos = [pos[0], pos[1], 0];
     } else {
       throw Error("invalid pos format for Point");
     }
@@ -84,7 +86,7 @@ export class Transform extends Point {
    * @param rot z-y-xのオイラー角、または3x3の回転行列
    * posに同次変換行列を渡した場合rotは不要
    */
-  constructor(pos?: number[] | number[][], rot?: number[] | number[][]) {
+  constructor(pos?: number[] | number[][], rot?: number | number[] | number[][]) {
     super();
     if (pos !== undefined) {
       this.pos = pos;
@@ -110,6 +112,8 @@ export class Transform extends Point {
       this.tfMatrix = pos as number[][];
     } else if (pos.length == 3) {
       this._pos = pos.slice() as Vec3;
+    } else if (pos.length == 2) {
+      this._pos = [pos[0] as number, pos[1] as number, 0];
     } else {
       throw Error("invalid pos format for Transform");
     }
@@ -124,8 +128,10 @@ export class Transform extends Point {
   /**
    * @param rot z-y-xのオイラー角、または3x3の回転行列
    */
-  set rot(rot: number[] | number[][]) {
-    if (
+  set rot(rot: number | number[] | number[][]) {
+    if (typeof rot === "number") {
+      this._rot = [rot, 0, 0];
+    } else if (
       rot.length == 3 &&
       !rot.map((r) => Array.isArray(r) && r.length == 3).includes(false)
     ) {
@@ -185,5 +191,17 @@ export class Transform extends Point {
     } else {
       throw Error("invalid matrix format for Transform");
     }
+  }
+  /**
+   * 2次元の同次変換行列を返す。
+   * @return 3x3の行列 (numberの2次元配列)
+   */
+  get tfMatrix2(): Mat3 {
+    const r = this.rotMatrix;
+    return [
+      [r[0][0], r[0][1], this.pos[0]],
+      [r[1][0], r[1][1], this.pos[1]],
+      [0, 0, 1],
+    ];
   }
 }

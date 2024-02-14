@@ -4,9 +4,11 @@ import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
 import { Geometry } from "./canvas3d.js";
+import { Transform } from "./transform.js";
 
 export class Canvas2DComponent {
   private _type: number;
+  private _origin: Transform;
   private _color: number;
   private _fill: number;
   private _stroke_width: number;
@@ -15,6 +17,7 @@ export class Canvas2DComponent {
   constructor(
     data: ClientData | null,
     type: number,
+    origin: Transform,
     color: number,
     fill: number,
     strokeWidth: number,
@@ -22,6 +25,7 @@ export class Canvas2DComponent {
   ) {
     this.data = data;
     this._type = type;
+    this._origin = origin;
     this._color = color;
     this._fill = fill;
     this._stroke_width = strokeWidth;
@@ -29,6 +33,9 @@ export class Canvas2DComponent {
   }
   get type() {
     return this._type;
+  }
+  get origin() {
+    return this._origin;
   }
   get color() {
     return this._color;
@@ -46,6 +53,7 @@ export class Canvas2DComponent {
     return new Canvas2DComponent(
       data,
       msg.t,
+      new Transform(msg.op, msg.or),
       msg.c,
       msg.f,
       msg.s,
@@ -55,6 +63,8 @@ export class Canvas2DComponent {
   toMessage(): Message.Canvas2DComponent {
     return {
       t: this._type,
+      op: this._origin.pos.slice(0, 2),
+      or: this._origin.rot[0],
       c: this._color,
       f: this._fill,
       s: this._stroke_width,
