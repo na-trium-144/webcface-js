@@ -192,16 +192,4 @@ export class Transform extends Point {
       throw Error("invalid matrix format for Transform");
     }
   }
-  /**
-   * 2次元の同次変換行列を返す。
-   * @return 3x3の行列 (numberの2次元配列)
-   */
-  get tfMatrix2(): Mat3 {
-    const r = this.rotMatrix;
-    return [
-      [r[0][0], r[0][1], this.pos[0]],
-      [r[1][0], r[1][1], this.pos[1]],
-      [0, 0, 1],
-    ];
-  }
 }
