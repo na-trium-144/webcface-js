@@ -456,6 +456,7 @@ export function onMessage(
         data.imageStore.addMember(dataR.M);
         data.robotModelStore.addMember(dataR.M);
         data.canvas3DStore.addMember(dataR.M);
+        data.canvas2DStore.addMember(dataR.M);
         data.syncTimeStore.unsetRecv(dataR.M);
         data.memberIds.set(dataR.M, dataR.m);
         data.memberLibName.set(dataR.m, dataR.l);
