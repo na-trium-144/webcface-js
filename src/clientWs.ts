@@ -103,6 +103,11 @@ export function syncDataFirst(data: ClientData) {
       msg.push({ kind: Message.kind.canvas3DReq, M: k, f: k2, i: v2 });
     }
   }
+  for (const [k, v] of data.canvas2DStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      msg.push({ kind: Message.kind.canvas2DReq, M: k, f: k2, i: v2 });
+    }
+  }
   for (const [k, v] of data.imageStore.transferReq().entries()) {
     for (const [k2, v2] of v.entries()) {
       const reqOption = data.imageStore.getReqInfo(k, k2);
@@ -158,6 +163,19 @@ export function syncData(data: ClientData, isFirst: boolean) {
     const vPrev = canvas3DPrev.get(k) || [];
     const diff = getDiff<Message.Canvas3DComponent>(v, vPrev);
     msg.push({ kind: Message.kind.canvas3D, f: k, d: diff, l: v.length });
+  }
+  const canvas2DPrev = data.canvas2DStore.getSendPrev(isFirst);
+  for (const [k, v] of data.canvas2DStore.transferSend(isFirst).entries()) {
+    const vPrev = canvas2DPrev.get(k)?.components || [];
+    const diff = getDiff<Message.Canvas2DComponent>(v.components, vPrev);
+    msg.push({
+      kind: Message.kind.canvas2D,
+      f: k,
+      w: v.width,
+      h: v.height,
+      d: diff,
+      l: v.components.length,
+    });
   }
   for (const [k, v] of data.imageStore.transferSend(isFirst).entries()) {
     msg.push({
@@ -295,6 +313,25 @@ export function onMessage(
         data.eventEmitter.emit(eventType.canvas3DChange(target), target);
         break;
       }
+      case Message.kind.canvas2DRes: {
+        const dataR = msg as Message.Canvas2DRes;
+        const [member, field] = data.canvas2DStore.getReq(dataR.i, dataR.f);
+        const current =
+          data.canvas2DStore.getRecv(member, field)?.components || [];
+        const diff: Message.Canvas2DComponentsDiff = {};
+        for (const k of Object.keys(dataR.d)) {
+          diff[k] = dataR.d[k];
+        }
+        mergeDiff<Message.Canvas2DComponent>(diff, dataR.l, current);
+        data.canvas2DStore.setRecv(member, field, {
+          width: dataR.w,
+          height: dataR.h,
+          components: current,
+        });
+        const target = wcli.member(member).canvas2D(field);
+        data.eventEmitter.emit(eventType.canvas2DChange(target), target);
+        break;
+      }
       case Message.kind.imageRes: {
         const dataR = msg as Message.ImageRes;
         const [member, field] = data.imageStore.getReq(dataR.i, dataR.f);
@@ -419,6 +456,7 @@ export function onMessage(
         data.imageStore.addMember(dataR.M);
         data.robotModelStore.addMember(dataR.M);
         data.canvas3DStore.addMember(dataR.M);
+        data.canvas2DStore.addMember(dataR.M);
         data.syncTimeStore.unsetRecv(dataR.M);
         data.memberIds.set(dataR.M, dataR.m);
         data.memberLibName.set(dataR.m, dataR.l);
@@ -466,6 +504,14 @@ export function onMessage(
         data.canvas3DStore.setEntry(member, dataR.f);
         const target = wcli.member(member).canvas3D(dataR.f);
         data.eventEmitter.emit(eventType.canvas3DEntry(target), target);
+        break;
+      }
+      case Message.kind.canvas2DEntry: {
+        const dataR = msg as Message.Entry;
+        const member = data.getMemberNameFromId(dataR.m);
+        data.canvas2DStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).canvas2D(dataR.f);
+        data.eventEmitter.emit(eventType.canvas2DEntry(target), target);
         break;
       }
       case Message.kind.imageEntry: {

@@ -14,6 +14,7 @@ export const geometryType = {
   circle: 4,
   cylinder: 5,
   sphere: 6,
+  polygon: 7,
 } as const;
 
 export class Geometry {
@@ -52,6 +53,9 @@ export class Geometry {
     } else {
       throw new Error("number of properties does not match");
     }
+  }
+  get asRect() {
+    return this.asPlane;
   }
   get asBox(): Geometry & { vertex1: Point; vertex2: Point } {
     if (this.properties.length === 6) {
@@ -110,6 +114,17 @@ export class Geometry {
         origin: new Point(this.properties.slice(0, 3)),
         radius: this.properties[3],
       };
+    } else {
+      throw new Error("number of properties does not match");
+    }
+  }
+  get asPolygon(): Geometry & { points: Point[] } {
+    if (this.properties.length > 0 && this.properties.length % 3 == 0) {
+      const points: Point[] = [];
+      for (let i = 0; i < this.properties.length; i += 3) {
+        points.push(new Point(this.properties.slice(i, i + 3)));
+      }
+      return { ...this, points };
     } else {
       throw new Error("number of properties does not match");
     }

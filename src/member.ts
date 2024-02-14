@@ -7,6 +7,7 @@ import { Image } from "./image.js";
 import { Field } from "./field.js";
 import { RobotModel } from "./robotModel.js";
 import { Canvas3D } from "./canvas3d.js";
+import { Canvas2D } from "./canvas2d.js";
 import { EventTarget, eventType } from "./event.js";
 import * as Message from "./message.js";
 
@@ -58,6 +59,12 @@ export class Member extends Field {
    */
   canvas3D(name: string) {
     return new Canvas3D(this, name);
+  }
+  /**
+   * Canvas2Dを参照する
+   */
+  canvas2D(name: string) {
+    return new Canvas2D(this, name);
   }
   /**
    * Imageを参照する
@@ -131,6 +138,14 @@ export class Member extends Field {
     return this.dataCheck()
       .canvas3DStore.getEntry(this.member_)
       .map((n) => this.canvas3D(n));
+  }
+  /**
+   * このMemberが公開しているCanvas2Dのリストを返す
+   */
+  canvas2DEntries() {
+    return this.dataCheck()
+      .canvas2DStore.getEntry(this.member_)
+      .map((n) => this.canvas2D(n));
   }
   /**
    * このMemberが公開しているImageのリストを返す
@@ -216,6 +231,18 @@ export class Member extends Field {
   get onCanvas3DEntry() {
     return new EventTarget<Canvas3D>(
       eventType.canvas3DEntry(this),
+      this.data,
+      this.member_
+    );
+  }
+  /**
+   * Canvas2Dが追加された時のイベント
+   *
+   * コールバックの型は (target: Canvas3D) => void
+   */
+  get onCanvas2DEntry() {
+    return new EventTarget<Canvas2D>(
+      eventType.canvas2DEntry(this),
       this.data,
       this.member_
     );

@@ -34,6 +34,7 @@ export {
   Canvas3DComponentProps,
   Canvas3D,
 } from "./canvas3d.js";
+export { Canvas2DComponent, Canvas2D } from "./canvas2d.js";
 export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";

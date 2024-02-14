@@ -7,6 +7,12 @@ import { Field } from "./field.js";
 import websocket from "websocket";
 import { ImageFrame, ImageReq } from "./image.js";
 
+export interface Canvas2DData {
+  width: number;
+  height: number;
+  components: Message.Canvas2DComponent[];
+}
+
 export class ClientData {
   selfMemberName: string;
   valueStore: SyncDataStore2<number[]>;
@@ -16,6 +22,7 @@ export class ClientData {
   imageStore: SyncDataStore2<ImageFrame, ImageReq>;
   robotModelStore: SyncDataStore2<Message.RobotLink[]>;
   canvas3DStore: SyncDataStore2<Message.Canvas3DComponent[]>;
+  canvas2DStore: SyncDataStore2<Canvas2DData>;
   logStore: SyncDataStore1<LogLine[]>;
   logSentLines = 0;
   syncTimeStore: SyncDataStore1<Date>;
@@ -53,6 +60,7 @@ export class ClientData {
     this.imageStore = new SyncDataStore2<ImageFrame, ImageReq>(name);
     this.robotModelStore = new SyncDataStore2<Message.RobotLink[]>(name);
     this.canvas3DStore = new SyncDataStore2<Message.Canvas3DComponent[]>(name);
+    this.canvas2DStore = new SyncDataStore2<Canvas2DData>(name);
     this.logStore = new SyncDataStore1<LogLine[]>(name);
     this.logStore.setRecv(name, []);
     this.syncTimeStore = new SyncDataStore1<Date>(name);
