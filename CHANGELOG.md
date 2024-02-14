@@ -1,3 +1,7 @@
+## [1.4.0] - 2024-02-15
+### Added
+* Canvas2D (#92)
+
 ## [1.3.1] - 2024-01-17
 ### Fixed
 * jointがfixedAbsoluteのときのRobotLink.originFromBaseを修正 (#81)
