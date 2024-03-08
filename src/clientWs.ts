@@ -57,7 +57,11 @@ export function reconnect(wcli: Client, data: ClientData) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
       };
-      data.pushSend();
+      data.pushSend(); // たまっているメッセージを送信
+      if (data.closing) {
+        data.ws = null;
+        ws.close();
+      }
     }
   };
 }

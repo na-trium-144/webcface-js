@@ -53,9 +53,18 @@ export class ClientData {
     this.selfMemberName = name;
     this.host = host;
     this.port = port;
-    this.valueStore = new SyncDataStore2<number[]>(name);
-    this.textStore = new SyncDataStore2<string>(name);
-    this.funcStore = new SyncDataStore2<FuncInfo>(name);
+    this.valueStore = new SyncDataStore2<number[]>(
+      name,
+      SyncDataStore2.shouldSendOnChange
+    );
+    this.textStore = new SyncDataStore2<string>(
+      name,
+      SyncDataStore2.shouldSendOnChange
+    );
+    this.funcStore = new SyncDataStore2<FuncInfo>(
+      name,
+      SyncDataStore2.shouldNotSendTwice
+    );
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
     this.imageStore = new SyncDataStore2<ImageFrame, ImageReq>(name);
     this.robotModelStore = new SyncDataStore2<Message.RobotLink[]>(name);
@@ -133,7 +142,17 @@ export class SyncDataStore2<T, ReqT = never> {
   req: Map<string, Map<string, number>>;
   reqInfo: Map<string, Map<string, ReqT>>;
   selfMemberName: string;
-  constructor(name: string) {
+  shouldSend: (prev: T | undefined, current: T) => boolean;
+
+  static shouldSendAlways = () => true;
+  static shouldNotSendTwice = (prev: any) => prev === undefined;
+  static shouldSendOnChange = (prev: any, current: any) =>
+    prev === undefined || !isEqual(prev, current);
+
+  constructor(
+    name: string,
+    shouldSend?: (prev: T | undefined, current: T) => boolean
+  ) {
     this.selfMemberName = name;
     this.dataSend = new Map();
     this.dataSendPrev = new Map();
@@ -141,6 +160,7 @@ export class SyncDataStore2<T, ReqT = never> {
     this.entry = new Map();
     this.req = new Map();
     this.reqInfo = new Map();
+    this.shouldSend = shouldSend || SyncDataStore2.shouldSendAlways;
   }
   isSelf(member: string) {
     return this.selfMemberName === member;
@@ -149,7 +169,11 @@ export class SyncDataStore2<T, ReqT = never> {
    * 送信するデータをdata_sendとdata_recv[self_member_name]にセット
    */
   setSend(field: string, data: T) {
-    this.dataSend.set(field, data);
+    if (
+      this.shouldSend(this.dataRecv.get(this.selfMemberName)?.get(field), data)
+    ) {
+      this.dataSend.set(field, data);
+    }
     this.setRecv(this.selfMemberName, field, data);
   }
   /**

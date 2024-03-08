@@ -107,6 +107,9 @@ describe("Value Tests", function () {
     it("sets array of single value when single value is passed", function () {
       value(selfName, "b").set(5);
       assert.sameOrderedMembers(data.valueStore.dataSend.get("b") || [], [5]);
+      data.valueStore.dataSend = new Map();
+      value(selfName, "b").set(42);
+      assert.sameOrderedMembers(data.valueStore.dataSend.get("b") || [], [42]);
     });
     it("sets value when array of number is passed", function () {
       value(selfName, "b").set([2, 3, 4]);
@@ -129,6 +132,12 @@ describe("Value Tests", function () {
         data.valueStore.dataSend.get("b.v") || [],
         [8, 9, 10]
       );
+    });
+    it("does not set value when same value is passed twice", function () {
+      value(selfName, "b").set(5);
+      data.valueStore.dataSend = new Map();
+      value(selfName, "b").set(5);
+      assert.isFalse(data.valueStore.dataSend.has("b"));
     });
     it("triggers change event", function () {
       let called = 0;
@@ -217,6 +226,9 @@ describe("Text Tests", function () {
     it("sets value when string is passed", function () {
       text(selfName, "b").set("aaa");
       assert.strictEqual(data.textStore.dataSend.get("b"), "aaa");
+      data.textStore.dataSend = new Map();
+      text(selfName, "b").set("bbb");
+      assert.strictEqual(data.textStore.dataSend.get("b"), "bbb");
     });
     it("sets value recursively when object is passed", function () {
       text(selfName, "b").set({
@@ -225,6 +237,12 @@ describe("Text Tests", function () {
       });
       assert.strictEqual(data.textStore.dataSend.get("b.a"), "a");
       assert.strictEqual(data.textStore.dataSend.get("b.b.c"), "bc");
+    });
+    it("does not set value when same string is passed twice", function () {
+      text(selfName, "b").set("aaa");
+      data.textStore.dataSend = new Map();
+      text(selfName, "b").set("aaa");
+      assert.isFalse(data.textStore.dataSend.has("b"));
     });
     it("triggers change event", function () {
       let called = 0;
