@@ -37,17 +37,21 @@ export class Canvas2DComponent {
     this._fill = options?.fillColor || 0;
     this._stroke_width = options?.strokeWidth || 1;
     this._geometry = geometry || null;
-    if (options.onClick instanceof AnonymousFunc) {
-      this.on_click_tmp_ = options.onClick;
-    } else if (options.onClick instanceof FieldBase) {
-      this.on_click_ = options.onClick;
-    } else {
-      this.on_click_tmp_ = new AnonymousFunc(
-        null,
-        options.onClick,
-        Message.valType.none_,
-        []
-      );
+    this._on_click = null;
+    this._on_click_tmp = null;
+    if (options?.onClick !== undefined) {
+      if (options.onClick instanceof AnonymousFunc) {
+        this._on_click_tmp = options.onClick;
+      } else if (options.onClick instanceof FieldBase) {
+        this._on_click = options.onClick;
+      } else {
+        this._on_click_tmp = new AnonymousFunc(
+          null,
+          options.onClick,
+          Message.valType.none_,
+          []
+        );
+      }
     }
   }
   /**
@@ -98,6 +102,9 @@ export class Canvas2DComponent {
       return null;
     }
   }
+  /**
+   * CanvasCommonComponent.to2() との互換性のため
+   */
   to2() {
     return this;
   }
@@ -112,7 +119,7 @@ export class Canvas2DComponent {
         fillColor: msg.f,
         strokeWidth: msg.s,
         onClick:
-          msg.L !== null && msg.l !== null
+          msg.L != null && msg.l != null
             ? new FieldBase(msg.L, msg.l)
             : undefined,
       }
@@ -128,8 +135,8 @@ export class Canvas2DComponent {
       s: this._stroke_width,
       gt: this._geometry == null ? null : this._geometry.type,
       gp: this._geometry?.properties || [],
-      L: this.on_click_ === null ? null : this.on_click_.member_,
-      l: this.on_click_ === null ? null : this.on_click_.field_,
+      L: this._on_click === null ? null : this._on_click.member_,
+      l: this._on_click === null ? null : this._on_click.field_,
     };
   }
 }

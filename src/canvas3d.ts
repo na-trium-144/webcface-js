@@ -11,35 +11,6 @@ import {
   canvas2DComponentType,
 } from "./canvas2d.js";
 
-export class CanvasCommonComponent extends Geometry {
-  private _options: Canvas2DComponentOption & Canvas3DComponentOption;
-  constructor(
-    type: number,
-    properties: number[],
-    options?: Canvas2DComponentOption & Canvas3DComponentOption
-  ) {
-    super(type, properties);
-    this._options = options || {};
-  }
-  to2() {
-    return new Canvas2DComponent(
-      null,
-      canvas2DComponentType.geometry,
-      this,
-      this._options
-    );
-  }
-  to3() {
-    return new Canvas3DComponent(
-      null,
-      canvas3DComponentType.geometry,
-      this,
-      null,
-      this._options
-    );
-  }
-}
-
 export const geometryType = {
   none: 0,
   line: 1,
@@ -270,10 +241,39 @@ export const geometries = {
     ),
 };
 
+export class CanvasCommonComponent extends Geometry {
+  private _options: Canvas2DComponentOption & Canvas3DComponentOption;
+  constructor(
+    type: number,
+    properties: number[],
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) {
+    super(type, properties);
+    this._options = options || {};
+  }
+  to2() {
+    return new Canvas2DComponent(
+      null,
+      canvas2DComponentType.geometry,
+      this,
+      this._options
+    );
+  }
+  to3() {
+    return new Canvas3DComponent(
+      null,
+      canvas3DComponentType.geometry,
+      this,
+      null,
+      this._options
+    );
+  }
+}
+
 interface Canvas3DComponentOption {
-  origin: Transform;
-  color: number;
-  angles: Map<number, number> | object;
+  origin?: Transform;
+  color?: number;
+  angles?: Map<number, number> | object;
 }
 export class Canvas3DComponent {
   private _type: number;
@@ -296,7 +296,15 @@ export class Canvas3DComponent {
     this._color = options?.color || 0;
     this._geometry = geometry;
     this._fieldBase = fieldBase;
-    this._angles = options?.angles || new Map<number, number>();
+    if (options?.angles instanceof Map) {
+      this._angles = options.angles;
+    } else if (typeof options?.angles === "object") {
+      this._angles = new Map<number, number>(
+        Object.entries(options.angles).map(([k, v]) => [Number(k), Number(v)])
+      );
+    } else {
+      this._angles = new Map<number, number>();
+    }
   }
   get type() {
     return this._type;
@@ -340,11 +348,13 @@ export class Canvas3DComponent {
     return new Canvas3DComponent(
       data,
       msg.t,
-      new Transform(msg.op, msg.or),
-      msg.c,
       msg.gt == null ? null : new Geometry(msg.gt, msg.gp),
       msg.fm == null || msg.ff == null ? null : new FieldBase(msg.fm, msg.ff),
-      a
+      {
+        origin: new Transform(msg.op, msg.or),
+        color: msg.c,
+        angles: a,
+      }
     );
   }
   toMessage(): Message.Canvas3DComponent {
