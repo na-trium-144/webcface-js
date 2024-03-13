@@ -1,3 +1,10 @@
+## [1.5.0] - 2024-03-13
+### Added
+* Canvas2D.onClick
+### Changed
+* geometriesの各関数の戻り値の型を変更
+* Canvas2D.add, Canvas3D.add の引数変更
+
 ## [1.4.1] - 2024-03-08
 ### Changed
 * Value, Textで値が変化したときのみ送信するようにした (#107)
