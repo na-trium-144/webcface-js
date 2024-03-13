@@ -5,6 +5,11 @@ import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
 import { RobotModel } from "./robotModel.js";
+import {
+  Canvas2DComponent,
+  Canvas2DComponentOption,
+  canvas2DComponentType,
+} from "./canvas2d.js";
 
 export const geometryType = {
   none: 0,
@@ -132,65 +137,144 @@ export class Geometry {
 }
 
 export const geometries = {
-  line: (begin: Point, end: Point) =>
-    new Geometry(geometryType.line, [
-      begin.pos[0],
-      begin.pos[1],
-      begin.pos[2],
-      end.pos[0],
-      end.pos[1],
-      end.pos[2],
-    ]),
-  plane: (origin: Transform, width: number, height: number) =>
-    new Geometry(geometryType.plane, [
-      origin.pos[0],
-      origin.pos[1],
-      origin.pos[2],
-      origin.rot[0],
-      origin.rot[1],
-      origin.rot[2],
-      width,
-      height,
-    ]),
-  box: (vertex1: Point, vertex2: Point) =>
-    new Geometry(geometryType.box, [
-      vertex1.pos[0],
-      vertex1.pos[1],
-      vertex1.pos[2],
-      vertex2.pos[0],
-      vertex2.pos[1],
-      vertex2.pos[2],
-    ]),
-  circle: (origin: Transform, radius: number) =>
-    new Geometry(geometryType.circle, [
-      origin.pos[0],
-      origin.pos[1],
-      origin.pos[2],
-      origin.rot[0],
-      origin.rot[1],
-      origin.rot[2],
-      radius,
-    ]),
-  cylinder: (origin: Transform, radius: number, length: number) =>
-    new Geometry(geometryType.cylinder, [
-      origin.pos[0],
-      origin.pos[1],
-      origin.pos[2],
-      origin.rot[0],
-      origin.rot[1],
-      origin.rot[2],
-      radius,
-      length,
-    ]),
-  sphere: (origin: Point, radius: number) =>
-    new Geometry(geometryType.sphere, [
-      origin.pos[0],
-      origin.pos[1],
-      origin.pos[2],
-      radius,
-    ]),
+  line: (
+    begin: Point,
+    end: Point,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.line,
+      [
+        begin.pos[0],
+        begin.pos[1],
+        begin.pos[2],
+        end.pos[0],
+        end.pos[1],
+        end.pos[2],
+      ],
+      options
+    ),
+  plane: (
+    origin: Transform,
+    width: number,
+    height: number,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.plane,
+      [
+        origin.pos[0],
+        origin.pos[1],
+        origin.pos[2],
+        origin.rot[0],
+        origin.rot[1],
+        origin.rot[2],
+        width,
+        height,
+      ],
+      options
+    ),
+  box: (
+    vertex1: Point,
+    vertex2: Point,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.box,
+      [
+        vertex1.pos[0],
+        vertex1.pos[1],
+        vertex1.pos[2],
+        vertex2.pos[0],
+        vertex2.pos[1],
+        vertex2.pos[2],
+      ],
+      options
+    ),
+  circle: (
+    origin: Transform,
+    radius: number,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.circle,
+      [
+        origin.pos[0],
+        origin.pos[1],
+        origin.pos[2],
+        origin.rot[0],
+        origin.rot[1],
+        origin.rot[2],
+        radius,
+      ],
+      options
+    ),
+  cylinder: (
+    origin: Transform,
+    radius: number,
+    length: number,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.cylinder,
+      [
+        origin.pos[0],
+        origin.pos[1],
+        origin.pos[2],
+        origin.rot[0],
+        origin.rot[1],
+        origin.rot[2],
+        radius,
+        length,
+      ],
+      options
+    ),
+  sphere: (
+    origin: Point,
+    radius: number,
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) =>
+    new CanvasCommonComponent(
+      geometryType.sphere,
+      [origin.pos[0], origin.pos[1], origin.pos[2], radius],
+      options
+    ),
 };
 
+export class CanvasCommonComponent extends Geometry {
+  private _options: Canvas2DComponentOption & Canvas3DComponentOption;
+  constructor(
+    type: number,
+    properties: number[],
+    options?: Canvas2DComponentOption & Canvas3DComponentOption
+  ) {
+    super(type, properties);
+    this._options = options || {};
+  }
+  to2() {
+    return new Canvas2DComponent(
+      null,
+      canvas2DComponentType.geometry,
+      this,
+      this._options
+    );
+  }
+  to3() {
+    return new Canvas3DComponent(
+      null,
+      canvas3DComponentType.geometry,
+      this,
+      null,
+      this._options
+    );
+  }
+}
+
+interface Canvas3DComponentOption {
+  origin?: Transform;
+  color?: number;
+  angles?: Map<number, number> | object;
+}
 export class Canvas3DComponent {
   private _type: number;
   private _origin: Transform;
@@ -202,19 +286,25 @@ export class Canvas3DComponent {
   constructor(
     data: ClientData | null,
     type: number,
-    origin: Transform,
-    color: number,
     geometry: Geometry | null,
     fieldBase: FieldBase | null,
-    angles: Map<number, number>
+    options?: Canvas3DComponentOption
   ) {
     this.data = data;
     this._type = type;
-    this._origin = origin;
-    this._color = color;
+    this._origin = options?.origin || new Transform();
+    this._color = options?.color || 0;
     this._geometry = geometry;
     this._fieldBase = fieldBase;
-    this._angles = angles;
+    if (options?.angles instanceof Map) {
+      this._angles = options.angles;
+    } else if (typeof options?.angles === "object") {
+      this._angles = new Map<number, number>(
+        Object.entries(options.angles).map(([k, v]) => [Number(k), Number(v)])
+      );
+    } else {
+      this._angles = new Map<number, number>();
+    }
   }
   get type() {
     return this._type;
@@ -247,6 +337,9 @@ export class Canvas3DComponent {
     }
     return anglesWithName;
   }
+  to3() {
+    return this;
+  }
   static fromMessage(data: ClientData | null, msg: Message.Canvas3DComponent) {
     const a = new Map<number, number>();
     for (const [k, v] of Object.entries(msg.a)) {
@@ -255,11 +348,13 @@ export class Canvas3DComponent {
     return new Canvas3DComponent(
       data,
       msg.t,
-      new Transform(msg.op, msg.or),
-      msg.c,
       msg.gt == null ? null : new Geometry(msg.gt, msg.gp),
       msg.fm == null || msg.ff == null ? null : new FieldBase(msg.fm, msg.ff),
-      a
+      {
+        origin: new Transform(msg.op, msg.or),
+        color: msg.c,
+        angles: a,
+      }
     );
   }
   toMessage(): Message.Canvas3DComponent {
@@ -374,57 +469,11 @@ export class Canvas3D extends EventTarget<Canvas3D> {
   /**
    * Canvas3DComponentのリストをセットする
    */
-  set(data: (Canvas3DComponent | Canvas3DComponentProps)[]) {
-    const data2: Message.Canvas3DComponent[] = [];
-    for (let ci = 0; ci < data.length; ci++) {
-      const c = data[ci];
-      if (c instanceof Canvas3DComponent) {
-        data2.push(c.toMessage());
-      } else if (
-        c[0] instanceof Geometry &&
-        c[1] instanceof Transform &&
-        typeof c[2] == "number"
-      ) {
-        data2.push(
-          new Canvas3DComponent(
-            this.data,
-            canvas3DComponentType.geometry,
-            c[1],
-            c[2],
-            c[0],
-            null,
-            new Map()
-          ).toMessage()
-        );
-      } else if (
-        c[0] instanceof RobotModel &&
-        c[1] instanceof Transform &&
-        typeof c[2] == "object"
-      ) {
-        const a = new Map<number, number>();
-        const model = c[0].get();
-        for (let ji = 0; ji < model.length; ji++) {
-          const j = model[ji].joint;
-          if (typeof c[2][j.name] === "number") {
-            a.set(ji, c[2][j.name]);
-          }
-        }
-        data2.push(
-          new Canvas3DComponent(
-            this.data,
-            canvas3DComponentType.robotModel,
-            c[1],
-            0,
-            null,
-            c[0],
-            a
-          ).toMessage()
-        );
-      } else {
-        throw new Error(`Type error in Canvas3D.set() at index=${ci}`);
-      }
-    }
-    this.setCheck().canvas3DStore.setSend(this.field_, data2);
+  set(data: (Canvas3DComponent | CanvasCommonComponent)[]) {
+    this.setCheck().canvas3DStore.setSend(
+      this.field_,
+      data.map((c) => c.to3().toMessage())
+    );
     this.triggerEvent(this);
   }
 }

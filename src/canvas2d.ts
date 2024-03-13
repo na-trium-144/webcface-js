@@ -1,11 +1,19 @@
-import { Field } from "./field.js";
+import { Field, FieldBase } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
-import { Geometry } from "./canvas3d.js";
+import { CanvasCommonComponent, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
+import { Func, AnonymousFunc, FuncCallback } from "./func.js";
 
+export interface Canvas2DComponentOption {
+  origin?: Transform;
+  color?: number;
+  fillColor?: number;
+  strokeWidth?: number;
+  onClick?: FieldBase | AnonymousFunc | FuncCallback;
+}
 export class Canvas2DComponent {
   private _type: number;
   private _origin: Transform;
@@ -13,23 +21,49 @@ export class Canvas2DComponent {
   private _fill: number;
   private _stroke_width: number;
   private _geometry: Geometry | null;
+  private _on_click: FieldBase | null;
+  private _on_click_tmp: AnonymousFunc | null;
   private data: ClientData | null;
   constructor(
     data: ClientData | null,
     type: number,
-    origin: Transform,
-    color: number,
-    fill: number,
-    strokeWidth: number,
-    geometry: Geometry | null
+    geometry: Geometry | null,
+    options?: Canvas2DComponentOption
   ) {
     this.data = data;
     this._type = type;
-    this._origin = origin;
-    this._color = color;
-    this._fill = fill;
-    this._stroke_width = strokeWidth;
-    this._geometry = geometry;
+    this._origin = options?.origin || new Transform();
+    this._color = options?.color || 0;
+    this._fill = options?.fillColor || 0;
+    this._stroke_width = options?.strokeWidth || 1;
+    this._geometry = geometry || null;
+    this._on_click = null;
+    this._on_click_tmp = null;
+    if (options?.onClick !== undefined) {
+      if (options.onClick instanceof AnonymousFunc) {
+        this._on_click_tmp = options.onClick;
+      } else if (options.onClick instanceof FieldBase) {
+        this._on_click = options.onClick;
+      } else {
+        this._on_click_tmp = new AnonymousFunc(
+          null,
+          options.onClick,
+          Message.valType.none_,
+          []
+        );
+      }
+    }
+  }
+  /**
+   * AnonymousFuncをFuncオブジェクトにロックする
+   */
+  lockTmp(data: ClientData, field: string) {
+    if (this._on_click_tmp) {
+      const f = new Func(new Field(data, data.selfMemberName, field));
+      this._on_click_tmp.lockTo(f, true);
+      this._on_click = f;
+    }
+    return this;
   }
   get type() {
     return this._type;
@@ -43,21 +77,52 @@ export class Canvas2DComponent {
   get fill() {
     return this._fill;
   }
+  get fillColor() {
+    return this._fill;
+  }
   get strokeWidth() {
     return this._stroke_width;
   }
   get geometry(): Geometry {
     return this._geometry || new Geometry(0, []);
   }
+  /**
+   * クリック時に実行する関数
+   */
+  get onClick(): Func | null {
+    if (this._on_click !== null) {
+      if (this.data !== null) {
+        return new Func(
+          new Field(this.data, this._on_click.member_, this._on_click.field_)
+        );
+      } else {
+        throw new Error("cannot get onClick: ClientData not set");
+      }
+    } else {
+      return null;
+    }
+  }
+  /**
+   * CanvasCommonComponent.to2() との互換性のため
+   */
+  to2() {
+    return this;
+  }
   static fromMessage(data: ClientData | null, msg: Message.Canvas2DComponent) {
     return new Canvas2DComponent(
       data,
       msg.t,
-      new Transform(msg.op, msg.or),
-      msg.c,
-      msg.f,
-      msg.s,
-      msg.gt == null ? null : new Geometry(msg.gt, msg.gp)
+      msg.gt == null ? null : new Geometry(msg.gt, msg.gp),
+      {
+        origin: new Transform(msg.op, msg.or),
+        color: msg.c,
+        fillColor: msg.f,
+        strokeWidth: msg.s,
+        onClick:
+          msg.L != null && msg.l != null
+            ? new FieldBase(msg.L, msg.l)
+            : undefined,
+      }
     );
   }
   toMessage(): Message.Canvas2DComponent {
@@ -70,11 +135,11 @@ export class Canvas2DComponent {
       s: this._stroke_width,
       gt: this._geometry == null ? null : this._geometry.type,
       gp: this._geometry?.properties || [],
+      L: this._on_click === null ? null : this._on_click.member_,
+      l: this._on_click === null ? null : this._on_click.field_,
     };
   }
 }
-
-export type Canvas2DComponentProps = [Geometry, number, number, number];
 
 export const canvas2DComponentType = {
   geometry: 0,
@@ -178,27 +243,18 @@ export class Canvas2D extends EventTarget<Canvas2D> {
   /**
    * Canvas2DComponentのリストをセットする
    *
-   * todo
-   *
    */
   set(
     width: number,
     height: number,
-    data: (Canvas2DComponent | Canvas2DComponentProps)[]
+    data: (Canvas2DComponent | CanvasCommonComponent)[]
   ) {
-    const data2: Message.Canvas2DComponent[] = [];
-    for (let ci = 0; ci < data.length; ci++) {
-      const c = data[ci];
-      if (c instanceof Canvas2DComponent) {
-        data2.push(c.toMessage());
-      } else {
-        throw new Error(`Type error in Canvas2D.set() at index=${ci}`);
-      }
-    }
     this.setCheck().canvas2DStore.setSend(this.field_, {
       width,
       height,
-      components: data2,
+      components: data.map((c, i) =>
+        c.to2().lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
+      ),
     });
     this.triggerEvent(this);
   }
