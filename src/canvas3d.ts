@@ -142,7 +142,7 @@ export const geometries = {
     end: Point,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.line,
       [
         begin.pos[0],
@@ -160,7 +160,7 @@ export const geometries = {
     height: number,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.plane,
       [
         origin.pos[0],
@@ -179,7 +179,7 @@ export const geometries = {
     vertex2: Point,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.box,
       [
         vertex1.pos[0],
@@ -196,7 +196,7 @@ export const geometries = {
     radius: number,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.circle,
       [
         origin.pos[0],
@@ -215,7 +215,7 @@ export const geometries = {
     length: number,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.cylinder,
       [
         origin.pos[0],
@@ -234,14 +234,14 @@ export const geometries = {
     radius: number,
     options?: Canvas2DComponentOption & Canvas3DComponentOption
   ) =>
-    new CanvasCommonComponent(
+    new TemporalGeometry(
       geometryType.sphere,
       [origin.pos[0], origin.pos[1], origin.pos[2], radius],
       options
     ),
 };
 
-export class CanvasCommonComponent extends Geometry {
+export class TemporalGeometry extends Geometry {
   private _options: Canvas2DComponentOption & Canvas3DComponentOption;
   constructor(
     type: number,
@@ -256,6 +256,7 @@ export class CanvasCommonComponent extends Geometry {
       null,
       canvas2DComponentType.geometry,
       this,
+      "",
       this._options
     );
   }
@@ -469,7 +470,7 @@ export class Canvas3D extends EventTarget<Canvas3D> {
   /**
    * Canvas3DComponentのリストをセットする
    */
-  set(data: (Canvas3DComponent | CanvasCommonComponent)[]) {
+  set(data: (Canvas3DComponent | TemporalGeometry)[]) {
     this.setCheck().canvas3DStore.setSend(
       this.field_,
       data.map((c) => c.to3().toMessage())

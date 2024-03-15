@@ -3,7 +3,7 @@ import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
-import { CanvasCommonComponent, Geometry } from "./canvas3d.js";
+import { TemporalGeometry, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
 import { Func, AnonymousFunc, FuncCallback } from "./func.js";
 
@@ -23,11 +23,13 @@ export class Canvas2DComponent {
   private _geometry: Geometry | null;
   private _on_click: FieldBase | null;
   private _on_click_tmp: AnonymousFunc | null;
+  private _text: string;
   private data: ClientData | null;
   constructor(
     data: ClientData | null,
     type: number,
     geometry: Geometry | null,
+    text: string,
     options?: Canvas2DComponentOption
   ) {
     this.data = data;
@@ -39,6 +41,7 @@ export class Canvas2DComponent {
     this._geometry = geometry || null;
     this._on_click = null;
     this._on_click_tmp = null;
+    this._text = text;
     if (options?.onClick !== undefined) {
       if (options.onClick instanceof AnonymousFunc) {
         this._on_click_tmp = options.onClick;
@@ -86,6 +89,9 @@ export class Canvas2DComponent {
   get geometry(): Geometry {
     return this._geometry || new Geometry(0, []);
   }
+  get text(): string {
+    return this._text;
+  }
   /**
    * クリック時に実行する関数
    */
@@ -103,7 +109,7 @@ export class Canvas2DComponent {
     }
   }
   /**
-   * CanvasCommonComponent.to2() との互換性のため
+   * TemporalGeometry.to2() との互換性のため
    */
   to2() {
     return this;
@@ -113,6 +119,7 @@ export class Canvas2DComponent {
       data,
       msg.t,
       msg.gt == null ? null : new Geometry(msg.gt, msg.gp),
+      msg.x || "",
       {
         origin: new Transform(msg.op, msg.or),
         color: msg.c,
@@ -137,12 +144,14 @@ export class Canvas2DComponent {
       gp: this._geometry?.properties || [],
       L: this._on_click === null ? null : this._on_click.member_,
       l: this._on_click === null ? null : this._on_click.field_,
+      x: this._text,
     };
   }
 }
 
 export const canvas2DComponentType = {
   geometry: 0,
+  text: 3,
 } as const;
 
 /**
@@ -247,7 +256,7 @@ export class Canvas2D extends EventTarget<Canvas2D> {
   set(
     width: number,
     height: number,
-    data: (Canvas2DComponent | CanvasCommonComponent)[]
+    data: (Canvas2DComponent | TemporalGeometry)[]
   ) {
     this.setCheck().canvas2DStore.setSend(this.field_, {
       width,
