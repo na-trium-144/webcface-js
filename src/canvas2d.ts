@@ -86,6 +86,9 @@ export class Canvas2DComponent {
   get strokeWidth() {
     return this._stroke_width;
   }
+  get textSize() {
+    return this._stroke_width; // strokeWidthと共通
+  }
   get geometry(): Geometry {
     return this._geometry || new Geometry(0, []);
   }
