@@ -37,7 +37,7 @@ export class Canvas2DComponent {
     this._origin = options?.origin || new Transform();
     this._color = options?.color || 0;
     this._fill = options?.fillColor || 0;
-    this._stroke_width = options?.strokeWidth || 1;
+    this._stroke_width = options?.strokeWidth || 0;
     this._geometry = geometry || null;
     this._on_click = null;
     this._on_click_tmp = null;
