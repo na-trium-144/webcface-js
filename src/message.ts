@@ -137,6 +137,7 @@ export interface Canvas2DComponent {
   gp: number[];
   L?: string | null;
   l?: string | null;
+  x?: string;
 }
 export interface Canvas2D {
   kind: 4;
