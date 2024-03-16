@@ -1,3 +1,10 @@
+## [1.5.1] - 2024-03-16
+### Added
+* Canvas2D.text, textSize (#116)
+* Canvas2DComponentTypeのexport追加
+### Changed
+* Canvas2D.strokeWidthの初期値を1から0に変更 (#116)
+
 ## [1.5.0] - 2024-03-13
 ### Added
 * Canvas2D.onClick
