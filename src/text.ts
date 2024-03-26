@@ -58,6 +58,15 @@ export class Text extends EventTarget<Text> {
    */
   tryGet() {
     this.request();
+    return String(
+      this.dataCheck().textStore.getRecv(this.member_, this.field_)
+    );
+  }
+  /**
+   * 文字列ではないかもしれないデータをそのまま返す
+   */
+  tryGetRaw() {
+    this.request();
     return this.dataCheck().textStore.getRecv(this.member_, this.field_);
   }
   /**
@@ -72,9 +81,20 @@ export class Text extends EventTarget<Text> {
     }
   }
   /**
+   * 文字列ではないかもしれないデータをそのまま返す
+   */
+  getRaw() {
+    const v = this.tryGetRaw();
+    if (v === null) {
+      return "";
+    } else {
+      return v;
+    }
+  }
+  /**
    * 文字列をセットする
    */
-  set(data: string | object) {
+  set(data: string | number | boolean | object) {
     if (typeof data === "object" && data != null) {
       for (const [k, v] of Object.entries(data)) {
         this.child(k).set(v as string | object);

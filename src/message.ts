@@ -84,7 +84,7 @@ export interface Value {
 export interface Text {
   kind: 1;
   f: string;
-  d: string;
+  d: Val;
 }
 export type ViewComponentsDiff = {
   [key in string]: ViewComponent;
@@ -94,8 +94,14 @@ export interface ViewComponent {
   x: string;
   L: string | null;
   l: string | null;
+  R?: string | null;
+  r?: string | null;
   c: number;
   b: number;
+  ii?: Val | null;
+  im?: number | null;
+  ix?: number | null;
+  io?: number[] | string[];
 }
 export interface View {
   kind: 3;
