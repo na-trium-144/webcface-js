@@ -65,7 +65,7 @@ export class Text extends EventTarget<Text> {
   /**
    * 文字列ではないかもしれないデータをそのまま返す
    */
-  tryGetRaw() {
+  tryGetAny() {
     this.request();
     return this.dataCheck().textStore.getRecv(this.member_, this.field_);
   }
@@ -83,8 +83,8 @@ export class Text extends EventTarget<Text> {
   /**
    * 文字列ではないかもしれないデータをそのまま返す
    */
-  getRaw() {
-    const v = this.tryGetRaw();
+  getAny() {
+    const v = this.tryGetAny();
     if (v === null) {
       return "";
     } else {

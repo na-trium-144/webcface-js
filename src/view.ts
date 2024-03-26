@@ -15,8 +15,9 @@ export const viewComponentTypes = {
   numInput: 4,
   intInput: 5,
   toggleInput: 6,
-  sliderInput: 7,
-  checkInput: 8,
+  selectInput: 7,
+  sliderInput: 8,
+  checkInput: 9,
 } as const;
 export const viewColor = {
   inherit: 0,
@@ -271,14 +272,17 @@ export class ViewComponent {
     return this.bg_color_;
   }
   /**
-   * バインドされたinputの値を取得
+   * バインドされたinputの値
+   *
+   * bind.getAny() で値を取得したり、
+   * bind.on(...) で値が変化したときのコールバックを設定して使う。
    */
-  getBindValue(): string | number | boolean | null {
+  get bind(): Text | null {
     if (this.text_ref_ !== null) {
       if (this.data !== null) {
         return new Text(
           new Field(this.data, this.text_ref_.member_, this.text_ref_.field_)
-        ).tryGetRaw();
+        );
       } else {
         throw new Error("cannot get bindValue: ClientData not set");
       }
