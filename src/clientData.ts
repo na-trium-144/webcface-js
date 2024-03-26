@@ -57,7 +57,7 @@ export class ClientData {
       name,
       SyncDataStore2.shouldSendOnChange
     );
-    this.textStore = new SyncDataStore2<string>(
+    this.textStore = new SyncDataStore2<string | number | boolean>(
       name,
       SyncDataStore2.shouldSendOnChange
     );
