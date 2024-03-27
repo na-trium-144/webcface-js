@@ -112,7 +112,7 @@ interface ViewComponentOption {
   init?: string | number | boolean;
   min?: number;
   max?: number;
-  options?: string[] | number[];
+  option?: string[] | number[];
 }
 /**
  * Viewのコンポーネントを表すクラス
@@ -129,7 +129,7 @@ export class ViewComponent {
   init_: string | number | boolean | null = null;
   min_: number | null = null;
   max_: number | null = null;
-  options_: string[] | number[] | null = null;
+  option_: string[] | number[] | null = null;
   data: ClientData | null = null;
   /**
    * 引数に文字列を入れるとtextコンポーネントを作成できる
@@ -162,7 +162,7 @@ export class ViewComponent {
       this.init_ = arg.ii != null ? arg.ii : null;
       this.min_ = arg.im != null ? arg.im : null;
       this.max_ = arg.ix != null ? arg.ix : null;
-      this.options_ = arg.io != null ? arg.io : null;
+      this.option_ = arg.io != null ? arg.io : null;
     }
     this.data = data;
     if (options?.text !== undefined) {
@@ -197,8 +197,8 @@ export class ViewComponent {
     if (options?.max !== undefined) {
       this.max_ = options.max;
     }
-    if (options?.options !== undefined) {
-      this.options_ = options.options;
+    if (options?.option !== undefined) {
+      this.option_ = options.option;
     }
   }
   /**
@@ -320,8 +320,8 @@ export class ViewComponent {
   /**
    * inputの選択肢
    */
-  get options() {
-    return this.options_;
+  get option() {
+    return this.option_;
   }
 }
 
