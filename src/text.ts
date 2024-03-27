@@ -58,13 +58,31 @@ export class Text extends EventTarget<Text> {
    */
   tryGet() {
     this.request();
+    const v = this.dataCheck().textStore.getRecv(this.member_, this.field_);
+    if (v === null) {
+      return null;
+    } else {
+      return String(v);
+    }
+  }
+  /**
+   * 文字列ではないかもしれないデータをそのまま返す
+   */
+  tryGetAny() {
+    this.request();
     return this.dataCheck().textStore.getRecv(this.member_, this.field_);
   }
   /**
    * 文字列を返す
    */
   get() {
-    const v = this.tryGet();
+    return this.tryGet() || "";
+  }
+  /**
+   * 文字列ではないかもしれないデータをそのまま返す
+   */
+  getAny() {
+    const v = this.tryGetAny();
     if (v === null) {
       return "";
     } else {
@@ -74,7 +92,7 @@ export class Text extends EventTarget<Text> {
   /**
    * 文字列をセットする
    */
-  set(data: string | object) {
+  set(data: string | number | boolean | object) {
     if (typeof data === "object" && data != null) {
       for (const [k, v] of Object.entries(data)) {
         this.child(k).set(v as string | object);

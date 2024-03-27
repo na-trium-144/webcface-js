@@ -4,12 +4,20 @@ import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field, FieldBase } from "./field.js";
+import { Text } from "./text.js";
 import * as Message from "./message.js";
 
 export const viewComponentTypes = {
   text: 0,
   newLine: 1,
   button: 2,
+  textInput: 3,
+  numInput: 4,
+  intInput: 5,
+  toggleInput: 6,
+  selectInput: 7,
+  sliderInput: 8,
+  checkInput: 9,
 } as const;
 export const viewColor = {
   inherit: 0,
@@ -98,8 +106,13 @@ export const viewComponents = {
 interface ViewComponentOption {
   text?: string;
   onClick?: Func | AnonymousFunc | FuncCallback;
+  // bind?: InputRef;
   textColor?: number;
   bgColor?: number;
+  init?: string | number | boolean;
+  min?: number;
+  max?: number;
+  option?: string[] | number[];
 }
 /**
  * Viewのコンポーネントを表すクラス
@@ -109,8 +122,14 @@ export class ViewComponent {
   text_ = "";
   on_click_: FieldBase | null = null;
   on_click_tmp_: AnonymousFunc | null = null;
+  text_ref_: FieldBase | null = null;
+  // text_ref_tmp_: InputRef | null = null;
   text_color_ = 0;
   bg_color_ = 0;
+  init_: string | number | boolean | null = null;
+  min_: number | null = null;
+  max_: number | null = null;
+  option_: string[] | number[] | null = null;
   data: ClientData | null = null;
   /**
    * 引数に文字列を入れるとtextコンポーネントを作成できる
@@ -138,6 +157,11 @@ export class ViewComponent {
         arg.L !== null && arg.l !== null ? new FieldBase(arg.L, arg.l) : null;
       this.text_color_ = arg.c;
       this.bg_color_ = arg.b;
+      this.text_ref_ =
+        arg.R != null && arg.r != null ? new FieldBase(arg.R, arg.r) : null;
+      this.min_ = arg.im != null ? arg.im : null;
+      this.max_ = arg.ix != null ? arg.ix : null;
+      this.option_ = arg.io != null ? arg.io : null;
     }
     this.data = data;
     if (options?.text !== undefined) {
@@ -162,6 +186,18 @@ export class ViewComponent {
     }
     if (options?.bgColor !== undefined) {
       this.bg_color_ = options.bgColor;
+    }
+    if (options?.init !== undefined) {
+      this.init_ = options.init;
+    }
+    if (options?.min !== undefined) {
+      this.min_ = options.min;
+    }
+    if (options?.max !== undefined) {
+      this.max_ = options.max;
+    }
+    if (options?.option !== undefined) {
+      this.option_ = options.option;
     }
   }
   /**
@@ -233,6 +269,52 @@ export class ViewComponent {
    */
   get bgColor() {
     return this.bg_color_;
+  }
+  /**
+   * バインドされたinputの値
+   *
+   * bind.getAny() で値を取得したり、
+   * bind.on(...) で値が変化したときのコールバックを設定して使う。
+   */
+  get bind(): Text | null {
+    if (this.text_ref_ !== null) {
+      if (this.data !== null) {
+        return new Text(
+          new Field(this.data, this.text_ref_.member_, this.text_ref_.field_)
+        );
+      } else {
+        throw new Error("cannot get bindValue: ClientData not set");
+      }
+    }
+    return null;
+  }
+  /**
+   * 値の変化時に実行する関数を取得
+   *
+   * 取得してそれを呼び出すには onChange?.runAsync(値) のようにする
+   *
+   * 内部データとしてはonClickと共通
+   */
+  get onChange(): Func | null {
+    return this.onClick;
+  }
+  /**
+   * inputの最小値 or 最小文字数
+   */
+  get min() {
+    return this.min_;
+  }
+  /**
+   * inputの最大値 or 最大文字数
+   */
+  get max() {
+    return this.max_;
+  }
+  /**
+   * inputの選択肢
+   */
+  get option() {
+    return this.option_;
   }
 }
 

@@ -16,7 +16,7 @@ export interface Canvas2DData {
 export class ClientData {
   selfMemberName: string;
   valueStore: SyncDataStore2<number[]>;
-  textStore: SyncDataStore2<string>;
+  textStore: SyncDataStore2<string | number | boolean>;
   funcStore: SyncDataStore2<FuncInfo>;
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
   imageStore: SyncDataStore2<ImageFrame, ImageReq>;
@@ -57,7 +57,7 @@ export class ClientData {
       name,
       SyncDataStore2.shouldSendOnChange
     );
-    this.textStore = new SyncDataStore2<string>(
+    this.textStore = new SyncDataStore2<string | number | boolean>(
       name,
       SyncDataStore2.shouldSendOnChange
     );
