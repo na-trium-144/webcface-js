@@ -159,7 +159,6 @@ export class ViewComponent {
       this.bg_color_ = arg.b;
       this.text_ref_ =
         arg.R != null && arg.r != null ? new FieldBase(arg.R, arg.r) : null;
-      this.init_ = arg.ii != null ? arg.ii : null;
       this.min_ = arg.im != null ? arg.im : null;
       this.max_ = arg.ix != null ? arg.ix : null;
       this.option_ = arg.io != null ? arg.io : null;
@@ -298,12 +297,6 @@ export class ViewComponent {
    */
   get onChange(): Func | null {
     return this.onClick;
-  }
-  /**
-   * inputの初期値
-   */
-  get init() {
-    return this.init_;
   }
   /**
    * inputの最小値 or 最小文字数

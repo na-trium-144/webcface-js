@@ -98,7 +98,6 @@ export interface ViewComponent {
   r?: string | null;
   c: number;
   b: number;
-  ii?: Val | null;
   im?: number | null;
   ix?: number | null;
   io?: number[] | string[];
