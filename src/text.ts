@@ -58,9 +58,12 @@ export class Text extends EventTarget<Text> {
    */
   tryGet() {
     this.request();
-    return String(
-      this.dataCheck().textStore.getRecv(this.member_, this.field_)
-    );
+    const v = this.dataCheck().textStore.getRecv(this.member_, this.field_);
+    if (v === null) {
+      return null;
+    } else {
+      return String(v);
+    }
   }
   /**
    * 文字列ではないかもしれないデータをそのまま返す
@@ -73,12 +76,7 @@ export class Text extends EventTarget<Text> {
    * 文字列を返す
    */
   get() {
-    const v = this.tryGet();
-    if (v === null) {
-      return "";
-    } else {
-      return v;
-    }
+    return this.tryGet() || "";
   }
   /**
    * 文字列ではないかもしれないデータをそのまま返す
