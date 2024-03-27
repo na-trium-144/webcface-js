@@ -202,11 +202,15 @@ export class ViewComponent {
   }
   /**
    * AnonymousFuncをFuncオブジェクトにロックする
+   *
+   * funcIdIncは呼ぶたびに1増加
    */
-  lockTmp(data: ClientData, field: string) {
+  lockTmp(data: ClientData, viewName: string, funcIdInc: () => number) {
     if (this.on_click_tmp_) {
-      const f = new Func(new Field(data, data.selfMemberName, field));
-      this.on_click_tmp_.lockTo(f, true);
+      const f = new Func(
+        new Field(data, data.selfMemberName, `..v${viewName}.${funcIdInc()}`)
+      );
+      this.on_click_tmp_.lockTo(f);
       this.on_click_ = f;
     }
     return this;
@@ -419,10 +423,11 @@ export class View extends EventTarget<View> {
         data2.push(viewComponents.text(String(c)));
       }
     }
+    let funcId = 0;
     this.setCheck().viewStore.setSend(
       this.field_,
-      data2.map((c, i) =>
-        c.lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
+      data2.map((c) =>
+        c.lockTmp(this.dataCheck(), this.field_, () => funcId++).toMessage()
       )
     );
     this.triggerEvent(this);
