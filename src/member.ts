@@ -338,4 +338,10 @@ export class Member extends Field {
       this.member_
     );
   }
+  /**
+   * syncの時刻を返す
+   */
+  syncTime() {
+    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+  }
 }

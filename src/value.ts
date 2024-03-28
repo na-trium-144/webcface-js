@@ -82,7 +82,7 @@ export class Value extends EventTarget<Value> {
     if (v === null) {
       return [];
     } else {
-      return v;
+      return v.slice();
     }
   }
   /**
@@ -117,6 +117,8 @@ export class Value extends EventTarget<Value> {
   }
   /**
    * Memberのsyncの時刻を返す
+   *
+   * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
     return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);

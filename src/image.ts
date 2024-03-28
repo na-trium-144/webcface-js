@@ -145,6 +145,8 @@ export class Image extends EventTarget<Image> {
   }
   /**
    * Memberのsyncの時刻を返す
+   *
+   * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
     return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);

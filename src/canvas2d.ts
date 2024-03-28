@@ -250,6 +250,8 @@ export class Canvas2D extends EventTarget<Canvas2D> {
   }
   /**
    * Memberのsyncの時刻を返す
+   *
+   * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
     return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
