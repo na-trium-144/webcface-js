@@ -82,7 +82,7 @@ export class Value extends EventTarget<Value> {
     if (v === null) {
       return [];
     } else {
-      return v;
+      return v.slice();
     }
   }
   /**
