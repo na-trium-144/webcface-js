@@ -1,10 +1,10 @@
 import isEqual from "lodash.isequal";
-import { Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { Val, Func, AnonymousFunc, FuncCallback } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field, FieldBase } from "./field.js";
-import { Text } from "./text.js";
+import { Text, InputRef } from "./text.js";
 import * as Message from "./message.js";
 
 export const viewComponentTypes = {
@@ -93,20 +93,54 @@ export const viewComponents = {
     t: string,
     f: Func | AnonymousFunc | FuncCallback,
     options?: ViewComponentOption
-  ) => {
-    const v = new ViewComponent(viewComponentTypes.button, null, {
+  ) =>
+    new ViewComponent(viewComponentTypes.button, null, {
       ...options,
       text: t,
       onClick: f,
-    });
-    return v;
-  },
+    }),
+  textInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.textInput, null, {
+      ...options,
+      text: t,
+    }),
+  numInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.numInput, null, {
+      ...options,
+      text: t,
+    }),
+  intInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.intInput, null, {
+      ...options,
+      text: t,
+    }),
+  selectInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.selectInput, null, {
+      ...options,
+      text: t,
+    }),
+  toggleInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.toggleInput, null, {
+      ...options,
+      text: t,
+    }),
+  sliderInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.sliderInput, null, {
+      ...options,
+      text: t,
+    }),
+  checkInput: (t: string, options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.checkInput, null, {
+      ...options,
+      text: t,
+    }),
 } as const;
 
 interface ViewComponentOption {
   text?: string;
   onClick?: Func | AnonymousFunc | FuncCallback;
-  // bind?: InputRef;
+  onChange?: FuncCallback;
+  bind?: InputRef;
   textColor?: number;
   bgColor?: number;
   init?: string | number | boolean;
@@ -123,7 +157,7 @@ export class ViewComponent {
   on_click_: FieldBase | null = null;
   on_click_tmp_: AnonymousFunc | null = null;
   text_ref_: FieldBase | null = null;
-  // text_ref_tmp_: InputRef | null = null;
+  text_ref_tmp_: InputRef | null = null;
   text_color_ = 0;
   bg_color_ = 0;
   init_: string | number | boolean | null = null;
@@ -181,6 +215,32 @@ export class ViewComponent {
         );
       }
     }
+    if (options?.onChange !== undefined) {
+      const ref = new InputRef();
+      const func = options.onChange;
+      this.on_click_tmp_ = new AnonymousFunc(
+        null,
+        (val: Val) => {
+          ref.state.set(val);
+          return func(val);
+        },
+        Message.valType.none_,
+        [{ type: Message.valType.string_ }]
+      );
+      this.text_ref_tmp_ = ref;
+    }
+    if (options?.bind !== undefined) {
+      const ref = options.bind;
+      this.on_click_tmp_ = new AnonymousFunc(
+        null,
+        (val: Val) => {
+          ref.state.set(val);
+        },
+        Message.valType.none_,
+        [{ type: Message.valType.string_ }]
+      );
+      this.text_ref_tmp_ = ref;
+    }
     if (options?.textColor !== undefined) {
       this.text_color_ = options.textColor;
     }
@@ -205,13 +265,32 @@ export class ViewComponent {
    *
    * funcIdIncは呼ぶたびに1増加
    */
-  lockTmp(data: ClientData, viewName: string, funcIdInc: () => number) {
+  lockTmp(
+    data: ClientData,
+    viewName: string,
+    funcIdInc: () => number,
+    inputRefIdInc: () => number
+  ) {
     if (this.on_click_tmp_) {
       const f = new Func(
         new Field(data, data.selfMemberName, `..v${viewName}.${funcIdInc()}`)
       );
       this.on_click_tmp_.lockTo(f);
       this.on_click_ = f;
+    }
+    if (this.text_ref_tmp_) {
+      const t = new Text(
+        new Field(
+          data,
+          data.selfMemberName,
+          `..ir${viewName}.${inputRefIdInc()}`
+        )
+      );
+      this.text_ref_tmp_.state = t;
+      if (this.init_ != null && t.tryGet() != null) {
+        t.set(this.init_);
+      }
+      this.text_ref_ = t;
     }
     return this;
   }
@@ -226,6 +305,11 @@ export class ViewComponent {
       l: this.on_click_ === null ? null : this.on_click_.field_,
       c: this.text_color_,
       b: this.bg_color_,
+      R: this.text_ref_ === null ? null : this.text_ref_.member_,
+      r: this.text_ref_ === null ? null : this.text_ref_.field_,
+      im: this.min_,
+      ix: this.max_,
+      io: this.option_,
     };
   }
   /**

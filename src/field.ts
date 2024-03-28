@@ -26,4 +26,7 @@ export class Field extends FieldBase {
     }
     return this.data;
   }
+  isValid() {
+    return this.data != null;
+  }
 }
