@@ -120,13 +120,13 @@ export class Text extends EventTarget<Text> {
 export class InputRef {
   state: Text;
   constructor() {
-    this.state = new Text();
+    this.state = new Text(null);
   }
   get() {
     if (this.state.isValid()) {
       return this.state.getAny();
     } else {
-      return null;
+      return "";
     }
   }
 }

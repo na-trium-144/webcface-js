@@ -99,41 +99,20 @@ export const viewComponents = {
       text: t,
       onClick: f,
     }),
-  textInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.textInput, null, {
-      ...options,
-      text: t,
-    }),
-  numInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.numInput, null, {
-      ...options,
-      text: t,
-    }),
-  intInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.intInput, null, {
-      ...options,
-      text: t,
-    }),
-  selectInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.selectInput, null, {
-      ...options,
-      text: t,
-    }),
-  toggleInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.toggleInput, null, {
-      ...options,
-      text: t,
-    }),
-  sliderInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.sliderInput, null, {
-      ...options,
-      text: t,
-    }),
-  checkInput: (t: string, options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.checkInput, null, {
-      ...options,
-      text: t,
-    }),
+  textInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.textInput, null, options),
+  numInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.numInput, null, options),
+  intInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.intInput, null, options),
+  selectInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.selectInput, null, options),
+  toggleInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.toggleInput, null, options),
+  sliderInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.sliderInput, null, options),
+  checkInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.checkInput, null, options),
 } as const;
 
 interface ViewComponentOption {
@@ -163,7 +142,7 @@ export class ViewComponent {
   init_: string | number | boolean | null = null;
   min_: number | null = null;
   max_: number | null = null;
-  option_: string[] | number[] | null = null;
+  option_: string[] | number[] = [];
   data: ClientData | null = null;
   /**
    * 引数に文字列を入れるとtextコンポーネントを作成できる
@@ -195,7 +174,7 @@ export class ViewComponent {
         arg.R != null && arg.r != null ? new FieldBase(arg.R, arg.r) : null;
       this.min_ = arg.im != null ? arg.im : null;
       this.max_ = arg.ix != null ? arg.ix : null;
-      this.option_ = arg.io != null ? arg.io : null;
+      this.option_ = arg.io != null ? arg.io : [];
     }
     this.data = data;
     if (options?.text !== undefined) {
@@ -287,7 +266,7 @@ export class ViewComponent {
         )
       );
       this.text_ref_tmp_.state = t;
-      if (this.init_ != null && t.tryGet() != null) {
+      if (this.init_ != null && t.tryGet() == null) {
         t.set(this.init_);
       }
       this.text_ref_ = t;
@@ -510,10 +489,18 @@ export class View extends EventTarget<View> {
       }
     }
     let funcId = 0;
+    let inputRefId = 0;
     this.setCheck().viewStore.setSend(
       this.field_,
       data2.map((c) =>
-        c.lockTmp(this.dataCheck(), this.field_, () => funcId++).toMessage()
+        c
+          .lockTmp(
+            this.dataCheck(),
+            this.field_,
+            () => funcId++,
+            () => inputRefId++
+          )
+          .toMessage()
       )
     );
     this.triggerEvent(this);
