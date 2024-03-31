@@ -194,7 +194,7 @@ export function syncData(data: ClientData, isFirst: boolean) {
   }
 
   for (const [k, v] of data.funcStore.transferSend(isFirst).entries()) {
-    if (!v.hidden) {
+    if (!k.startsWith(".")) {
       msg.push({
         kind: Message.kind.funcInfo,
         f: k,

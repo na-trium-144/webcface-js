@@ -1,10 +1,10 @@
 import isEqual from "lodash.isequal";
-import { Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { Val, Func, AnonymousFunc, FuncCallback } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Field, FieldBase } from "./field.js";
-import { Text } from "./text.js";
+import { Text, InputRef } from "./text.js";
 import * as Message from "./message.js";
 
 export const viewComponentTypes = {
@@ -93,20 +93,33 @@ export const viewComponents = {
     t: string,
     f: Func | AnonymousFunc | FuncCallback,
     options?: ViewComponentOption
-  ) => {
-    const v = new ViewComponent(viewComponentTypes.button, null, {
+  ) =>
+    new ViewComponent(viewComponentTypes.button, null, {
       ...options,
       text: t,
       onClick: f,
-    });
-    return v;
-  },
+    }),
+  textInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.textInput, null, options),
+  numInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.numInput, null, options),
+  intInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.intInput, null, options),
+  selectInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.selectInput, null, options),
+  toggleInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.toggleInput, null, options),
+  sliderInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.sliderInput, null, options),
+  checkInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.checkInput, null, options),
 } as const;
 
 interface ViewComponentOption {
   text?: string;
   onClick?: Func | AnonymousFunc | FuncCallback;
-  // bind?: InputRef;
+  onChange?: FuncCallback;
+  bind?: InputRef;
   textColor?: number;
   bgColor?: number;
   init?: string | number | boolean;
@@ -123,13 +136,13 @@ export class ViewComponent {
   on_click_: FieldBase | null = null;
   on_click_tmp_: AnonymousFunc | null = null;
   text_ref_: FieldBase | null = null;
-  // text_ref_tmp_: InputRef | null = null;
+  text_ref_tmp_: InputRef | null = null;
   text_color_ = 0;
   bg_color_ = 0;
   init_: string | number | boolean | null = null;
   min_: number | null = null;
   max_: number | null = null;
-  option_: string[] | number[] | null = null;
+  option_: string[] | number[] = [];
   data: ClientData | null = null;
   /**
    * 引数に文字列を入れるとtextコンポーネントを作成できる
@@ -161,7 +174,7 @@ export class ViewComponent {
         arg.R != null && arg.r != null ? new FieldBase(arg.R, arg.r) : null;
       this.min_ = arg.im != null ? arg.im : null;
       this.max_ = arg.ix != null ? arg.ix : null;
-      this.option_ = arg.io != null ? arg.io : null;
+      this.option_ = arg.io != null ? arg.io : [];
     }
     this.data = data;
     if (options?.text !== undefined) {
@@ -180,6 +193,32 @@ export class ViewComponent {
           []
         );
       }
+    }
+    if (options?.onChange !== undefined) {
+      const ref = new InputRef();
+      const func = options.onChange;
+      this.on_click_tmp_ = new AnonymousFunc(
+        null,
+        (val: Val) => {
+          ref.state.set(val);
+          return func(val);
+        },
+        Message.valType.none_,
+        [{ type: Message.valType.string_ }]
+      );
+      this.text_ref_tmp_ = ref;
+    }
+    if (options?.bind !== undefined) {
+      const ref = options.bind;
+      this.on_click_tmp_ = new AnonymousFunc(
+        null,
+        (val: Val) => {
+          ref.state.set(val);
+        },
+        Message.valType.none_,
+        [{ type: Message.valType.string_ }]
+      );
+      this.text_ref_tmp_ = ref;
     }
     if (options?.textColor !== undefined) {
       this.text_color_ = options.textColor;
@@ -202,12 +241,35 @@ export class ViewComponent {
   }
   /**
    * AnonymousFuncをFuncオブジェクトにロックする
+   *
+   * funcIdIncは呼ぶたびに1増加
    */
-  lockTmp(data: ClientData, field: string) {
+  lockTmp(
+    data: ClientData,
+    viewName: string,
+    funcIdInc: () => number,
+    inputRefIdInc: () => number
+  ) {
     if (this.on_click_tmp_) {
-      const f = new Func(new Field(data, data.selfMemberName, field));
-      this.on_click_tmp_.lockTo(f, true);
+      const f = new Func(
+        new Field(data, data.selfMemberName, `..v${viewName}.${funcIdInc()}`)
+      );
+      this.on_click_tmp_.lockTo(f);
       this.on_click_ = f;
+    }
+    if (this.text_ref_tmp_) {
+      const t = new Text(
+        new Field(
+          data,
+          data.selfMemberName,
+          `..ir${viewName}.${inputRefIdInc()}`
+        )
+      );
+      this.text_ref_tmp_.state = t;
+      if (this.init_ != null && t.tryGet() == null) {
+        t.set(this.init_);
+      }
+      this.text_ref_ = t;
     }
     return this;
   }
@@ -222,6 +284,11 @@ export class ViewComponent {
       l: this.on_click_ === null ? null : this.on_click_.field_,
       c: this.text_color_,
       b: this.bg_color_,
+      R: this.text_ref_ === null ? null : this.text_ref_.member_,
+      r: this.text_ref_ === null ? null : this.text_ref_.field_,
+      im: this.min_,
+      ix: this.max_,
+      io: this.option_,
     };
   }
   /**
@@ -421,10 +488,19 @@ export class View extends EventTarget<View> {
         data2.push(viewComponents.text(String(c)));
       }
     }
+    let funcId = 0;
+    let inputRefId = 0;
     this.setCheck().viewStore.setSend(
       this.field_,
-      data2.map((c, i) =>
-        c.lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
+      data2.map((c) =>
+        c
+          .lockTmp(
+            this.dataCheck(),
+            this.field_,
+            () => funcId++,
+            () => inputRefId++
+          )
+          .toMessage()
       )
     );
     this.triggerEvent(this);

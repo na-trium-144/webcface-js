@@ -14,8 +14,13 @@ export class Text extends EventTarget<Text> {
    * このコンストラクタは直接使わず、
    * Member.text(), Member.texts(), Member.onTextEntry などを使うこと
    */
-  constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+  constructor(base: Field | null, field = "") {
+    super(
+      "",
+      base?.data || null,
+      base?.member_ || "",
+      field || base?.field_ || ""
+    );
     this.eventType_ = eventType.textChange(this);
   }
   /**
@@ -109,5 +114,19 @@ export class Text extends EventTarget<Text> {
    */
   time() {
     return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+  }
+}
+
+export class InputRef {
+  state: Text;
+  constructor() {
+    this.state = new Text(null);
+  }
+  get() {
+    if (this.state.isValid()) {
+      return this.state.getAny();
+    } else {
+      return "";
+    }
   }
 }

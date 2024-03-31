@@ -60,10 +60,12 @@ export class Canvas2DComponent {
   /**
    * AnonymousFuncをFuncオブジェクトにロックする
    */
-  lockTmp(data: ClientData, field: string) {
+  lockTmp(data: ClientData, canvasName: string, funcIdInc: () => number) {
     if (this._on_click_tmp) {
-      const f = new Func(new Field(data, data.selfMemberName, field));
-      this._on_click_tmp.lockTo(f, true);
+      const f = new Func(
+        new Field(data, data.selfMemberName, `..c2${canvasName}.${funcIdInc()}`)
+      );
+      this._on_click_tmp.lockTo(f);
       this._on_click = f;
     }
     return this;
@@ -263,11 +265,15 @@ export class Canvas2D extends EventTarget<Canvas2D> {
     height: number,
     data: (Canvas2DComponent | TemporalGeometry)[]
   ) {
+    let funcId = 0;
     this.setCheck().canvas2DStore.setSend(this.field_, {
       width,
       height,
-      components: data.map((c, i) =>
-        c.to2().lockTmp(this.dataCheck(), `${this.field_}_${i}`).toMessage()
+      components: data.map((c) =>
+        c
+          .to2()
+          .lockTmp(this.dataCheck(), this.field_, () => funcId++)
+          .toMessage()
       ),
     });
     this.triggerEvent(this);

@@ -10,7 +10,6 @@ export interface FuncInfo {
   args: Arg[];
   funcImpl?: FuncCallback;
   // call
-  hidden?: boolean;
 }
 
 export interface Arg {
@@ -147,19 +146,16 @@ export class Func extends Field {
    * @param func 登録したい関数
    * @param return_type 関数の戻り値 (valTypeオブジェクトの定数を使う)
    * @param args 関数の引数の情報
-   * @param hidden trueにすると関数を他のMemberから隠す
    */
   set(
     func: FuncCallback,
     returnType: number = valType.none_,
-    args: Arg[] = [],
-    hidden = false
+    args: Arg[] = []
   ) {
     this.setInfo({
       returnType: returnType,
       args: args,
       funcImpl: func,
-      hidden: hidden,
     });
   }
   get returnType() {
@@ -248,7 +244,7 @@ export class Func extends Field {
 export class AnonymousFunc {
   static fieldId = 0;
   static fieldNameTmp() {
-    return `.tmp${++this.fieldId}`;
+    return `..tmp${++this.fieldId}`;
   }
 
   base_: Func | null;
@@ -268,25 +264,23 @@ export class AnonymousFunc {
       this.base_ = null;
     } else {
       this.base_ = new Func(base, AnonymousFunc.fieldNameTmp());
-      this.base_.set(func, returnType, args, true);
+      this.base_.set(func, returnType, args);
     }
   }
   /**
    * target に関数を移動
-   * @param hidden targetに設定されるhidden属性
    */
-  lockTo(target: Func, hidden = false) {
+  lockTo(target: Func) {
     if (this.base_ === null) {
       this.base_ = new Func(target, AnonymousFunc.fieldNameTmp());
-      this.base_.set(this.func_, this.returnType_, this.args_, true);
+      this.base_.set(this.func_, this.returnType_, this.args_);
     }
     const fi = this.base_.dataCheck().funcStore.getRecv(
       this.base_.member_,
       this.base_.field_
     );
     if (fi) {
-      const fi2 = { ...fi, hidden };
-      target.setInfo(fi2);
+      target.setInfo(fi);
       this.base_.free();
     } else {
       // コンストラクタかlockToのどちらかで必ずsetされているはずなのであり得ないが
