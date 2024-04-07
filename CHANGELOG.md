@@ -1,3 +1,13 @@
+## [1.6.0] - 2024-04-07
+### Added
+* Viewにinput要素追加 (#125, #128, #133)
+* InputRef
+* ViewComponent.id, Canvas2dComponent.id
+### Changed
+* exampleを内容別に分割 (#128)
+* Value.getVec()がarrayのコピーを返すようにした (#126)
+* 各種field.time() を Member.syncTime() に移行 (#127)
+
 ## [1.5.1] - 2024-03-16
 ### Added
 * Canvas2D.text, textSize (#116)
