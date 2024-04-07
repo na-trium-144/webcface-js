@@ -128,10 +128,27 @@ interface ViewComponentOption {
   step?: number;
   option?: string[] | number[];
 }
+
+/**
+ * ViewComponent, Canvas2DComponentのid管理
+ */
+export class IdBase {
+  private idxForType: number = 0;
+  initIdx(idxNext: Map<number, number>, type: number) {
+    this.idxForType = idxNext.get(type) || 0;
+    idxNext.set(type, this.idxForType + 1);
+  }
+  get type(): number {
+    throw new Error("undefined type");
+  }
+  get id() {
+    return `..${this.type}.${this.idxForType}`;
+  }
+}
 /**
  * Viewのコンポーネントを表すクラス
  */
-export class ViewComponent {
+export class ViewComponent extends IdBase {
   type_ = 0;
   text_ = "";
   on_click_: FieldBase | null = null;
@@ -158,14 +175,17 @@ export class ViewComponent {
   constructor(
     arg: number | string | Message.ViewComponent,
     data: ClientData | null = null,
-    options?: ViewComponentOption
+    options?: ViewComponentOption,
+    idxNext?: Map<number, number>
   ) {
+    super();
     if (typeof arg === "number") {
       this.type_ = arg;
     } else if (typeof arg === "string") {
       this.type_ = viewComponentTypes.text;
       this.text_ = arg;
     } else {
+      idxNext && this.initIdx(idxNext, arg.t);
       this.type_ = arg.t;
       this.text_ = arg.x;
       this.on_click_ =
@@ -250,26 +270,18 @@ export class ViewComponent {
    *
    * funcIdIncは呼ぶたびに1増加
    */
-  lockTmp(
-    data: ClientData,
-    viewName: string,
-    funcIdInc: () => number,
-    inputRefIdInc: () => number
-  ) {
+  lockTmp(data: ClientData, viewName: string, idxNext: Map<number, number>) {
+    this.initIdx(idxNext, this.type);
     if (this.on_click_tmp_) {
       const f = new Func(
-        new Field(data, data.selfMemberName, `..v${viewName}.${funcIdInc()}`)
+        new Field(data, data.selfMemberName, `..v${viewName}/${this.id}`)
       );
       this.on_click_tmp_.lockTo(f);
       this.on_click_ = f;
     }
     if (this.text_ref_tmp_) {
       const t = new Text(
-        new Field(
-          data,
-          data.selfMemberName,
-          `..ir${viewName}.${inputRefIdInc()}`
-        )
+        new Field(data, data.selfMemberName, `..ir${viewName}/${this.id}`)
       );
       this.text_ref_tmp_.state = t;
       if (this.init_ != null && t.tryGet() == null) {
@@ -454,10 +466,12 @@ export class View extends EventTarget<View> {
    */
   tryGet() {
     this.request();
+    const idxNext = new Map<number, number>();
     return (
       this.dataCheck()
         .viewStore.getRecv(this.member_, this.field_)
-        ?.map((v) => new ViewComponent(v, this.data)) || null
+        ?.map((v) => new ViewComponent(v, this.data, undefined, idxNext)) ||
+      null
     );
   }
   /**
@@ -501,19 +515,11 @@ export class View extends EventTarget<View> {
         data2.push(viewComponents.text(String(c)));
       }
     }
-    let funcId = 0;
-    let inputRefId = 0;
+    const idxNext = new Map<number, number>();
     this.setCheck().viewStore.setSend(
       this.field_,
       data2.map((c) =>
-        c
-          .lockTmp(
-            this.dataCheck(),
-            this.field_,
-            () => funcId++,
-            () => inputRefId++
-          )
-          .toMessage()
+        c.lockTmp(this.dataCheck(), this.field_, idxNext).toMessage()
       )
     );
     this.triggerEvent(this);

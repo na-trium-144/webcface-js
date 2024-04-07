@@ -6,6 +6,7 @@ import { Member } from "./member.js";
 import { TemporalGeometry, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
 import { Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { IdBase } from "./view.js";
 
 export interface Canvas2DComponentOption {
   origin?: Transform;
@@ -14,7 +15,7 @@ export interface Canvas2DComponentOption {
   strokeWidth?: number;
   onClick?: FieldBase | AnonymousFunc | FuncCallback;
 }
-export class Canvas2DComponent {
+export class Canvas2DComponent extends IdBase {
   private _type: number;
   private _origin: Transform;
   private _color: number;
@@ -32,6 +33,7 @@ export class Canvas2DComponent {
     text: string,
     options?: Canvas2DComponentOption
   ) {
+    super();
     this.data = data;
     this._type = type;
     this._origin = options?.origin || new Transform();
@@ -60,10 +62,11 @@ export class Canvas2DComponent {
   /**
    * AnonymousFuncをFuncオブジェクトにロックする
    */
-  lockTmp(data: ClientData, canvasName: string, funcIdInc: () => number) {
+  lockTmp(data: ClientData, canvasName: string, idxNext: Map<number, number>) {
+    this.initIdx(idxNext, this.type);
     if (this._on_click_tmp) {
       const f = new Func(
-        new Field(data, data.selfMemberName, `..c2${canvasName}.${funcIdInc()}`)
+        new Field(data, data.selfMemberName, `..c2${canvasName}/${this.id}`)
       );
       this._on_click_tmp.lockTo(f);
       this._on_click = f;
@@ -119,8 +122,12 @@ export class Canvas2DComponent {
   to2() {
     return this;
   }
-  static fromMessage(data: ClientData | null, msg: Message.Canvas2DComponent) {
-    return new Canvas2DComponent(
+  static fromMessage(
+    data: ClientData | null,
+    msg: Message.Canvas2DComponent,
+    idxNext: Map<number, number>
+  ) {
+    const c2 = new Canvas2DComponent(
       data,
       msg.t,
       msg.gt == null ? null : new Geometry(msg.gt, msg.gp),
@@ -136,6 +143,8 @@ export class Canvas2DComponent {
             : undefined,
       }
     );
+    c2.initIdx(idxNext, msg.t);
+    return c2;
   }
   toMessage(): Message.Canvas2DComponent {
     return {
@@ -218,11 +227,13 @@ export class Canvas2D extends EventTarget<Canvas2D> {
    */
   tryGet() {
     this.request();
+    const idxNext = new Map<number, number>();
     return (
       this.dataCheck()
         .canvas2DStore.getRecv(this.member_, this.field_)
-        ?.components.map((v) => Canvas2DComponent.fromMessage(this.data, v)) ||
-      null
+        ?.components.map((v) =>
+          Canvas2DComponent.fromMessage(this.data, v, idxNext)
+        ) || null
     );
   }
   /**
@@ -265,15 +276,12 @@ export class Canvas2D extends EventTarget<Canvas2D> {
     height: number,
     data: (Canvas2DComponent | TemporalGeometry)[]
   ) {
-    let funcId = 0;
+    const idxNext = new Map<number, number>();
     this.setCheck().canvas2DStore.setSend(this.field_, {
       width,
       height,
       components: data.map((c) =>
-        c
-          .to2()
-          .lockTmp(this.dataCheck(), this.field_, () => funcId++)
-          .toMessage()
+        c.to2().lockTmp(this.dataCheck(), this.field_, idxNext).toMessage()
       ),
     });
     this.triggerEvent(this);
