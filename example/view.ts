@@ -21,7 +21,7 @@ setInterval(() => {
       init: "hello",
     }),
     viewComponents.textInput({ text: "ref1", bind: ref1 }),
-    viewComponents.numInput({ text: "ref2", bind: ref2, min: -15, max: 15 }),
+    viewComponents.decimalInput({ text: "ref2", bind: ref2, min: -15, max: 15 }),
     viewComponents.toggleInput({
       text: "ref3",
       bind: ref3,

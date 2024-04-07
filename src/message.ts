@@ -100,6 +100,7 @@ export interface ViewComponent {
   b: number;
   im?: number | null;
   ix?: number | null;
+  is?: number | null;
   io?: number[] | string[];
 }
 export interface View {
