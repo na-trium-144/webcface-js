@@ -12,8 +12,8 @@ export const viewComponentTypes = {
   newLine: 1,
   button: 2,
   textInput: 3,
-  numInput: 4,
-  intInput: 5,
+  decimalInput: 4,
+  numberInput: 5,
   toggleInput: 6,
   selectInput: 7,
   sliderInput: 8,
@@ -101,10 +101,10 @@ export const viewComponents = {
     }),
   textInput: (options?: ViewComponentOption) =>
     new ViewComponent(viewComponentTypes.textInput, null, options),
-  numInput: (options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.numInput, null, options),
-  intInput: (options?: ViewComponentOption) =>
-    new ViewComponent(viewComponentTypes.intInput, null, options),
+  decimalInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.decimalInput, null, options),
+  numberInput: (options?: ViewComponentOption) =>
+    new ViewComponent(viewComponentTypes.numberInput, null, options),
   selectInput: (options?: ViewComponentOption) =>
     new ViewComponent(viewComponentTypes.selectInput, null, options),
   toggleInput: (options?: ViewComponentOption) =>
@@ -125,6 +125,7 @@ interface ViewComponentOption {
   init?: string | number | boolean;
   min?: number;
   max?: number;
+  step?: number;
   option?: string[] | number[];
 }
 /**
@@ -142,6 +143,7 @@ export class ViewComponent {
   init_: string | number | boolean | null = null;
   min_: number | null = null;
   max_: number | null = null;
+  step_: number | null = null;
   option_: string[] | number[] = [];
   data: ClientData | null = null;
   /**
@@ -174,6 +176,7 @@ export class ViewComponent {
         arg.R != null && arg.r != null ? new FieldBase(arg.R, arg.r) : null;
       this.min_ = arg.im != null ? arg.im : null;
       this.max_ = arg.ix != null ? arg.ix : null;
+      this.step_ = arg.is != null ? arg.is : null;
       this.option_ = arg.io != null ? arg.io : [];
     }
     this.data = data;
@@ -235,6 +238,9 @@ export class ViewComponent {
     if (options?.max !== undefined) {
       this.max_ = options.max;
     }
+    if (options?.step !== undefined) {
+      this.step_ = options.step;
+    }
     if (options?.option !== undefined) {
       this.option_ = options.option;
     }
@@ -288,6 +294,7 @@ export class ViewComponent {
       r: this.text_ref_ === null ? null : this.text_ref_.field_,
       im: this.min_,
       ix: this.max_,
+      is: this.step_,
       io: this.option_,
     };
   }
@@ -376,6 +383,12 @@ export class ViewComponent {
    */
   get max() {
     return this.max_;
+  }
+  /**
+   * inputの刻み幅
+   */
+  get step() {
+    return this.step_;
   }
   /**
    * inputの選択肢
