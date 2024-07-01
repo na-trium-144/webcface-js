@@ -43,7 +43,7 @@
     "eventemitter3": "^5.0.1",
     "lodash.isequal": "^4.5.0",
     "log4js": "^6.9.1",
-    "mathjs": "^12.2.1",
+    "mathjs": "^13.0.1",
     "util": "^0.12.5",
     "websocket": "^1.0.34"
   },
