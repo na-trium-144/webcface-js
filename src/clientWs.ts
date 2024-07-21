@@ -232,10 +232,12 @@ export function onMessage(
   const syncMembers: string[] = [];
   for (const msg of messages) {
     switch (msg.kind) {
-      case Message.kind.svrVersion: {
-        const dataR = msg as Message.SvrVersion;
+      case Message.kind.syncInitEnd: {
+        const dataR = msg as Message.SyncInitEnd;
         data.svrName = dataR.n;
         data.svrVersion = dataR.v;
+        data.selfMemberId = dataR.m;
+        data.svrHostName = dataR.h;
         break;
       }
       case Message.kind.ping: {

@@ -34,6 +34,8 @@ export class ClientData {
   eventEmitter: EventEmitter;
   svrName = "";
   svrVersion = "";
+  selfMemberId = 0;
+  svrHostName = "";
   pingStatus: Map<number, number>;
   pingStatusReq = false;
   pingStatusReqSend = false;
@@ -106,6 +108,9 @@ export class ClientData {
     return this.selfMemberName === member;
   }
   getMemberNameFromId(id: number) {
+    if(id == this.selfMemberId){
+      return this.selfMemberName;
+    }
     for (const [n, i] of this.memberIds.entries()) {
       if (i === id) {
         return n;
@@ -114,7 +119,11 @@ export class ClientData {
     return "";
   }
   getMemberIdFromName(name: string) {
-    return this.memberIds.get(name) || 0;
+    if (name === this.selfMemberName) {
+      return this.selfMemberId;
+    } else {
+      return this.memberIds.get(name) || 0;
+    }
   }
   /**
    * messageQueueを消費

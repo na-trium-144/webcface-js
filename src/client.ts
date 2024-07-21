@@ -66,9 +66,15 @@ export class Client extends Member {
 
   /**
    * 他のmemberにアクセスする
+   *
+   * ver1.7〜: member名が空文字列ならthisを返す
    */
   member(member: string) {
-    return new Member(this, member);
+    if (member === "") {
+      return this as Member;
+    } else {
+      return new Member(this, member);
+    }
   }
   /**
    * サーバーに接続されている他のmemberのリストを得る。
@@ -99,6 +105,13 @@ export class Client extends Member {
    */
   get serverVersion() {
     return this.dataCheck().svrVersion;
+  }
+  /**
+   * サーバーのホスト名
+   * @since ver1.7
+   */
+  get serverHostName() {
+    return this.dataCheck().svrHostName;
   }
   /**
    * webcfaceに出力するLogAppender

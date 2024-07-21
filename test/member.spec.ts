@@ -205,6 +205,11 @@ describe("Member Tests", function () {
       data.pingStatus.set(1, 10);
       assert.strictEqual(member("a").pingStatus, 10);
     });
+    it("returns pingStatus of client itself if selfMemberId is known", function () {
+      data.selfMemberId = 5;
+      data.pingStatus.set(5, 10);
+      assert.strictEqual(member(data.selfMemberName).pingStatus, 10);
+    });
     it("sets pingStatusReq", function () {
       member("a").pingStatus;
       assert.isTrue(data.pingStatusReq);
