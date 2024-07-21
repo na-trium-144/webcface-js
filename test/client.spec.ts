@@ -70,6 +70,11 @@ describe("Client Tests", function () {
       assert.instanceOf(v, Member);
       assert.strictEqual(v.name, "a");
     });
+    it("returns Member object with self name if given name is empty", function () {
+      const v = wcli.member("");
+      assert.instanceOf(v, Member);
+      assert.strictEqual(v.name, wcli.name);
+    });
   });
   describe("#members()", function () {
     it("returns list of members in data.valueStore.entry", function () {
@@ -99,6 +104,12 @@ describe("Client Tests", function () {
     it("returns data.svrVersion", function () {
       data.svrVersion = "a";
       assert.strictEqual(wcli.serverVersion, "a");
+    });
+  });
+  describe("#serverHostName", function () {
+    it("returns data.svrHostName", function () {
+      data.svrHostName = "a";
+      assert.strictEqual(wcli.serverHostName, "a");
     });
   });
   describe("#logAppender", function () {
@@ -212,10 +223,12 @@ describe("Client Tests", function () {
       it("receiving server version", function (done) {
         wcli.start();
         setTimeout(() => {
-          wssSend({ kind: Message.kind.svrVersion, n: "a", v: "1" });
+          wssSend({ kind: Message.kind.syncInitEnd, n: "a", v: "1", m: 5, h: "b" });
           setTimeout(() => {
             assert.strictEqual(data.svrName, "a");
             assert.strictEqual(data.svrVersion, "1");
+            assert.strictEqual(data.svrHostName, "b");
+            assert.strictEqual(data.selfMemberId, 5);
             done();
           }, 10);
         }, 10);

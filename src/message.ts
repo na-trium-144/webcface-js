@@ -60,7 +60,7 @@ export const kind = {
   log: 85,
   logReq: 86,
   sync: 87,
-  svrVersion: 88,
+  syncInitEnd: 88,
   ping: 89,
   pingStatus: 90,
   pingStatusReq: 91,
@@ -263,10 +263,12 @@ export interface SyncInit {
   v: string;
   a: string;
 }
-export interface SvrVersion {
+export interface SyncInitEnd {
   kind: 88;
   n: string;
   v: string;
+  m: number;
+  h: string;
 }
 export interface Sync {
   kind: 87;
@@ -358,7 +360,7 @@ export type AnyMessage =
   | Canvas2DRes
   | SyncInit
   | Sync
-  | SvrVersion
+  | SyncInitEnd
   | Ping
   | PingStatus
   | PingStatusReq
