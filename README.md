@@ -14,7 +14,12 @@ To use this library, you need WebCFace server separately.
 npm install webcface
 ```
 
+Since ver1.7, you can also load webcface library built with webpack from CDN:
+```html
+<script src="https://cdn.jsdelivr.net/npm/webcface@1.7.0/dist/webcface.bundle.js"></script>
+```
+
 ## API Documentation
 [API Reference](https://na-trium-144.github.io/webcface-js/modules.html)
 
-See also [WebCFace c++ documentation](https://na-trium-144.github.io/webcface/)(Currently Japanese only), which has similar API.
+See also [WebCFace documentation](https://na-trium-144.github.io/webcface/)(Currently Japanese only).
