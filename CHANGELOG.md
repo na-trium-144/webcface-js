@@ -1,3 +1,13 @@
+## [1.7.0] - 2024-08-29
+### Added
+* WebCFace ver2.0に対応する機能追加 (#167)
+	* Client.serverHostName 追加
+	* Member.pingStatus でClient自身のping値を取得できるようにした
+* webpackでビルドできるようにした (#172)
+	* CDNからWebCFaceを直接HTMLに読み込むことができます
+### Changed
+* Client.member() が引数が空文字列の時thisを返す (#167)
+
 ## [1.6.0] - 2024-04-07
 ### Added
 * Viewにinput要素追加 (#125, #128, #133)
