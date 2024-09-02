@@ -30,7 +30,7 @@
     "@types/mocha": "^10.0.1",
     "@types/websocket": "^1.0.5",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^7.1.1",
     "c8": "^10.1.2",
     "chai": "^5.0.0",
