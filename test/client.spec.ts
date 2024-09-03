@@ -337,6 +337,7 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").values(), 1);
+            assert.isTrue(wcli.member("a").value("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -347,6 +348,7 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").values(), 0);
+              assert.isFalse(wcli.member("a").value("b").exists());
               done();
             }, 10);
           }, 10);
@@ -373,6 +375,7 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").texts(), 1);
+            assert.isTrue(wcli.member("a").text("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -383,6 +386,7 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").texts(), 0);
+              assert.isFalse(wcli.member("a").text("b").exists());
               done();
             }, 10);
           }, 10);
@@ -409,6 +413,7 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").robotModels(), 1);
+            assert.isTrue(wcli.member("a").robotModel("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -419,6 +424,7 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").robotModels(), 0);
+              assert.isFalse(wcli.member("a").robotModel("b").exists());
               done();
             }, 10);
           }, 10);
@@ -445,6 +451,7 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").views(), 1);
+            assert.isTrue(wcli.member("a").view("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -455,6 +462,7 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").views(), 0);
+              assert.isFalse(wcli.member("a").view("b").exists());
               done();
             }, 10);
           }, 10);
@@ -530,6 +538,7 @@ describe("Client Tests", function () {
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").funcs(), 1);
+            assert.isTrue(wcli.member("a").func("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -540,6 +549,7 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").funcs(), 0);
+              assert.isFalse(wcli.member("a").func("b").exists());
               done();
             }, 10);
           }, 10);
