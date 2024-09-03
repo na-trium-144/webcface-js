@@ -9,6 +9,7 @@ import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
 import { ImageFrame, imageCompressMode } from "./image.js";
+import { Log } from "./log.js";
 
 export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {
@@ -353,15 +354,24 @@ export function onMessage(
       case Message.kind.log: {
         const dataR = msg as Message.Log;
         const member = data.getMemberNameFromId(dataR.m);
-        const log = data.logStore.getRecv(member) || [];
+        let log = data.logStore.getRecv(member) || [];
         const target = wcli.member(member).log();
-        for (const ll of dataR.l) {
-          const ll2: LogLine = {
-            level: ll.v,
-            time: new Date(ll.t),
-            message: ll.m,
-          };
-          log.push(ll2);
+        let rLogBegin = 0;
+        const rLogEnd = dataR.l.length;
+        if(Log.keepLines >= 0){
+          if(rLogEnd > Log.keepLines){
+            rLogBegin = rLogEnd - Log.keepLines;
+          }
+          if(log.length + (rLogEnd - rLogBegin) > Log.keepLines){
+            log = log.slice(log.length + (rLogEnd - rLogBegin) - Log.keepLines);
+          }
+        }
+        for (let i = rLogBegin; i < rLogEnd; i++) {
+          log.push({
+            level: dataR.l[i].v,
+            time: new Date(dataR.l[i].t),
+            message: dataR.l[i].m,
+          });
         }
         data.logStore.setRecv(member, log);
         data.eventEmitter.emit(eventType.logAppend(target), target);
