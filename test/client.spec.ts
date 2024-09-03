@@ -223,7 +223,13 @@ describe("Client Tests", function () {
       it("receiving server version", function (done) {
         wcli.start();
         setTimeout(() => {
-          wssSend({ kind: Message.kind.syncInitEnd, n: "a", v: "1", m: 5, h: "b" });
+          wssSend({
+            kind: Message.kind.syncInitEnd,
+            n: "a",
+            v: "1",
+            m: 5,
+            h: "b",
+          });
           setTimeout(() => {
             assert.strictEqual(data.svrName, "a");
             assert.strictEqual(data.svrVersion, "1");
@@ -449,6 +455,38 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.lengthOf(wcli.member("a").views(), 0);
+              done();
+            }, 10);
+          }, 10);
+        }, 10);
+      });
+      it("log entry", function (done) {
+        wcli.start();
+        setTimeout(() => {
+          wssSend({
+            kind: Message.kind.syncInit,
+            M: "a",
+            m: 10,
+            l: "",
+            v: "",
+            a: "",
+          });
+          wssSend({
+            kind: Message.kind.logEntry,
+            m: 10,
+          });
+          setTimeout(() => {
+            assert.isTrue(wcli.member("a").log().exists());
+            wssSend({
+              kind: Message.kind.syncInit,
+              M: "a",
+              m: 10,
+              l: "",
+              v: "",
+              a: "",
+            });
+            setTimeout(() => {
+              assert.isFalse(wcli.member("a").log().exists());
               done();
             }, 10);
           }, 10);

@@ -321,6 +321,14 @@ describe("Log Tests", function () {
       assert.isEmpty(data.logStore.req);
     });
   });
+  describe("#exists()", function () {
+    it("returns true if data.logStore.entry has this member", function () {
+      assert.isFalse(log("a").exists());
+      data.logStore.setEntry("a");
+      assert.isTrue(log("a").exists());
+    });
+    // todo: selfの場合もexists()は機能するべき?
+  });
   describe("#clear()", function () {
     it("clears data.logStore.dataRecv", function () {
       data.logStore.dataRecv.set("a", [

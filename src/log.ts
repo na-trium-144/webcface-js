@@ -53,6 +53,16 @@ export class Log extends EventTarget<Log> {
     }
   }
   /**
+   * このメンバーがログを1行以上出力していればtrueを返す
+   * @since ver1.8
+   * 
+   * get().length などとは違って、実際のログデータを受信しない。
+   * (リクエストも送信しない)
+   */
+  exists() {
+    return this.dataCheck().logStore.getEntry(this.member_);
+  }
+  /**
    * 受信したログをクリアする
    *
    * リクエスト状態は解除しない
