@@ -486,6 +486,16 @@ export class View extends EventTarget<View> {
     }
   }
   /**
+   * このフィールドにデータが存在すればtrueを返す
+   * @since ver1.8
+   * 
+   * tryGet() とは違って、実際のデータを受信しない。
+   * (リクエストも送信しない)
+   */
+  exists() {
+    return this.dataCheck().viewStore.getEntry(this.member_).includes(this.field_);
+  }
+  /**
    * Memberのsyncの時刻を返す
    *
    * @deprecated ver1.6〜 Member.syncTime() に移行

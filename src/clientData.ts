@@ -108,7 +108,7 @@ export class ClientData {
     return this.selfMemberName === member;
   }
   getMemberNameFromId(id: number) {
-    if(id == this.selfMemberId){
+    if (id == this.selfMemberId) {
       return this.selfMemberName;
     }
     for (const [n, i] of this.memberIds.entries()) {
@@ -340,10 +340,12 @@ export class SyncDataStore2<T, ReqT = never> {
 export class SyncDataStore1<T> {
   dataRecv: Map<string, T>;
   req: Map<string, boolean>;
+  entry: Set<string>;
   selfMemberName: string;
   constructor(name: string) {
     this.selfMemberName = name;
     this.dataRecv = new Map();
+    this.entry = new Set();
     this.req = new Map();
   }
   isSelf(member: string) {
@@ -371,6 +373,24 @@ export class SyncDataStore1<T> {
   }
   transferReq() {
     return this.req;
+  }
+  /**
+   * entryを取得
+   */
+  getEntry(member: string): boolean {
+    return this.entry.has(member);
+  }
+  /**
+   * 受信したentryを追加
+   */
+  setEntry(member: string) {
+    this.entry.add(member);
+  }
+  /**
+   * entry削除
+   */
+  clearEntry(member: string) {
+    this.entry.delete(member);
   }
 }
 

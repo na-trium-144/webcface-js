@@ -233,6 +233,13 @@ export class Func extends Field {
     });
     return r;
   }
+  /**
+   * 関数が存在すればtrueを返す
+   * @since ver1.8
+   */
+  exists() {
+    return this.dataCheck().funcStore.getEntry(this.member_).includes(this.field_);
+  }
 }
 
 /**

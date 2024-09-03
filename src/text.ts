@@ -95,6 +95,16 @@ export class Text extends EventTarget<Text> {
     }
   }
   /**
+   * このフィールドにデータが存在すればtrueを返す
+   * @since ver1.8
+   * 
+   * tryGet() とは違って、実際のデータを受信しない。
+   * (リクエストも送信しない)
+   */
+  exists() {
+    return this.dataCheck().textStore.getEntry(this.member_).includes(this.field_);
+  }
+  /**
    * 文字列をセットする
    */
   set(data: string | number | boolean | object) {

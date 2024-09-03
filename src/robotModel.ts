@@ -194,6 +194,16 @@ export class RobotModel extends EventTarget<RobotModel> {
       return v;
     }
   }
+  /**
+   * このフィールドにデータが存在すればtrueを返す
+   * @since ver1.8
+   * 
+   * tryGet() とは違って、実際のデータを受信しない。
+   * (リクエストも送信しない)
+   */
+  exists() {
+    return this.dataCheck().robotModelStore.getEntry(this.member_).includes(this.field_);
+  }
   // /**
   //  * 文字列をセットする
   //  */
