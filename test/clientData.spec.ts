@@ -248,6 +248,26 @@ describe("ClientData Tests", function () {
         assert.strictEqual(s.get("b"), true);
       });
     });
+    describe("#addEntry()", function () {
+      it("add entry to #entry", function () {
+        s1.setEntry("a");
+        assert.isTrue(s1.entry.has("a"));
+      });
+    });
+    describe("#getEntry()", function () {
+      it("returns true if entry is in #entry", function () {
+        s1.entry.add("a");
+        assert.isTrue(s1.getEntry("a"));
+        assert.isFalse(s1.getEntry("b"));
+      });
+    });
+    describe("#clearEntry()", function () {
+      it("clears #entry", function () {
+        s1.entry.add("a");
+        s1.clearEntry("a");
+        assert.isFalse(s1.entry.has("a"));
+      });
+    });
   });
   describe("FuncResultStore Tests", function () {
     let fs: FuncResultStore;

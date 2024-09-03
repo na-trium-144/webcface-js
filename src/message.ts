@@ -64,6 +64,7 @@ export const kind = {
   ping: 89,
   pingStatus: 90,
   pingStatusReq: 91,
+  logEntry: 92,
 } as const;
 
 export const valType = {
@@ -337,6 +338,10 @@ export interface LogReq {
   kind: 86;
   M: string;
 }
+export interface LogEntry {
+  kind: 92;
+  m: number;
+}
 export interface Unknown {
   kind: number;
 }
@@ -370,4 +375,5 @@ export type AnyMessage =
   | FuncInfo
   | Log
   | LogReq
+  | LogEntry
   | Unknown;
