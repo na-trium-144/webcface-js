@@ -215,6 +215,12 @@ describe("Member Tests", function () {
       assert.isTrue(data.pingStatusReq);
     });
   });
+  describe("#requestPingStatus", function () {
+    it("sets pingStatusReq", function () {
+      member("a").requestPingStatus();
+      assert.isTrue(data.pingStatusReq);
+    });
+  });
   describe("#onPing", function () {
     it("handles ping event", function () {
       let called = 0;
