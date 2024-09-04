@@ -307,11 +307,22 @@ export class Member extends Field {
   /**
    * 通信速度を調べる
    *
-   * 初回の呼び出しで通信速度データをリクエストし、
-   * sync()後通信速度が得られるようになる
-   * @return 初回→ null, 2回目以降(取得できれば)→ pingの往復時間 (ms)
+   * 通信速度データがリクエストされていなければリクエストを送る。
+   * @return まだ受信していなければnull, 取得できればpingの往復時間 (ms)
    */
   get pingStatus() {
+    this.requestPingStatus();
+    const ps = this.dataCheck().pingStatus.get(
+      this.dataCheck().getMemberIdFromName(this.member_)
+    );
+    return ps !== undefined ? ps : null;
+  }
+  /**
+   * pingStatusのデータをリクエストする
+   * @since ver1.8
+   *
+   */
+  requestPingStatus() {
     if (!this.dataCheck().pingStatusReq) {
       this.dataCheck().pingStatusReq = true;
       this.dataCheck().pushSendOnline([
@@ -320,18 +331,15 @@ export class Member extends Field {
         },
       ]);
     }
-    const ps = this.dataCheck().pingStatus.get(
-      this.dataCheck().getMemberIdFromName(this.member_)
-    );
-    return ps !== undefined ? ps : null;
   }
   /**
    * 通信速度が更新された時のイベント
    *
+   * 通信速度データがリクエストされていなければリクエストを送る。
    * コールバックの型は (target: Member) => void
    */
   get onPing() {
-    void this.pingStatus;
+    this.requestPingStatus();
     return new EventTarget<Member>(
       eventType.ping(this),
       this.data,

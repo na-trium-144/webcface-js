@@ -185,7 +185,9 @@ export class ViewComponent extends IdBase {
       this.type_ = viewComponentTypes.text;
       this.text_ = arg;
     } else {
-      idxNext && this.initIdx(idxNext, arg.t);
+      if (idxNext) {
+        this.initIdx(idxNext, arg.t);
+      }
       this.type_ = arg.t;
       this.text_ = arg.x;
       this.on_click_ =
@@ -488,12 +490,14 @@ export class View extends EventTarget<View> {
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().viewStore.getEntry(this.member_).includes(this.field_);
+    return this.dataCheck()
+      .viewStore.getEntry(this.member_)
+      .includes(this.field_);
   }
   /**
    * Memberのsyncの時刻を返す
