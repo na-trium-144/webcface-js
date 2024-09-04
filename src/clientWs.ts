@@ -8,6 +8,7 @@ import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
 import { ImageFrame, imageCompressMode } from "./image.js";
+import { Log } from "./log.js";
 
 export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {
