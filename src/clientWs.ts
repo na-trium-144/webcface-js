@@ -1,7 +1,6 @@
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { runFunc, Val } from "./func.js";
-import { LogLine } from "./logger.js";
 import { getDiff, mergeDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
