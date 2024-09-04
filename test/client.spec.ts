@@ -8,7 +8,7 @@ import { Text } from "../src/text.js";
 import { RobotModel, RobotLink } from "../src/robotModel.js";
 import { Transform } from "../src/transform.js";
 import { Geometry } from "../src/canvas3d.js";
-import { Func, AsyncFuncResult, FuncNotFoundError } from "../src/func.js";
+import { Func, FuncNotFoundError, FuncPromiseData } from "../src/func.js";
 import { valType } from "../src/message.js";
 import { View, viewComponents } from "../src/view.js";
 import { Field } from "../src/field.js";
@@ -1000,7 +1000,7 @@ describe("Client Tests", function () {
         wcli.start();
         setTimeout(() => {
           data.memberIds.set("a", 10);
-          const r = new AsyncFuncResult(1, "", new Field(data, "a", "b"));
+          const r = new FuncPromiseData(1, "", new Field(data, "a", "b"));
           data.pushSend([
             {
               kind: Message.kind.call,
@@ -1052,11 +1052,11 @@ describe("Client Tests", function () {
               c: 0,
               s: false,
             });
-            r.started
-              .then((started) => assert.isFalse(started))
+            r.getter()
+              .started.then((started) => assert.isFalse(started))
               .catch(() => assert.fail("r.started threw error"));
-            r.result
-              .then(() => {
+            r.getter()
+              .result.then(() => {
                 assert.fail("r.result did not throw error");
                 done();
               })
@@ -1099,11 +1099,11 @@ describe("Client Tests", function () {
               e: true,
               r: "aaa",
             });
-            r.started
-              .then((started) => assert.isFalse(started))
+            r.getter()
+              .started.then((started) => assert.isFalse(started))
               .catch(() => assert.fail("r.started threw error"));
-            r.result
-              .then(() => {
+            r.getter()
+              .result.then(() => {
                 assert.fail("r.result did not throw error");
                 done();
               })
@@ -1146,11 +1146,11 @@ describe("Client Tests", function () {
               e: false,
               r: "aaa",
             });
-            r.started
-              .then((started) => assert.isTrue(started))
+            r.getter()
+              .started.then((started) => assert.isTrue(started))
               .catch(() => assert.fail("r.started threw error"));
-            r.result
-              .then((res) => {
+            r.getter()
+              .result.then((res) => {
                 assert.strictEqual(res, "aaa");
                 done();
               })

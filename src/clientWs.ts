@@ -441,7 +441,7 @@ export function onMessage(
         const dataR = msg as Message.CallResponse;
         const r = data.funcResultStore.getResult(dataR.i);
         if (r !== undefined) {
-          r.resolveStarted(dataR.s);
+          r.resolveReach(dataR.s);
         } else {
           data.consoleLogger.error(`error receiving call result id=${dataR.i}`);
         }
@@ -452,9 +452,9 @@ export function onMessage(
         const r = data.funcResultStore.getResult(dataR.i);
         if (r !== undefined) {
           if (dataR.e) {
-            r.rejectResult(new Error(String(dataR.r)));
+            r.rejectFinish(new Error(String(dataR.r)));
           } else {
-            r.resolveResult(dataR.r);
+            r.resolveFinish(dataR.r);
           }
         } else {
           data.consoleLogger.error(`error receiving call result id=${dataR.i}`);

@@ -1,5 +1,5 @@
 import isEqual from "lodash.isequal";
-import { FuncInfo, AsyncFuncResult } from "./func.js";
+import { FuncInfo, FuncPromiseData } from "./func.js";
 import { EventEmitter } from "eventemitter3";
 import { LogLine } from "./log.js";
 import * as Message from "./message.js";
@@ -395,10 +395,10 @@ export class SyncDataStore1<T> {
 }
 
 export class FuncResultStore {
-  results: AsyncFuncResult[] = [];
+  results: FuncPromiseData[] = [];
   addResult(caller: string, base: Field) {
     const callerId = this.results.length;
-    this.results.push(new AsyncFuncResult(callerId, caller, base));
+    this.results.push(new FuncPromiseData(callerId, caller, base));
     return this.results[callerId];
   }
   getResult(callerId: number) {

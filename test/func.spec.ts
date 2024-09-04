@@ -80,24 +80,25 @@ describe("Func Tests", function () {
         ])
       );
     });
-    it("calls function with casted arguments, and returns AsyncFuncResult object", async function () {
+    it("calls function with casted arguments, and returns FuncPromise object", async function () {
       const r = func(selfName, "a").runAsync(5, "123", 1);
-      assert.strictEqual(r.callerId, 0);
+      // assert.strictEqual(r.callerId, 0);
       assert.strictEqual(r.member.name, selfName);
       assert.strictEqual(r.name, "a");
       assert.isTrue(await r.started);
+      assert.isTrue(await r.reach);
       assert.strictEqual(await r.result, "test");
+      assert.strictEqual(await r.finish, "test");
       assert.strictEqual(called, 1);
     });
     it("returns AsyncFuncResult object which throws Error when fewer argument passed", function (done) {
       const r = func(selfName, "a").runAsync();
-      r.started
+      r.reach
         .then((started) => assert.isFalse(started))
         .catch(() => assert.fail("r.started threw error"));
-      r.result
+      r.finish
         .then(() => {
           assert.fail("r.result did not throw error");
-          done();
         })
         .catch((e) => {
           assert.instanceOf(e, Error);
@@ -106,10 +107,10 @@ describe("Func Tests", function () {
     });
     it("returns AsyncFuncResult object which throws Error when more argument passed", function (done) {
       const r = func(selfName, "a").runAsync(1, 2, 3, 4, 5);
-      r.started
+      r.reach
         .then((started) => assert.isFalse(started))
         .catch(() => assert.fail("r.started threw error"));
-      r.result
+      r.finish
         .then(() => {
           assert.fail("r.result did not throw error");
           done();

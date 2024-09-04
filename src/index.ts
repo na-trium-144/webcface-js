@@ -40,7 +40,7 @@ export {
   canvas2DComponentType,
 } from "./canvas2d.js";
 export { valType } from "./message.js";
-export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";
+export { Arg, Func, FuncPromise, AsyncFuncResult, FuncNotFoundError } from "./func.js";
 export { EventTarget } from "./event.js";
 // export {} from "./field.js";
 import version_ from "./version.js";
