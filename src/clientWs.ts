@@ -31,6 +31,13 @@ export function reconnect(wcli: Client, data: ClientData) {
     if (data.ws == null) {
       data.ws = ws;
       data.consoleLogger.info("connected");
+
+      if (data.syncFirst === null) {
+        initSyncDataFirst(data);
+      }
+      data.ws.send(data.syncFirst!);
+      data.syncFirst = null;
+
       ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
         data.consoleLogger.trace(
           `onMessage ${(event.data as ArrayBuffer).byteLength}`
@@ -52,12 +59,12 @@ export function reconnect(wcli: Client, data: ClientData) {
       ws.onclose = (e) => {
         data.consoleLogger.warn(`closed: ${String(e.reason)}`);
         data.ws = null;
-        syncDataFirst(data);
+        // syncDataFirst(data);
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
       };
-      data.pushSend(); // たまっているメッセージを送信
+      data.pushSendAlways(); // たまっているメッセージを送信
       if (data.closing) {
         data.ws = null;
         ws.close();
@@ -67,10 +74,10 @@ export function reconnect(wcli: Client, data: ClientData) {
 }
 
 /**
- * 初期化時に送信するメッセージをキューに入れる
+ * 初期化時に送信するメッセージをdata.syncFirstにセット
  * 各種reqとsyncData(true)の全データ
  */
-export function syncDataFirst(data: ClientData) {
+export function initSyncDataFirst(data: ClientData) {
   const msg: Message.AnyMessage[] = [];
   msg.push({
     kind: Message.kind.syncInit,
@@ -137,9 +144,11 @@ export function syncDataFirst(data: ClientData) {
     msg.push({ kind: Message.kind.pingStatusReq });
   }
 
-  data.pushSend(msg);
+  // data.pushSendAlways(msg);
 
-  syncData(data, true);
+  // return msg.concat(syncData(data, true));
+
+  data.syncFirst = Message.pack(msg.concat(syncData(data, true)));
 }
 
 export function syncData(data: ClientData, isFirst: boolean) {
@@ -220,7 +229,8 @@ export function syncData(data: ClientData, isFirst: boolean) {
     msg.push({ kind: Message.kind.log, l: logSend });
   }
 
-  data.pushSend(msg);
+  // data.pushSend(msg);
+  return msg;
 }
 
 export function onMessage(
@@ -241,7 +251,7 @@ export function onMessage(
         break;
       }
       case Message.kind.ping: {
-        data.pushSend([
+        data.pushSendAlways([
           {
             kind: Message.kind.ping,
           },
@@ -357,11 +367,11 @@ export function onMessage(
         const target = wcli.member(member).log();
         let rLogBegin = 0;
         const rLogEnd = dataR.l.length;
-        if(Log.keepLines >= 0){
-          if(rLogEnd > Log.keepLines){
+        if (Log.keepLines >= 0) {
+          if (rLogEnd > Log.keepLines) {
             rLogBegin = rLogEnd - Log.keepLines;
           }
-          if(log.length + (rLogEnd - rLogBegin) > Log.keepLines){
+          if (log.length + (rLogEnd - rLogBegin) > Log.keepLines) {
             log = log.slice(log.length + (rLogEnd - rLogBegin) - Log.keepLines);
           }
         }
@@ -381,7 +391,7 @@ export function onMessage(
           const dataR = msg as Message.Call;
           const s = data.funcStore.dataRecv.get(data.selfMemberName);
           const sendResult = (res: Val | void) => {
-            data.pushSend([
+            data.pushSendAlways([
               {
                 kind: Message.kind.callResult,
                 i: dataR.i,
@@ -392,7 +402,7 @@ export function onMessage(
             ]);
           };
           const sendError = (e: any) => {
-            data.pushSend([
+            data.pushSendAlways([
               {
                 kind: Message.kind.callResult,
                 i: dataR.i,
@@ -403,7 +413,7 @@ export function onMessage(
             ]);
           };
           const sendResponse = (s: boolean) => {
-            data.pushSend([
+            data.pushSendAlways([
               {
                 kind: Message.kind.callResponse,
                 i: dataR.i,

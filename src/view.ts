@@ -450,7 +450,7 @@ export class View extends EventTarget<View> {
   request() {
     const reqId = this.dataCheck().viewStore.addReq(this.member_, this.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.viewReq,
           M: this.member_,

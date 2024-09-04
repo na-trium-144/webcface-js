@@ -244,7 +244,7 @@ export class Func extends Field {
         r.resolveReach(false);
       }
     } else {
-      this.dataCheck().pushSend([
+      if(!this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.call,
           i: r.callerId,
@@ -253,7 +253,10 @@ export class Func extends Field {
           f: this.field_,
           a: args,
         },
-      ]);
+      ])){
+        // 未接続でfalseになる
+        r.resolveReach(false);
+      }
     }
   }
   /**

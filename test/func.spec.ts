@@ -135,19 +135,31 @@ describe("Func Tests", function () {
           done();
         });
     });
-    it("push call message to data.messageQueue when member is not self", function (done) {
+    it("send call message when member is not self and ws is not null", function (done) {
+      data.memberIds.set("a", 10);
+      let send_called = 0;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      data.ws = {
+        send: (msg: ArrayBuffer) => {
+          send_called++;
+          const msg0 = Message.unpack(msg)[0] as Message.Call;
+          assert.strictEqual(msg0.i, 0);
+          assert.strictEqual(msg0.r, 10);
+          assert.strictEqual(msg0.f, "b");
+          assert.sameOrderedMembers(msg0.a, ["5", 123, true]);
+        },
+      } as any;
+      func("a", "b").runAsync("5", 123, true);
+      setTimeout(() => {
+        assert.strictEqual(send_called, 1);
+        done();
+      }, 10);
+    });
+    it("do not push call message to data.messageQueue when ws is null", function (done) {
       data.memberIds.set("a", 10);
       func("a", "b").runAsync("5", 123, true);
       setTimeout(() => {
-        assert.lengthOf(data.messageQueue, 1);
-        const msg = Message.unpack(data.messageQueue[0]);
-        assert.lengthOf(msg, 1);
-        const msg0 = msg[0] as Message.Call;
-        assert.strictEqual(msg0.i, 0);
-        assert.strictEqual(msg0.r, 10);
-        assert.strictEqual(msg0.f, "b");
-        assert.sameOrderedMembers(msg0.a, ["5", 123, true]);
-
+        assert.isEmpty(data.messageQueue);
         done();
       }, 10);
     });

@@ -125,12 +125,26 @@ export class ClientData {
       return this.memberIds.get(name) || 0;
     }
   }
+
   /**
-   * messageQueueを消費
+   * 次回接続後一番最初に送信するメッセージ
+   * 
+   * * syncDataFirst() の返り値であり、
+   * すべてのリクエストとすべてのsyncデータ(1時刻分)が含まれる
+   * * sync()時に未接続かつこれが空ならその時点のsyncDataFirstをこれにセット
+   * * 接続時にこれが空でなければ、
+   *   * これ + messageQueueの中身(=syncDataFirst以降のすべてのsync()データ) を、
+   *   * これが空ならその時点のsyncDataFirstを、
+   * * 送信する
+   * * 送信したら再度これを空にする
+   */
+  syncFirst: ArrayBuffer | null = null;
+  /**
+   * メッセージを追加 & messageQueueを消費
    *
    * messageQueueになにか追加するところで呼ぶこと
    */
-  pushSend(msgs?: Message.AnyMessage[]) {
+  pushSendAlways(msgs?: Message.AnyMessage[]) {
     if (msgs != undefined) {
       this.messageQueue.push(Message.pack(msgs));
     }
@@ -139,6 +153,23 @@ export class ClientData {
         this.ws.send(msg);
       }
       this.messageQueue = [];
+    }
+  }
+  /**
+   * 接続されている場合に限ってメッセージを追加しtrueを返す
+   */
+  pushSendOnline(msgs?: Message.AnyMessage[]) {
+    if (this.ws != null) {
+      if (msgs != undefined) {
+        this.messageQueue.push(Message.pack(msgs));
+      }
+      for (const msg of this.messageQueue) {
+        this.ws.send(msg);
+      }
+      this.messageQueue = [];
+      return true;
+    }else{
+      return false;
     }
   }
 }

@@ -28,7 +28,7 @@ export class Client extends Member {
     logLevel: "trace" | "verbose" | "none" = "none"
   ) {
     super(new Field(new ClientData(name, host, port, logLevel), name), name);
-    clientWs.syncDataFirst(this.dataCheck());
+    // clientWs.syncDataFirst(this.dataCheck());
   }
   get logLevel() {
     return this.dataCheck().logLevel;
@@ -60,7 +60,13 @@ export class Client extends Member {
    */
   sync() {
     this.start();
-    clientWs.syncData(this.dataCheck(), false);
+    if (!this.connected && this.dataCheck().syncFirst === null) {
+      clientWs.initSyncDataFirst(this.dataCheck());
+    } else {
+      this.dataCheck().pushSendAlways(
+        clientWs.syncData(this.dataCheck(), false)
+      );
+    }
   }
 
   /**

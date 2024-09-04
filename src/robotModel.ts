@@ -154,7 +154,7 @@ export class RobotModel extends EventTarget<RobotModel> {
       this.field_
     );
     if (reqId > 0) {
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.robotModelReq,
           M: this.member_,

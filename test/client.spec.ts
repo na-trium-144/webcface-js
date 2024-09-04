@@ -1001,7 +1001,7 @@ describe("Client Tests", function () {
         setTimeout(() => {
           data.memberIds.set("a", 10);
           const r = new FuncPromiseData(1, "", new Field(data, "a", "b"));
-          data.pushSend([
+          data.pushSendAlways([
             {
               kind: Message.kind.call,
               i: r.callerId,
@@ -1035,7 +1035,7 @@ describe("Client Tests", function () {
             new Field(data, "a", "b")
           );
           assert.strictEqual(r.callerId, 0);
-          data.pushSend([
+          data.pushSendAlways([
             {
               kind: Message.kind.call,
               i: r.callerId,
@@ -1075,7 +1075,7 @@ describe("Client Tests", function () {
             "",
             new Field(data, "a", "b")
           );
-          data.pushSend([
+          data.pushSendAlways([
             {
               kind: Message.kind.call,
               i: r.callerId,
@@ -1122,7 +1122,7 @@ describe("Client Tests", function () {
             "",
             new Field(data, "a", "b")
           );
-          data.pushSend([
+          data.pushSendAlways([
             {
               kind: Message.kind.call,
               i: r.callerId,
