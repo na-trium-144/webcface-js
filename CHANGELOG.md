@@ -1,3 +1,22 @@
+## [1.8.0] - 2024-09-04
+### Added
+* 各種Field.exists() (#187)
+	* リクエストを送らずに、Entryを受信したかどうかを取得する
+* Log.keepLines (#188)
+	* 指定した行数以上のログをClientが保持しないようにした
+* Member.requestPingStatus() 追加 (#191)
+### Changed
+* LogEntryメッセージ実装 (#187)
+* log4js依存を削除 (#189)
+	* Client.logAppender() 削除
+	* Log.append() 追加
+* AsyncFuncResult → FuncPromise (#190)
+	* started→reach, result→finish
+	* finishのエラー値が常にError型で返るようにした
+	* setter関数などをFuncPromiseDataクラスに分離
+* syncDataFirstの仕様をC++に合わせた (#190)
+	* クライアントが未接続のときrunAsync()は関数呼び出しを送信しないようにした
+
 ## [1.7.0] - 2024-08-29
 ### Added
 * WebCFace ver2.0に対応する機能追加 (#167)
