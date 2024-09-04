@@ -339,4 +339,26 @@ describe("Log Tests", function () {
       assert.isEmpty(data.logStore.dataRecv.get("a"));
     });
   });
+  describe("#append()", function () {
+    it("push log to data.logStore", function () {
+      log(selfName).append(0, "a");
+      log(selfName).append(1, "b");
+      const ls = data.logStore.getRecv(selfName) || [];
+      assert.lengthOf(ls, 2);
+      assert.include(ls[0], { level: 0, message: "a" });
+      assert.include(ls[1], { level: 1, message: "b" });
+    });
+    it("triggers change event", function () {
+      let called = 0;
+      log(selfName).addListener((v) => {
+        ++called;
+        assert.strictEqual(v.member.name, selfName);
+      });
+      log(selfName).append(1, "a");
+      assert.strictEqual(called, 1);
+    });
+    it("throws error when member is not self", function () {
+      assert.throws(() => log("a").append(1, "a"), Error);
+    });
+  });
 });

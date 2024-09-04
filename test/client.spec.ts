@@ -14,7 +14,6 @@ import { View, viewComponents } from "../src/view.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
-import log4js from "log4js";
 import version from "../src/version.js";
 import { Log } from "../src/log.js";
 
@@ -111,33 +110,6 @@ describe("Client Tests", function () {
     it("returns data.svrHostName", function () {
       data.svrHostName = "a";
       assert.strictEqual(wcli.serverHostName, "a");
-    });
-  });
-  describe("#logAppender", function () {
-    it("push log to data.logStore", function () {
-      log4js.configure({
-        appenders: {
-          wcf: { type: wcli.logAppender },
-        },
-        categories: {
-          default: { appenders: ["wcf"], level: "trace" },
-        },
-      });
-      const logger = log4js.getLogger();
-      logger.trace("a");
-      logger.debug("b");
-      logger.info("c");
-      logger.warn("d");
-      logger.error("e");
-      logger.fatal("f");
-      const ls = data.logStore.getRecv(selfName) || [];
-      assert.lengthOf(ls, 6);
-      assert.include(ls[0], { level: 0, message: "a" });
-      assert.include(ls[1], { level: 1, message: "b" });
-      assert.include(ls[2], { level: 2, message: "c" });
-      assert.include(ls[3], { level: 3, message: "d" });
-      assert.include(ls[4], { level: 4, message: "e" });
-      assert.include(ls[5], { level: 5, message: "f" });
     });
   });
   describe("messages", function () {

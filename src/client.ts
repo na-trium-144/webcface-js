@@ -1,6 +1,5 @@
 import { ClientData } from "./clientData.js";
 import { Member } from "./member.js";
-import { appender } from "./logger.js";
 import { Field } from "./field.js";
 import { EventTarget, eventType } from "./event.js";
 import * as clientWs from "./clientWs.js";
@@ -112,12 +111,5 @@ export class Client extends Member {
    */
   get serverHostName() {
     return this.dataCheck().svrHostName;
-  }
-  /**
-   * webcfaceに出力するLogAppender
-   * @return log4jsのappenderに設定して使う。
-   */
-  get logAppender() {
-    return appender(this.dataCheck());
   }
 }

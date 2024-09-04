@@ -3,6 +3,12 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
 
+export interface LogLine {
+  level: number;
+  time: Date;
+  message: string;
+}
+
 /**
  *  ログの送受信データを表すクラス
  *
@@ -82,5 +88,19 @@ export class Log extends EventTarget<Log> {
   clear() {
     this.dataCheck().logStore.setRecv(this.member_, []);
     return this;
+  }
+
+  /**
+   * ログを1行追加
+   * @since ver1.8
+   */
+  append(level: number, message: string) {
+    const ll = {
+      level,
+      time: new Date(),
+      message,
+    };
+    this.setCheck().logStore.getRecv(this.member_)?.push(ll);
+    this.triggerEvent(this);
   }
 }
