@@ -2,7 +2,7 @@ export { Client } from "./client.js";
 // export { } from "./clientData.js";
 export { Value } from "./value.js";
 export { Text, InputRef } from "./text.js";
-export { Log } from "./log.js";
+export { Log, LogLine } from "./log.js";
 export { Member } from "./member.js";
 export {
   View,
@@ -39,7 +39,6 @@ export {
   Canvas2D,
   canvas2DComponentType,
 } from "./canvas2d.js";
-export { LogLine } from "./logger.js";
 export { valType } from "./message.js";
 export { Arg, Func, AsyncFuncResult, FuncNotFoundError } from "./func.js";
 export { EventTarget } from "./event.js";

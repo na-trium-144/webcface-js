@@ -1,7 +1,7 @@
 import isEqual from "lodash.isequal";
 import { FuncInfo, AsyncFuncResult } from "./func.js";
 import { EventEmitter } from "eventemitter3";
-import { LogLine } from "./logger.js";
+import { LogLine } from "./log.js";
 import * as Message from "./message.js";
 import { Field } from "./field.js";
 import websocket from "websocket";
