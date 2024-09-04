@@ -15,6 +15,7 @@ import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
 import version from "../src/version.js";
+import { Log } from "../src/log.js";
 
 describe("Client Tests", function () {
   const selfName = "test";
@@ -934,7 +935,61 @@ describe("Client Tests", function () {
                 data.logStore.dataRecv.get("a")?.[2]?.level,
                 3
               );
-              done();
+
+              // keep_lines以上のログは保存しない
+              Log.keepLines = 2;
+              wssSend({
+                kind: Message.kind.log,
+                m: 10,
+                l: [
+                  {
+                    v: 4,
+                    t: 1000,
+                    m: "a",
+                  },
+                ],
+              });
+              setTimeout(() => {
+                assert.strictEqual(called, 3);
+                assert.lengthOf(data.logStore.dataRecv.get("a") || [], 2);
+                assert.strictEqual(
+                  data.logStore.dataRecv.get("a")?.[1]?.level,
+                  4
+                );
+
+                wssSend({
+                  kind: Message.kind.log,
+                  m: 10,
+                  l: [
+                    {
+                      v: 5,
+                      t: 1000,
+                      m: "a",
+                    },
+                    {
+                      v: 6,
+                      t: 1000,
+                      m: "a",
+                    },
+                    {
+                      v: 7,
+                      t: 1000,
+                      m: "a",
+                    },
+                  ],
+                });
+                setTimeout(() => {
+                  assert.strictEqual(called, 4);
+                  assert.lengthOf(data.logStore.dataRecv.get("a") || [], 2);
+                  assert.strictEqual(
+                    data.logStore.dataRecv.get("a")?.[1]?.level,
+                    7
+                  );
+
+                  Log.keepLines = 1000;
+                  done();
+                }, 10);
+              }, 10);
             }, 10);
           }, 10);
         }, 10);
