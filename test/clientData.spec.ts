@@ -278,8 +278,8 @@ describe("ClientData Tests", function () {
       it("returns result object", function () {
         const r = fs.addResult("a", new Field(data, "b", "c"));
         assert.strictEqual(r.caller, "a");
-        assert.strictEqual(r.member.name, "b");
-        assert.strictEqual(r.name, "c");
+        assert.strictEqual(r.getter().member.name, "b");
+        assert.strictEqual(r.getter().name, "c");
         assert.strictEqual(r.callerId, 0);
       });
     });
@@ -288,8 +288,8 @@ describe("ClientData Tests", function () {
         fs.addResult("a", new Field(data, "b", "c"));
         const r = fs.getResult(0);
         assert.strictEqual(r.caller, "a");
-        assert.strictEqual(r.member.name, "b");
-        assert.strictEqual(r.name, "c");
+        assert.strictEqual(r.getter().member.name, "b");
+        assert.strictEqual(r.getter().name, "c");
         assert.strictEqual(r.callerId, 0);
       });
     });

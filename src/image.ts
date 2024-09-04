@@ -100,7 +100,7 @@ export class Image extends EventTarget<Image> {
     );
     if (reqId > 0) {
       this.dataCheck().imageStore.clearRecv(this.member_, this.field_);
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.imageReq,
           M: this.member_,

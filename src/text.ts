@@ -48,7 +48,7 @@ export class Text extends EventTarget<Text> {
   request() {
     const reqId = this.dataCheck().textStore.addReq(this.member_, this.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.textReq,
           M: this.member_,

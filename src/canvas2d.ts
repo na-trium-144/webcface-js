@@ -211,7 +211,7 @@ export class Canvas2D extends EventTarget<Canvas2D> {
       this.field_
     );
     if (reqId > 0) {
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.canvas2DReq,
           M: this.member_,

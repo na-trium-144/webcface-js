@@ -28,42 +28,74 @@ export class FuncNotFoundError extends Error {
   }
 }
 
-/**
- * 非同期で実行した関数の実行結果を表す。
- */
-export class AsyncFuncResult extends Field {
+export class FuncPromiseData {
   callerId: number;
   caller: string;
-  resolveStarted: (r: boolean) => void = () => undefined;
-  resolveResult: (r: Val | Promise<Val>) => void = () => undefined;
+  reach: Promise<boolean>;
+  resolveReach: (r: boolean) => void = () => undefined;
+  finish: Promise<Val>;
+  resolveFinish: (r: Val | Promise<Val>) => void = () => undefined;
   // 例外をセットする
-  rejectResult: (e: any) => void = () => undefined;
-  /**
-   * 関数が開始したらtrue, 存在しなければfalse
-   *
-   * falseの場合自動でresultにもFuncNotFoundErrorが入る
-   */
-  started: Promise<boolean>;
-  /**
-   * 実行結果または例外
-   */
-  result: Promise<Val>;
+  rejectFinish: (e: Error) => void = () => undefined;
+  base: Field;
+
   constructor(callerId: number, caller: string, base: Field) {
-    super(base.data, base.member_, base.field_);
+    this.base = base;
     this.callerId = callerId;
     this.caller = caller;
-    this.started = new Promise((res) => {
-      this.resolveStarted = (r: boolean) => {
+    this.reach = new Promise((res) => {
+      this.resolveReach = (r: boolean) => {
         res(r);
         if (!r) {
-          this.rejectResult(new FuncNotFoundError(this));
+          this.rejectFinish(new FuncNotFoundError(this.base));
         }
       };
     });
-    this.result = new Promise((res, rej) => {
-      this.resolveResult = res;
-      this.rejectResult = rej;
+    this.finish = new Promise((res, rej) => {
+      this.resolveFinish = res;
+      this.rejectFinish = rej;
     });
+  }
+  getter(){
+    return new FuncPromise(this);
+  }
+}
+/**
+ * 非同期で実行した関数の実行結果を表す。
+ */
+export class FuncPromise extends Field {
+  /**
+   * 関数呼び出しのメッセージが相手のクライアントに到達したら解決するPromise
+   * @since ver1.8
+   * 
+   * * 相手のクライアントが関数の実行を開始したらtrue、
+   * 指定したクライアントまたは関数が存在しなかった場合falseを返す
+   * * falseの場合自動でresultにもFuncNotFoundErrorが入る
+   */
+  reach: Promise<boolean>;
+  /**
+   * reach と同じ。
+   * @deprecated ver1.8〜
+   */
+  started: Promise<boolean>;
+  /**
+   * 関数の実行が完了し戻り値かエラーメッセージを受け取ったら解決するPromise
+   * @since ver1.8
+   * 
+   * * 関数の戻り値をstring,number,booleanのいずれかで返す。
+   * * 関数が例外を返した場合、 Error(エラーメッセージ) の値でrejectする。
+   *   * ver1.7以前ではany型だったが、1.8以降任意の例外をStringに変換した上でError型のメッセージにする
+   */
+  finish: Promise<string | number | boolean>
+  /**
+   * finish と同じ
+   * @deprecated ver1.8〜
+   */
+  result: Promise<Val>;
+  constructor(pData: FuncPromiseData) {
+    super(pData.base.data, pData.base.member_, pData.base.field_);
+    this.reach = this.started = pData.reach;
+    this.finish = this.result = pData.finish;
   }
   /**
    * 関数のMember
@@ -78,6 +110,8 @@ export class AsyncFuncResult extends Field {
     return this.field_;
   }
 }
+export const AsyncFuncResult = FuncPromise;
+export type AsyncFuncResult = FuncPromise;
 
 export function runFunc(fi: FuncInfo, args: Val[]) {
   if (fi.args.length === args.length) {
@@ -184,29 +218,33 @@ export class Func extends Field {
   free() {
     this.dataCheck().funcStore.unsetRecv(this.member_, this.field_);
   }
-  runImpl(r: AsyncFuncResult, args: Val[]) {
+  runImpl(r: FuncPromiseData, args: Val[]) {
     const funcInfo = this.dataCheck().funcStore.getRecv(
       this.member_,
       this.field_
     );
     if (this.dataCheck().isSelf(this.member_)) {
       if (funcInfo !== null && funcInfo.funcImpl !== undefined) {
-        r.resolveStarted(true);
+        r.resolveReach(true);
         try {
           // funcImplがpromise返す場合もそのままresolveにぶちこめばよいはず
           let res: Val | Promise<Val> | void = runFunc(funcInfo, args);
           if (res === undefined) {
             res = "";
           }
-          r.resolveResult(res);
+          r.resolveFinish(res);
         } catch (e: any) {
-          r.rejectResult(e);
+          if(e instanceof Error){
+            r.rejectFinish(e);
+          }else{
+            r.rejectFinish(new Error(String(e)));
+          }
         }
       } else {
-        r.resolveStarted(false);
+        r.resolveReach(false);
       }
     } else {
-      this.dataCheck().pushSend([
+      if(!this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.call,
           i: r.callerId,
@@ -215,23 +253,23 @@ export class Func extends Field {
           f: this.field_,
           a: args,
         },
-      ]);
+      ])){
+        // 未接続でfalseになる
+        r.resolveReach(false);
+      }
     }
   }
   /**
    * 関数を実行する (非同期)
    *
-   * 戻り値やエラー、例外はAsyncFuncResultから取得する
-   *
-   * * 例外が発生した場合そのままthrow, 関数が存在しない場合 FuncNotFoundError をthrowする
-   * * リモートで実行し例外が発生した場合、例外は Error クラスになる
+   * 戻り値やエラー、例外はFuncPromiseから取得する
    */
   runAsync(...args: Val[]) {
     const r = this.dataCheck().funcResultStore.addResult("", this);
     setTimeout(() => {
       this.runImpl(r, args);
     });
-    return r;
+    return r.getter();
   }
   /**
    * 関数が存在すればtrueを返す

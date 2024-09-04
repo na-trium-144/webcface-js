@@ -314,7 +314,7 @@ export class Member extends Field {
   get pingStatus() {
     if (!this.dataCheck().pingStatusReq) {
       this.dataCheck().pingStatusReq = true;
-      this.dataCheck().pushSend([
+      this.dataCheck().pushSendOnline([
         {
           kind: Message.kind.pingStatusReq,
         },
