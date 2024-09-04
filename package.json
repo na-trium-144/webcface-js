@@ -41,6 +41,7 @@
     "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typedoc": "^0.26.3",
     "typescript": "^5.3.3",
+    "util": "^0.12.5",
     "webpack": "^5.93.0",
     "webpack-cli": "^5.1.4",
     "ws": "^8.14.1"
@@ -50,7 +51,6 @@
     "eventemitter3": "^5.0.1",
     "lodash.isequal": "^4.5.0",
     "mathjs": "^13.0.1",
-    "util": "^0.12.5",
     "websocket": "^1.0.34"
   },
   "repository": {
