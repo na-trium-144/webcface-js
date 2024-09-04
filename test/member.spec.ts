@@ -211,7 +211,7 @@ describe("Member Tests", function () {
       assert.strictEqual(member(data.selfMemberName).pingStatus, 10);
     });
     it("sets pingStatusReq", function () {
-      member("a").pingStatus;
+      void member("a").pingStatus;
       assert.isTrue(data.pingStatusReq);
     });
   });
