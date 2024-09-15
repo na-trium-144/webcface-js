@@ -48,7 +48,7 @@ export class Value extends EventTarget<Value> {
   request() {
     const reqId = this.dataCheck().valueStore.addReq(this.member_, this.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendOnline([
+      this.dataCheck().pushSendReq([
         {
           kind: Message.kind.valueReq,
           M: this.member_,

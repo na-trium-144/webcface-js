@@ -36,7 +36,6 @@ export function reconnect(wcli: Client, data: ClientData) {
         initSyncDataFirst(data);
       }
       data.ws.send(data.syncFirst!);
-      data.syncFirst = null;
 
       ws.onmessage = (event: { data: string | ArrayBuffer | Buffer }) => {
         data.consoleLogger.trace(
@@ -52,6 +51,7 @@ export function reconnect(wcli: Client, data: ClientData) {
         data.consoleLogger.warn(`connection error: ${String(e)}`);
         ws.close();
         data.ws = null;
+        data.syncFirst = null;
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);
         }
@@ -59,6 +59,7 @@ export function reconnect(wcli: Client, data: ClientData) {
       ws.onclose = (e) => {
         data.consoleLogger.warn(`closed: ${String(e.reason)}`);
         data.ws = null;
+        data.syncFirst = null;
         // syncDataFirst(data);
         if (!data.closing) {
           setTimeout(() => reconnect(wcli, data), 1000);

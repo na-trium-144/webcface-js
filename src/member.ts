@@ -325,7 +325,7 @@ export class Member extends Field {
   requestPingStatus() {
     if (!this.dataCheck().pingStatusReq) {
       this.dataCheck().pingStatusReq = true;
-      this.dataCheck().pushSendOnline([
+      this.dataCheck().pushSendReq([
         {
           kind: Message.kind.pingStatusReq,
         },

@@ -44,7 +44,7 @@ export class Log extends EventTarget<Log> {
   request() {
     const req = this.dataCheck().logStore.addReq(this.member_);
     if (req) {
-      this.dataCheck().pushSendOnline([
+      this.dataCheck().pushSendReq([
         {
           kind: Message.kind.logReq,
           M: this.member_,

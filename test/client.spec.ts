@@ -24,8 +24,7 @@ describe("Client Tests", function () {
   let wss: WebSocketServer;
   let wssSend: (msg: Message.AnyMessage) => void;
   let wssRecv: Message.AnyMessage[];
-  beforeEach(function (done) {
-    wssRecv = [];
+  const initServer = () => {
     wss = new WebSocketServer({ port: 37530 });
     wss.on("connection", (ws) => {
       ws.on("error", console.error);
@@ -34,6 +33,13 @@ describe("Client Tests", function () {
       });
       wssSend = (msg) => ws.send(Message.pack([msg]));
     });
+  };
+  const closeServer = () => {
+    wss.close();
+  };
+  beforeEach(function (done) {
+    wssRecv = [];
+    initServer();
     setTimeout(() => {
       wcli = new Client(selfName, "127.0.0.1", 37530, "trace");
       data = wcli.dataCheck();
@@ -42,7 +48,7 @@ describe("Client Tests", function () {
   });
   afterEach(function (done) {
     wcli.close();
-    wss.close();
+    closeServer();
     setTimeout(done, 10);
   });
   it("successfully connects with #start", function (done) {
@@ -681,6 +687,40 @@ describe("Client Tests", function () {
       });
     });
     describe("data request", function () {
+      it("send request at any timing", function (done) {
+        closeServer();
+        setTimeout(() => {
+          assert.isFalse(wcli.connected);
+          // 1. 接続前、sync前
+          wcli.member("a").value("1").request();
+          wcli.sync();
+          // 2. 接続前、sync後
+          wcli.member("a").value("2").request();
+
+          initServer();
+          // todo: autoreconnectをオフにする設定がないので、
+          // バックグラウンドで再接続するのを待っている
+          setTimeout(() => {
+            assert.isTrue(wcli.connected);
+            // 接続後
+            wcli.member("a").value("3").request();
+
+            setTimeout(() => {
+              const reqFound: number[] = [];
+              for (const m of wssRecv) {
+                if (m.kind === Message.kind.valueReq) {
+                  const mReq = m as Message.Req;
+                  assert.strictEqual(mReq.M, "a");
+                  assert.strictEqual(mReq.f, mReq.i.toString());
+                  reqFound.push(mReq.i);
+                }
+              }
+              assert.sameMembers(reqFound, [1, 2, 3]);
+              done();
+            }, 10);
+          }, 10);
+        }, 10);
+      });
       it("value", function (done) {
         wcli.start();
         wcli.member("a").value("b").request();

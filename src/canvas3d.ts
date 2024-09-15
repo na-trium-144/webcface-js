@@ -428,7 +428,7 @@ export class Canvas3D extends EventTarget<Canvas3D> {
       this.field_
     );
     if (reqId > 0) {
-      this.dataCheck().pushSendOnline([
+      this.dataCheck().pushSendReq([
         {
           kind: Message.kind.canvas3DReq,
           M: this.member_,
