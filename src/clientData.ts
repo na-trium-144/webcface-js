@@ -136,9 +136,20 @@ export class ClientData {
    *   * これ + messageQueueの中身(=syncDataFirst以降のすべてのsync()データ) を、
    *   * これが空ならその時点のsyncDataFirstを、
    * * 送信する
-   * * 送信したら再度これを空にする
+   * * 切断時に再度これを空にする
    */
   syncFirst: ArrayBuffer | null = null;
+  /**
+   * messageQueueにたまっているメッセージを処理
+   */
+  sendMsg() {
+    if (this.ws != null) {
+      for (const msg of this.messageQueue) {
+        this.ws.send(msg);
+      }
+      this.messageQueue = [];
+    }    
+  }
   /**
    * メッセージを追加 & messageQueueを消費
    *
@@ -148,12 +159,7 @@ export class ClientData {
     if (msgs != undefined) {
       this.messageQueue.push(Message.pack(msgs));
     }
-    if (this.ws != null) {
-      for (const msg of this.messageQueue) {
-        this.ws.send(msg);
-      }
-      this.messageQueue = [];
-    }
+    this.sendMsg();
   }
   /**
    * 接続されている場合に限ってメッセージを追加しtrueを返す
@@ -163,10 +169,21 @@ export class ClientData {
       if (msgs != undefined) {
         this.messageQueue.push(Message.pack(msgs));
       }
-      for (const msg of this.messageQueue) {
-        this.ws.send(msg);
+      this.sendMsg();
+      return true;
+    }else{
+      return false;
+    }
+  }
+  /**
+   * sync_firstが空でなければメッセージをキューに入れtrueを返す
+   */
+  pushSendReq(msgs?: Message.AnyMessage[]) {
+    if (this.syncFirst != null) {
+      if (msgs != undefined) {
+        this.messageQueue.push(Message.pack(msgs));
       }
-      this.messageQueue = [];
+      this.sendMsg();
       return true;
     }else{
       return false;
