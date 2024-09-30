@@ -95,9 +95,11 @@ export class Member extends Field {
   }
   /**
    * Logを参照する
+   * 
+   * ver1.9〜: nameを指定可能 (デフォルトは "default")
    */
-  log() {
-    return new Log(this);
+  log(name: string = "default") {
+    return new Log(this, name);
   }
   /**
    * このMemberが公開しているValueのリストを返す

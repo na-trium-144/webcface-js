@@ -31,6 +31,7 @@ export const kind = {
   image: 5,
   robotModel: 6,
   canvas3D: 7,
+  log: 8,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
@@ -38,6 +39,7 @@ export const kind = {
   imageEntry: 25,
   robotModelEntry: 26,
   canvas3DEntry: 27,
+  logEntry: 28,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
@@ -45,6 +47,7 @@ export const kind = {
   imageReq: 45,
   robotModelReq: 46,
   canvas3DReq: 47,
+  logReq: 48,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
@@ -52,19 +55,20 @@ export const kind = {
   imageRes: 65,
   robotModelRes: 66,
   canvas3DRes: 67,
+  logRes: 68,
   syncInit: 80,
   call: 81,
   callResponse: 82,
   callResult: 83,
   funcInfo: 84,
-  log: 85,
-  logReq: 86,
+  logDefault: 85,
+  logReqDefault: 86,
   sync: 87,
   syncInitEnd: 88,
   ping: 89,
   pingStatus: 90,
   pingStatusReq: 91,
-  logEntry: 92,
+  logEntryDefault: 92,
 } as const;
 
 export const valType = {
@@ -182,13 +186,20 @@ export interface RobotModel {
   f: string;
   d: RobotLink[];
 }
+
+export interface Log {
+  kind: 8;
+  f: string;
+  l: LogLine[];
+}
+
 export interface Entry {
-  kind: 20 | 21 | 23 | 24 | 25 | 26 | 27;
+  kind: 20 | 21 | 23 | 24 | 25 | 26 | 27 | 28;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 40 | 41 | 43 | 44 | 46 | 47;
+  kind: 40 | 41 | 43 | 44 | 46 | 47 | 48;
   M: string;
   f: string;
   i: number;
@@ -255,6 +266,12 @@ export interface RobotModelRes {
   i: number;
   f: string;
   d: RobotLink[];
+}
+export interface LogRes {
+  kind: 68;
+  i: number;
+  f: string;
+  l: LogLine[];
 }
 export interface SyncInit {
   kind: 80;
@@ -329,19 +346,6 @@ export interface LogLine {
   t: number;
   m: string;
 }
-export interface Log {
-  kind: 85;
-  m: number;
-  l: LogLine[];
-}
-export interface LogReq {
-  kind: 86;
-  M: string;
-}
-export interface LogEntry {
-  kind: 92;
-  m: number;
-}
 export interface Unknown {
   kind: number;
 }
@@ -374,6 +378,5 @@ export type AnyMessage =
   | CallResult
   | FuncInfo
   | Log
-  | LogReq
-  | LogEntry
+  | LogRes
   | Unknown;

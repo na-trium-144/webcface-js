@@ -29,7 +29,8 @@ export const eventType = {
     JSON.stringify(["canvas3DChange", b.member_, b.field_]),
   canvas2DChange: (b: FieldBase) =>
     JSON.stringify(["canvas2DChange", b.member_, b.field_]),
-  logAppend: (b: FieldBase) => JSON.stringify(["logAppend", b.member_]),
+  logAppend: (b: FieldBase) =>
+    JSON.stringify(["logAppend", b.member_, b.field_]),
 };
 
 type EventListener<TargetType> = (target: TargetType) => void;
