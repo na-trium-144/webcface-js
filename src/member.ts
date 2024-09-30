@@ -271,6 +271,19 @@ export class Member extends Field {
     );
   }
   /**
+   * Logが追加された時のイベント
+   * @since ver1.9
+   * 
+   * コールバックの型は (target: Log) => void
+   */
+  get onLogEntry() {
+    return new EventTarget<Log>(
+      eventType.logEntry(this),
+      this.data,
+      this.member_
+    );
+  }
+  /**
    * Memberがsyncしたときのイベント
    *
    * コールバックの型は (target: Member) => void

@@ -559,8 +559,8 @@ export function onMessage(
         const dataR = msg as Message.Entry;
         const member = data.getMemberNameFromId(dataR.m);
         data.logStore.setEntry(member, dataR.f);
-        // const target = wcli.member(member).log();
-        // data.eventEmitter.emit(eventType.logEntry(target), target);
+        const target = wcli.member(member).log(dataR.f);
+        data.eventEmitter.emit(eventType.logEntry(target), target);
         break;
       }
       case Message.kind.funcInfo: {

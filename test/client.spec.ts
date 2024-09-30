@@ -449,6 +449,12 @@ describe("Client Tests", function () {
       });
       it("log entry", function (done) {
         wcli.start();
+        let called = 0;
+        wcli.member("a").onLogEntry.on((v: Log) => {
+          ++called;
+          assert.strictEqual(v.member.name, "a");
+          assert.strictEqual(v.name, "b");
+        });
         setTimeout(() => {
           wssSend({
             kind: Message.kind.syncInit,
@@ -464,6 +470,8 @@ describe("Client Tests", function () {
             f: "b",
           });
           setTimeout(() => {
+            assert.strictEqual(called, 1);
+            assert.lengthOf(wcli.member("a").logEntries(), 1);
             assert.isTrue(wcli.member("a").log("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
