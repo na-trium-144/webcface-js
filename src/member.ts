@@ -95,7 +95,7 @@ export class Member extends Field {
   }
   /**
    * Logを参照する
-   * 
+   *
    * ver1.9〜: nameを指定可能 (デフォルトは "default")
    */
   log(name: string = "default") {
@@ -164,6 +164,15 @@ export class Member extends Field {
     return this.dataCheck()
       .funcStore.getEntry(this.member_)
       .map((n) => this.func(n));
+  }
+  /**
+   * このmemberが公開しているLogのリストを返す
+   * @since ver1.9
+   */
+  logEntries() {
+    return this.dataCheck()
+      .logStore.getEntry(this.member_)
+      .map((n) => this.log(n));
   }
   /**
    * Valueが追加された時のイベント
