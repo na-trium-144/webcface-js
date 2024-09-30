@@ -26,10 +26,17 @@ export class Log extends EventTarget<Log> {
   get member() {
     return new Member(this);
   }
+  /**
+   * field名を返す
+   * @since ver1.9
+   */
+  get name() {
+    return this.field_;
+  }
 
   /**
    * Clientが保持するログの行数を設定する。
-   * @since ver2.1
+   * @since ver1.8
    *
    * * この行数以上のログが送られてきたら古いログから順に削除され、get()で取得できなくなる。
    * * デフォルトは1000
@@ -60,7 +67,7 @@ export class Log extends EventTarget<Log> {
   tryGet() {
     this.request();
     return (
-      this.dataCheck().logStore.getRecv(this.member_, this.field_)?.data || null
+      this.dataCheck().logStore.getRecv(this.member_, this.field_)?.data.slice() || null
     );
   }
   /**

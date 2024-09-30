@@ -461,9 +461,10 @@ describe("Client Tests", function () {
           wssSend({
             kind: Message.kind.logEntry,
             m: 10,
+            f: "b",
           });
           setTimeout(() => {
-            assert.isTrue(wcli.member("a").log().exists());
+            assert.isTrue(wcli.member("a").log("b").exists());
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -473,7 +474,7 @@ describe("Client Tests", function () {
               a: "",
             });
             setTimeout(() => {
-              assert.isFalse(wcli.member("a").log().exists());
+              assert.isFalse(wcli.member("a").log("b").exists());
               done();
             }, 10);
           }, 10);
@@ -651,34 +652,46 @@ describe("Client Tests", function () {
         }, 10);
       });
       it("log", function (done) {
-        data.logStore
-          .getRecv(selfName)
-          ?.push({ level: 0, time: new Date(), message: "a" });
-        data.logStore
-          .getRecv(selfName)
-          ?.push({ level: 1, time: new Date(), message: "b" });
+        data.logStore.setSend("a", {
+          data: [
+            { level: 0, time: new Date(), message: "a" },
+            { level: 1, time: new Date(), message: "b" },
+          ],
+          sentLines: 0,
+        });
         wcli.sync();
-        assert.exists(data.logStore.dataRecv.get(selfName));
-        assert.lengthOf(data.logStore.dataRecv.get(selfName) || [], 2);
+        assert.strictEqual(data.logStore.getRecv(selfName, "a")?.sentLines, 2);
+        assert.lengthOf(data.logStore.getRecv(selfName, "a")!.data, 2);
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.log
           ) as Message.Log;
+          assert.strictEqual(m?.f, "a");
           assert.lengthOf(m?.l || [], 2);
           assert.include(m?.l?.[0], { v: 0, m: "a" });
           assert.include(m?.l?.[1], { v: 1, m: "b" });
           wssRecv = [];
 
           // 追加分を送る
-          data.logStore
-            .getRecv(selfName)
-            ?.push({ level: 2, time: new Date(), message: "c" });
+          data.logStore.setSend("a", {
+            data: [
+              { level: 0, time: new Date(), message: "a" },
+              { level: 1, time: new Date(), message: "b" },
+              { level: 2, time: new Date(), message: "c" },
+            ],
+            sentLines: 2,
+          });
           wcli.sync();
-          assert.lengthOf(data.logStore.dataRecv.get(selfName) || [], 3);
+          assert.strictEqual(
+            data.logStore.getRecv(selfName, "a")?.sentLines,
+            3
+          );
+          assert.lengthOf(data.logStore.getRecv(selfName, "a")!.data, 3);
           setTimeout(() => {
             const m = wssRecv.find(
               (m) => m.kind === Message.kind.log
             ) as Message.Log;
+            assert.strictEqual(m?.f, "a");
             assert.lengthOf(m?.l || [], 1);
             assert.include(m?.l?.[0], { v: 2, m: "c" });
             done();
@@ -906,17 +919,19 @@ describe("Client Tests", function () {
       });
       it("log", function (done) {
         wcli.start();
-        wcli.member("a").log().request();
+        wcli.member("a").log("b").request();
         setTimeout(() => {
           const m = wssRecv.find(
             (m) => m.kind === Message.kind.logReq
-          ) as Message.LogReq;
+          ) as Message.Req;
           assert.strictEqual(m?.M, "a");
+          assert.strictEqual(m?.f, "b");
+          assert.strictEqual(m?.i, 1);
 
           let called = 0;
           wcli
             .member("a")
-            .log()
+            .log("b")
             .on(() => ++called);
           wssSend({
             kind: Message.kind.syncInit,
@@ -927,8 +942,9 @@ describe("Client Tests", function () {
             a: "",
           });
           wssSend({
-            kind: Message.kind.log,
-            m: 10,
+            kind: Message.kind.logRes,
+            i: 1,
+            f: "",
             l: [
               {
                 v: 1,
@@ -944,22 +960,25 @@ describe("Client Tests", function () {
           });
           setTimeout(() => {
             assert.strictEqual(called, 1);
-            assert.isArray(data.logStore.dataRecv.get("a"));
-            assert.lengthOf(data.logStore.dataRecv.get("a") || [], 2);
-            assert.strictEqual(data.logStore.dataRecv.get("a")?.[0]?.level, 1);
+            assert.lengthOf(data.logStore.getRecv("a", "b")!.data, 2);
             assert.strictEqual(
-              data.logStore.dataRecv.get("a")?.[0]?.time?.getTime(),
+              data.logStore.getRecv("a", "b")?.data[0]?.level,
+              1
+            );
+            assert.strictEqual(
+              data.logStore.getRecv("a", "b")?.data[0]?.time?.getTime(),
               1000
             );
             assert.strictEqual(
-              data.logStore.dataRecv.get("a")?.[0]?.message,
+              data.logStore.getRecv("a", "b")?.data[0]?.message,
               "a"
             );
 
             // 追加
             wssSend({
-              kind: Message.kind.log,
-              m: 10,
+              kind: Message.kind.logRes,
+              i: 1,
+              f: "",
               l: [
                 {
                   v: 3,
@@ -970,17 +989,18 @@ describe("Client Tests", function () {
             });
             setTimeout(() => {
               assert.strictEqual(called, 2);
-              assert.lengthOf(data.logStore.dataRecv.get("a") || [], 3);
+              assert.lengthOf(data.logStore.getRecv("a", "b")!.data, 3);
               assert.strictEqual(
-                data.logStore.dataRecv.get("a")?.[2]?.level,
+                data.logStore.getRecv("a", "b")?.data[2]?.level,
                 3
               );
 
               // keep_lines以上のログは保存しない
               Log.keepLines = 2;
               wssSend({
-                kind: Message.kind.log,
-                m: 10,
+                kind: Message.kind.logRes,
+                i: 1,
+                f: "",
                 l: [
                   {
                     v: 4,
@@ -991,15 +1011,16 @@ describe("Client Tests", function () {
               });
               setTimeout(() => {
                 assert.strictEqual(called, 3);
-                assert.lengthOf(data.logStore.dataRecv.get("a") || [], 2);
+                assert.lengthOf(data.logStore.getRecv("a", "b")!.data, 2);
                 assert.strictEqual(
-                  data.logStore.dataRecv.get("a")?.[1]?.level,
+                  data.logStore.getRecv("a", "b")?.data[1]?.level,
                   4
                 );
 
                 wssSend({
-                  kind: Message.kind.log,
-                  m: 10,
+                  kind: Message.kind.logRes,
+                  i: 1,
+                  f: "",
                   l: [
                     {
                       v: 5,
@@ -1020,9 +1041,9 @@ describe("Client Tests", function () {
                 });
                 setTimeout(() => {
                   assert.strictEqual(called, 4);
-                  assert.lengthOf(data.logStore.dataRecv.get("a") || [], 2);
+                  assert.lengthOf(data.logStore.getRecv("a", "b")!.data, 2);
                   assert.strictEqual(
-                    data.logStore.dataRecv.get("a")?.[1]?.level,
+                    data.logStore.getRecv("a", "b")?.data[1]?.level,
                     7
                   );
 

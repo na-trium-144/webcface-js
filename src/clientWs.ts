@@ -366,7 +366,7 @@ export function onMessage(
       }
       case Message.kind.logRes: {
         const dataR = msg as Message.LogRes;
-        const [member, field] = data.imageStore.getReq(dataR.i, dataR.f);
+        const [member, field] = data.logStore.getReq(dataR.i, dataR.f);
         let log = data.logStore.getRecv(member, field);
         if(log === null){
           log = {data: [], sentLines: 0}
