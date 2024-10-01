@@ -16,8 +16,8 @@ export interface LogLine {
  * を参照
  */
 export class Log extends EventTarget<Log> {
-  constructor(base: Field) {
-    super("", base.data, base.member_, "");
+  constructor(base: Field, name: string) {
+    super("", base.data, base.member_, name);
     this.eventType_ = eventType.logAppend(this);
   }
   /**
@@ -26,10 +26,17 @@ export class Log extends EventTarget<Log> {
   get member() {
     return new Member(this);
   }
+  /**
+   * field名を返す
+   * @since ver1.9
+   */
+  get name() {
+    return this.field_;
+  }
 
   /**
    * Clientが保持するログの行数を設定する。
-   * @since ver2.1
+   * @since ver1.8
    *
    * * この行数以上のログが送られてきたら古いログから順に削除され、get()で取得できなくなる。
    * * デフォルトは1000
@@ -42,12 +49,14 @@ export class Log extends EventTarget<Log> {
    * 値をリクエストする。
    */
   request() {
-    const req = this.dataCheck().logStore.addReq(this.member_);
+    const req = this.dataCheck().logStore.addReq(this.member_, this.field_);
     if (req) {
       this.dataCheck().pushSendReq([
         {
           kind: Message.kind.logReq,
           M: this.member_,
+          f: this.field_,
+          i: req,
         },
       ]);
     }
@@ -57,7 +66,9 @@ export class Log extends EventTarget<Log> {
    */
   tryGet() {
     this.request();
-    return this.dataCheck().logStore.getRecv(this.member_);
+    return (
+      this.dataCheck().logStore.getRecv(this.member_, this.field_)?.data.slice() || null
+    );
   }
   /**
    * ログを取得する
@@ -78,7 +89,9 @@ export class Log extends EventTarget<Log> {
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().logStore.getEntry(this.member_);
+    return this.dataCheck()
+      .logStore.getEntry(this.member_)
+      .includes(this.field_);
   }
   /**
    * 受信したログをクリアする
@@ -86,7 +99,10 @@ export class Log extends EventTarget<Log> {
    * リクエスト状態は解除しない
    */
   clear() {
-    this.dataCheck().logStore.setRecv(this.member_, []);
+    this.dataCheck().logStore.setRecv(this.member_, this.field_, {
+      data: [],
+      sentLines: 0,
+    });
     return this;
   }
 
@@ -100,7 +116,12 @@ export class Log extends EventTarget<Log> {
       time: new Date(),
       message,
     };
-    this.setCheck().logStore.getRecv(this.member_)?.push(ll);
+    let log = this.setCheck().logStore.getRecv(this.member_, this.field_);
+    if (log === null) {
+      log = { data: [], sentLines: 0 };
+    }
+    log.data.push(ll);
+    this.setCheck().logStore.setSend(this.field_, log);
     this.triggerEvent(this);
   }
 }

@@ -268,97 +268,98 @@ describe("Text Tests", function () {
 describe("Log Tests", function () {
   const selfName = "test";
   let data: ClientData;
-  const log = (member: string) => new Log(new Field(data, member, ""));
+  const log = (member: string, name: string) => new Log(new Field(data, member, ""), name);
   beforeEach(function () {
     data = new ClientData(selfName);
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
-      assert.instanceOf(log("a").member, Member);
-      assert.strictEqual(log("a").member.name, "a");
+      assert.instanceOf(log("a", "b").member, Member);
+      assert.strictEqual(log("a", "b").member.name, "a");
+      assert.strictEqual(log("a", "b").name, "b");
     });
   });
   describe("#tryGet()", function () {
     it("returns null by default", function () {
-      assert.isNull(log("a").tryGet());
+      assert.isNull(log("a", "b").tryGet());
     });
     it("returns value if data.logStore.dataRecv is set", function () {
-      data.logStore.dataRecv.set("a", [
+      data.logStore.setRecv("a", "b", {data: [
         { level: 1, time: new Date(), message: "a" },
-      ]);
-      assert.lengthOf(log("a").tryGet() || [], 1);
-      assert.strictEqual((log("a").tryGet() || [])[0]?.level, 1);
-      assert.strictEqual((log("a").tryGet() || [])[0]?.message, "a");
+      ], sentLines: 0});
+      assert.lengthOf(log("a", "b").tryGet() || [], 1);
+      assert.strictEqual((log("a", "b").tryGet() || [])[0]?.level, 1);
+      assert.strictEqual((log("a", "b").tryGet() || [])[0]?.message, "a");
     });
     it("sets request when member is not self name", function () {
-      log("a").tryGet();
-      assert.strictEqual(data.logStore.req.get("a"), true);
+      log("a", "b").tryGet();
+      assert.strictEqual(data.logStore.req.get("a")?.get("b"), 1);
     });
     it("does not set request when member is self name", function () {
-      log(selfName).tryGet();
+      log(selfName, "b").tryGet();
       assert.isEmpty(data.logStore.req);
     });
   });
   describe("#get()", function () {
     it("returns empty array by default", function () {
-      assert.isArray(log("a").get());
-      assert.isEmpty(log("a").get());
+      assert.isArray(log("a", "b").get());
+      assert.isEmpty(log("a", "b").get());
     });
     it("returns value if data.logStore.dataRecv is set", function () {
-      data.logStore.dataRecv.set("a", [
+      data.logStore.setRecv("a", "b", {data: [
         { level: 1, time: new Date(), message: "a" },
-      ]);
-      assert.lengthOf(log("a").get(), 1);
-      assert.strictEqual(log("a").get()[0]?.level, 1);
-      assert.strictEqual(log("a").get()[0]?.message, "a");
+      ], sentLines: 0});
+      assert.lengthOf(log("a", "b").get(), 1);
+      assert.strictEqual(log("a", "b").get()[0]?.level, 1);
+      assert.strictEqual(log("a", "b").get()[0]?.message, "a");
     });
     it("sets request when member is not self name", function () {
-      log("a").get();
-      assert.strictEqual(data.logStore.req.get("a"), true);
+      log("a", "b").get();
+      assert.strictEqual(data.logStore.req.get("a")?.get("b"), 1);
     });
     it("does not set request when member is self name", function () {
-      log(selfName).get();
+      log(selfName, "b").get();
       assert.isEmpty(data.logStore.req);
     });
   });
   describe("#exists()", function () {
     it("returns true if data.logStore.entry has this member", function () {
-      assert.isFalse(log("a").exists());
-      data.logStore.setEntry("a");
-      assert.isTrue(log("a").exists());
+      assert.isFalse(log("a", "b").exists());
+      data.logStore.setEntry("a", "b");
+      assert.isTrue(log("a", "b").exists());
     });
     // todo: selfの場合もexists()は機能するべき?
   });
   describe("#clear()", function () {
     it("clears data.logStore.dataRecv", function () {
-      data.logStore.dataRecv.set("a", [
+      data.logStore.setRecv("a", "b", {data:[
         { level: 1, time: new Date(), message: "a" },
-      ]);
-      log("a").clear();
-      assert.isArray(data.logStore.dataRecv.get("a"));
-      assert.isEmpty(data.logStore.dataRecv.get("a"));
+      ], sentLines: 0});
+      log("a", "b").clear();
+      assert.isArray(data.logStore.getRecv("a", "b")?.data);
+      assert.isEmpty(data.logStore.getRecv("a", "b")?.data);
     });
   });
   describe("#append()", function () {
     it("push log to data.logStore", function () {
-      log(selfName).append(0, "a");
-      log(selfName).append(1, "b");
-      const ls = data.logStore.getRecv(selfName) || [];
+      log(selfName, "b").append(0, "a");
+      log(selfName, "b").append(1, "b");
+      const ls = data.logStore.getRecv(selfName, "b")?.data || [];
       assert.lengthOf(ls, 2);
       assert.include(ls[0], { level: 0, message: "a" });
       assert.include(ls[1], { level: 1, message: "b" });
     });
     it("triggers change event", function () {
       let called = 0;
-      log(selfName).addListener((v) => {
+      log(selfName, "b").addListener((v) => {
         ++called;
         assert.strictEqual(v.member.name, selfName);
       });
-      log(selfName).append(1, "a");
+      log(selfName, "b").append(1, "a");
       assert.strictEqual(called, 1);
     });
     it("throws error when member is not self", function () {
-      assert.throws(() => log("a").append(1, "a"), Error);
+      assert.throws(() => log("a", "b").append(1, "a"), Error);
     });
   });
 });

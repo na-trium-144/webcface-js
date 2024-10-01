@@ -13,6 +13,7 @@ export const eventType = {
   imageEntry: (b: FieldBase) => JSON.stringify(["imageEntry", b.member_]),
   canvas3DEntry: (b: FieldBase) => JSON.stringify(["canvas3DEntry", b.member_]),
   canvas2DEntry: (b: FieldBase) => JSON.stringify(["canvas2DEntry", b.member_]),
+  logEntry: (b: FieldBase) => JSON.stringify(["logEntry", b.member_]),
   robotModelEntry: (b: FieldBase) =>
     JSON.stringify(["robotModelEntry", b.member_]),
   valueChange: (b: FieldBase) =>
@@ -29,7 +30,8 @@ export const eventType = {
     JSON.stringify(["canvas3DChange", b.member_, b.field_]),
   canvas2DChange: (b: FieldBase) =>
     JSON.stringify(["canvas2DChange", b.member_, b.field_]),
-  logAppend: (b: FieldBase) => JSON.stringify(["logAppend", b.member_]),
+  logAppend: (b: FieldBase) =>
+    JSON.stringify(["logAppend", b.member_, b.field_]),
 };
 
 type EventListener<TargetType> = (target: TargetType) => void;

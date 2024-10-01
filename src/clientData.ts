@@ -12,7 +12,10 @@ export interface Canvas2DData {
   height: number;
   components: Message.Canvas2DComponent[];
 }
-
+export interface LogData {
+  data: LogLine[];
+  sentLines: number;
+}
 export class ClientData {
   selfMemberName: string;
   valueStore: SyncDataStore2<number[]>;
@@ -23,8 +26,7 @@ export class ClientData {
   robotModelStore: SyncDataStore2<Message.RobotLink[]>;
   canvas3DStore: SyncDataStore2<Message.Canvas3DComponent[]>;
   canvas2DStore: SyncDataStore2<Canvas2DData>;
-  logStore: SyncDataStore1<LogLine[]>;
-  logSentLines = 0;
+  logStore: SyncDataStore2<LogData>;
   syncTimeStore: SyncDataStore1<Date>;
   funcResultStore: FuncResultStore;
   memberIds: Map<string, number>;
@@ -72,8 +74,7 @@ export class ClientData {
     this.robotModelStore = new SyncDataStore2<Message.RobotLink[]>(name);
     this.canvas3DStore = new SyncDataStore2<Message.Canvas3DComponent[]>(name);
     this.canvas2DStore = new SyncDataStore2<Canvas2DData>(name);
-    this.logStore = new SyncDataStore1<LogLine[]>(name);
-    this.logStore.setRecv(name, []);
+    this.logStore = new SyncDataStore2<LogData>(name);
     this.syncTimeStore = new SyncDataStore1<Date>(name);
     this.funcResultStore = new FuncResultStore();
     this.memberIds = new Map<string, number>();

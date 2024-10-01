@@ -137,8 +137,10 @@ export function initSyncDataFirst(data: ClientData) {
     }
   }
 
-  for (const [k] of data.logStore.transferReq().entries()) {
-    msg.push({ kind: Message.kind.logReq, M: k });
+  for (const [k, v] of data.logStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      msg.push({ kind: Message.kind.logReq, M: k, f: k2, i: v2 });
+    }
   }
 
   if (data.pingStatusReq) {
@@ -221,13 +223,14 @@ export function syncData(data: ClientData, isFirst: boolean) {
     }
   }
 
-  const logs = data.logStore.getRecv(data.selfMemberName) || [];
-  if ((logs.length > 0 && isFirst) || logs.length > data.logSentLines) {
-    const logSend = logs
-      .slice(isFirst ? 0 : data.logSentLines)
-      .map((l) => ({ v: l.level, t: l.time.getTime(), m: l.message }));
-    data.logSentLines = logs.length;
-    msg.push({ kind: Message.kind.log, l: logSend });
+  for (const [k, v] of data.logStore.transferSend(isFirst).entries()) {
+    if ((v.data.length > 0 && isFirst) || v.data.length > v.sentLines) {
+      const logSend = v.data
+        .slice(isFirst ? 0 : v.sentLines)
+        .map((l) => ({ v: l.level, t: l.time.getTime(), m: l.message }));
+      v.sentLines = v.data.length;
+      msg.push({ kind: Message.kind.log, f: k, l: logSend });
+    }
   }
 
   // data.pushSend(msg);
@@ -361,29 +364,32 @@ export function onMessage(
         data.eventEmitter.emit(eventType.imageChange(target), target);
         break;
       }
-      case Message.kind.log: {
-        const dataR = msg as Message.Log;
-        const member = data.getMemberNameFromId(dataR.m);
-        let log = data.logStore.getRecv(member) || [];
-        const target = wcli.member(member).log();
+      case Message.kind.logRes: {
+        const dataR = msg as Message.LogRes;
+        const [member, field] = data.logStore.getReq(dataR.i, dataR.f);
+        let log = data.logStore.getRecv(member, field);
+        if(log === null){
+          log = {data: [], sentLines: 0}
+        }
         let rLogBegin = 0;
         const rLogEnd = dataR.l.length;
         if (Log.keepLines >= 0) {
           if (rLogEnd > Log.keepLines) {
             rLogBegin = rLogEnd - Log.keepLines;
           }
-          if (log.length + (rLogEnd - rLogBegin) > Log.keepLines) {
-            log = log.slice(log.length + (rLogEnd - rLogBegin) - Log.keepLines);
+          if (log.data.length + (rLogEnd - rLogBegin) > Log.keepLines) {
+            log.data = log.data.slice(log.data.length + (rLogEnd - rLogBegin) - Log.keepLines);
           }
         }
         for (let i = rLogBegin; i < rLogEnd; i++) {
-          log.push({
+          log.data.push({
             level: dataR.l[i].v,
             time: new Date(dataR.l[i].t),
             message: dataR.l[i].m,
           });
         }
-        data.logStore.setRecv(member, log);
+        data.logStore.setRecv(member, field, log);
+        const target = wcli.member(member).log(field);
         data.eventEmitter.emit(eventType.logAppend(target), target);
         break;
       }
@@ -478,13 +484,12 @@ export function onMessage(
         data.valueStore.addMember(dataR.M);
         data.textStore.addMember(dataR.M);
         data.funcStore.addMember(dataR.M);
-        data.logStore.unsetRecv(dataR.M);
+        data.logStore.addMember(dataR.M);
         data.viewStore.addMember(dataR.M);
         data.imageStore.addMember(dataR.M);
         data.robotModelStore.addMember(dataR.M);
         data.canvas3DStore.addMember(dataR.M);
         data.canvas2DStore.addMember(dataR.M);
-        data.logStore.clearEntry(dataR.M);
         data.syncTimeStore.unsetRecv(dataR.M);
         data.memberIds.set(dataR.M, dataR.m);
         data.memberLibName.set(dataR.m, dataR.l);
@@ -551,11 +556,11 @@ export function onMessage(
         break;
       }
       case Message.kind.logEntry: {
-        const dataR = msg as Message.LogEntry;
+        const dataR = msg as Message.Entry;
         const member = data.getMemberNameFromId(dataR.m);
-        data.logStore.setEntry(member);
-        // const target = wcli.member(member).log();
-        // data.eventEmitter.emit(eventType.logEntry(target), target);
+        data.logStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).log(dataR.f);
+        data.eventEmitter.emit(eventType.logEntry(target), target);
         break;
       }
       case Message.kind.funcInfo: {

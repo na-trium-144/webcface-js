@@ -95,9 +95,11 @@ export class Member extends Field {
   }
   /**
    * Logを参照する
+   *
+   * ver1.9〜: nameを指定可能 (デフォルトは "default")
    */
-  log() {
-    return new Log(this);
+  log(name: string = "default") {
+    return new Log(this, name);
   }
   /**
    * このMemberが公開しているValueのリストを返す
@@ -162,6 +164,15 @@ export class Member extends Field {
     return this.dataCheck()
       .funcStore.getEntry(this.member_)
       .map((n) => this.func(n));
+  }
+  /**
+   * このmemberが公開しているLogのリストを返す
+   * @since ver1.9
+   */
+  logEntries() {
+    return this.dataCheck()
+      .logStore.getEntry(this.member_)
+      .map((n) => this.log(n));
   }
   /**
    * Valueが追加された時のイベント
@@ -255,6 +266,19 @@ export class Member extends Field {
   get onImageEntry() {
     return new EventTarget<Image>(
       eventType.imageEntry(this),
+      this.data,
+      this.member_
+    );
+  }
+  /**
+   * Logが追加された時のイベント
+   * @since ver1.9
+   * 
+   * コールバックの型は (target: Log) => void
+   */
+  get onLogEntry() {
+    return new EventTarget<Log>(
+      eventType.logEntry(this),
       this.data,
       this.member_
     );
