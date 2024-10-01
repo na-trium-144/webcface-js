@@ -1,3 +1,11 @@
+## [1.9.0] - 2024-10-01
+### Added
+* 新Logメッセージ(kind=8)に対応 (#207)
+* Field.logEntries()
+* Member.onLogEntry()
+### Changed
+* eslintをv9にアップデートしたのでnode16ではテストが通りません (#211)
+
 ## [1.8.1] - 2024-09-16
 ### Fixed
 * サーバーに未接続のときのReq送信を修正 (#198)
