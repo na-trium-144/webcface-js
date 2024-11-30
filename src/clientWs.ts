@@ -480,16 +480,15 @@ export function onMessage(
       }
       case Message.kind.syncInit: {
         const dataR = msg as Message.SyncInit;
-        // addMember がなぜかclearEntryを兼ねている
-        data.valueStore.addMember(dataR.M);
-        data.textStore.addMember(dataR.M);
-        data.funcStore.addMember(dataR.M);
-        data.logStore.addMember(dataR.M);
-        data.viewStore.addMember(dataR.M);
-        data.imageStore.addMember(dataR.M);
-        data.robotModelStore.addMember(dataR.M);
-        data.canvas3DStore.addMember(dataR.M);
-        data.canvas2DStore.addMember(dataR.M);
+        data.valueStore.initMember(dataR.M);
+        data.textStore.initMember(dataR.M);
+        data.funcStore.initMember(dataR.M);
+        data.logStore.initMember(dataR.M);
+        data.viewStore.initMember(dataR.M);
+        data.imageStore.initMember(dataR.M);
+        data.robotModelStore.initMember(dataR.M);
+        data.canvas3DStore.initMember(dataR.M);
+        data.canvas2DStore.initMember(dataR.M);
         data.syncTimeStore.unsetRecv(dataR.M);
         data.memberIds.set(dataR.M, dataR.m);
         data.memberLibName.set(dataR.m, dataR.l);

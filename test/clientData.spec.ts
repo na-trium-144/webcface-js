@@ -82,11 +82,16 @@ describe("ClientData Tests", function () {
         assert.strictEqual(s2.req.get("a")?.get("b"), 0);
       });
     });
-    describe("#addMember()", function () {
+    describe("#initMember()", function () {
       it("add member to #entry", function () {
-        s2.addMember("a");
+        s2.initMember("a");
         assert.isTrue(s2.entry.has("a"));
         assert.isEmpty(s2.entry.get("a"));
+      });
+      it("clear previous data in #dataRecv", function () {
+        s2.dataRecv.set("a", new Map([["b", "c"]]));
+        s2.initMember("a");
+        assert.isFalse(s2.dataRecv.has("a"));
       });
     });
     describe("#addEntry()", function () {

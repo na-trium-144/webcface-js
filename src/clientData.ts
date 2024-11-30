@@ -326,10 +326,11 @@ export class SyncDataStore2<T, ReqT = never> {
     return this.entry.get(member) || [];
   }
   /**
-   * entryにmember名のみ追加
+   * entryにmember名を追加、recvをクリア
    */
-  addMember(member: string) {
+  initMember(member: string) {
     this.entry.set(member, []);
+    this.dataRecv.delete(member);
   }
   /**
    * 受信したentryを追加
