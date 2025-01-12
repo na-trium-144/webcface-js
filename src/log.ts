@@ -16,7 +16,7 @@ export interface LogLine {
  * を参照
  */
 export class Log extends EventTarget<Log> {
-  constructor(base: Field, name: string) {
+  constructor(base: Field, name: string = "") {
     super("", base.data, base.member_, name);
     this.eventType_ = eventType.logAppend(this);
   }

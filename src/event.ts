@@ -36,7 +36,8 @@ export const eventType = {
 
 type EventListener<TargetType> = (target: TargetType) => void;
 
-export class EventTarget<TargetType> extends Field {
+export class EventTarget<TargetType> {
+  base_: Field
   eventType_: string;
   // onAppend: () => void;
   constructor(
@@ -46,31 +47,31 @@ export class EventTarget<TargetType> extends Field {
     field = ""
     // onAppend: () => void = () => undefined
   ) {
-    super(data, member, field);
+    this.base_ = new Field(data, member, field);
     this.eventType_ = eventType;
     // this.onAppend = onAppend;
   }
   triggerEvent(arg: TargetType) {
-    this.dataCheck().eventEmitter.emit(this.eventType_, arg);
+    this.base_.dataCheck().eventEmitter.emit(this.eventType_, arg);
   }
   addListener(listener: EventListener<TargetType>) {
-    this.dataCheck().eventEmitter.addListener(this.eventType_, listener);
+    this.base_.dataCheck().eventEmitter.addListener(this.eventType_, listener);
     // this.onAppend();
   }
   on(listener: EventListener<TargetType>) {
     this.addListener(listener);
   }
   once(listener: EventListener<TargetType>) {
-    this.dataCheck().eventEmitter.once(this.eventType_, listener);
+    this.base_.dataCheck().eventEmitter.once(this.eventType_, listener);
     // this.onAppend();
   }
   removeListener(listener: EventListener<TargetType>) {
-    this.dataCheck().eventEmitter.removeListener(this.eventType_, listener);
+    this.base_.dataCheck().eventEmitter.removeListener(this.eventType_, listener);
   }
   off(listener: EventListener<TargetType>) {
     this.removeListener(listener);
   }
   removeAllListeners() {
-    this.dataCheck().eventEmitter.removeAllListeners(this.eventType_);
+    this.base_.dataCheck().eventEmitter.removeAllListeners(this.eventType_);
   }
 }
