@@ -107,6 +107,8 @@ export interface ViewComponent {
   ix?: number | null;
   is?: number | null;
   io?: number[] | string[];
+  w?: number;
+  h?: number;
 }
 export interface View {
   kind: 3;
