@@ -127,6 +127,8 @@ interface ViewComponentOption {
   max?: number;
   step?: number;
   option?: string[] | number[];
+  width?: number;
+  height?: number;
 }
 
 /**
@@ -162,6 +164,8 @@ export class ViewComponent extends IdBase {
   max_: number | null = null;
   step_: number | null = null;
   option_: string[] | number[] = [];
+  width_ = 0;
+  height_ = 0;
   data: ClientData | null = null;
   /**
    * 引数に文字列を入れるとtextコンポーネントを作成できる
@@ -200,6 +204,8 @@ export class ViewComponent extends IdBase {
       this.max_ = arg.ix != null ? arg.ix : null;
       this.step_ = arg.is != null ? arg.is : null;
       this.option_ = arg.io != null ? arg.io : [];
+      this.width_ = arg.w || 0;
+      this.height_ = arg.h || 0;
     }
     this.data = data;
     if (options?.text !== undefined) {
@@ -266,6 +272,12 @@ export class ViewComponent extends IdBase {
     if (options?.option !== undefined) {
       this.option_ = options.option;
     }
+    if (options?.width !== undefined) {
+      this.width_ = options.width;
+    }
+    if (options?.height !== undefined) {
+      this.height_ = options.height;
+    }
   }
   /**
    * AnonymousFuncをFuncオブジェクトにロックする
@@ -310,6 +322,8 @@ export class ViewComponent extends IdBase {
       ix: this.max_,
       is: this.step_,
       io: this.option_,
+      w: this.width_,
+      h: this.height_,
     };
   }
   /**
@@ -409,6 +423,20 @@ export class ViewComponent extends IdBase {
    */
   get option() {
     return this.option_;
+  }
+  /**
+   * 要素の幅
+   * @since ver1.10
+   */
+  get width() {
+    return this.width_;
+  }
+  /**
+   * 要素の高さ
+   * @since ver1.10
+   */
+  get height() {
+    return this.height_;
   }
 }
 
