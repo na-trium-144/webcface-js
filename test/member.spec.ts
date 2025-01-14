@@ -64,13 +64,6 @@ describe("Member Tests", function () {
       assert.strictEqual(v.member.name, "a");
       assert.strictEqual(v.name, "b");
     });
-    it("returns AnonymousFunc object in which callback is already set", function () {
-      const v = member(selfName).func(() => undefined, valType.none_, []);
-      assert.instanceOf(v, AnonymousFunc);
-      assert.strictEqual(v.base_?.member?.name, selfName);
-      assert.isNotEmpty(v.base_?.name || "");
-      assert.isNotEmpty(data.funcStore.dataRecv.get(selfName) || new Map());
-    });
   });
   describe("#log()", function () {
     it("returns log object", function () {

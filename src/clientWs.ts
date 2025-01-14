@@ -270,7 +270,7 @@ export function onMessage(
         }
         data.pingStatus = ps;
         for (const target of wcli.members()) {
-          data.eventEmitter.emit(eventType.ping(target), target);
+          data.eventEmitter.emit(eventType.ping(target.base_), target);
         }
         break;
       }
@@ -286,7 +286,7 @@ export function onMessage(
         const [member, field] = data.valueStore.getReq(dataR.i, dataR.f);
         data.valueStore.setRecv(member, field, dataR.d);
         const target = wcli.member(member).value(field);
-        data.eventEmitter.emit(eventType.valueChange(target), target);
+        data.eventEmitter.emit(eventType.valueChange(target.base_), target);
         break;
       }
       case Message.kind.textRes: {
@@ -294,7 +294,7 @@ export function onMessage(
         const [member, field] = data.textStore.getReq(dataR.i, dataR.f);
         data.textStore.setRecv(member, field, dataR.d);
         const target = wcli.member(member).text(field);
-        data.eventEmitter.emit(eventType.textChange(target), target);
+        data.eventEmitter.emit(eventType.textChange(target.base_), target);
         break;
       }
       case Message.kind.robotModelRes: {
@@ -302,7 +302,10 @@ export function onMessage(
         const [member, field] = data.robotModelStore.getReq(dataR.i, dataR.f);
         data.robotModelStore.setRecv(member, field, dataR.d);
         const target = wcli.member(member).robotModel(field);
-        data.eventEmitter.emit(eventType.robotModelChange(target), target);
+        data.eventEmitter.emit(
+          eventType.robotModelChange(target.base_),
+          target
+        );
         break;
       }
       case Message.kind.viewRes: {
@@ -316,7 +319,7 @@ export function onMessage(
         mergeDiff<Message.ViewComponent>(diff, dataR.l, current);
         data.viewStore.setRecv(member, field, current);
         const target = wcli.member(member).view(field);
-        data.eventEmitter.emit(eventType.viewChange(target), target);
+        data.eventEmitter.emit(eventType.viewChange(target.base_), target);
         break;
       }
       case Message.kind.canvas3DRes: {
@@ -330,7 +333,7 @@ export function onMessage(
         mergeDiff<Message.Canvas3DComponent>(diff, dataR.l, current);
         data.canvas3DStore.setRecv(member, field, current);
         const target = wcli.member(member).canvas3D(field);
-        data.eventEmitter.emit(eventType.canvas3DChange(target), target);
+        data.eventEmitter.emit(eventType.canvas3DChange(target.base_), target);
         break;
       }
       case Message.kind.canvas2DRes: {
@@ -349,7 +352,7 @@ export function onMessage(
           components: current,
         });
         const target = wcli.member(member).canvas2D(field);
-        data.eventEmitter.emit(eventType.canvas2DChange(target), target);
+        data.eventEmitter.emit(eventType.canvas2DChange(target.base_), target);
         break;
       }
       case Message.kind.imageRes: {
@@ -361,15 +364,15 @@ export function onMessage(
           new ImageFrame(dataR.w, dataR.h, dataR.d, dataR.l, dataR.p)
         );
         const target = wcli.member(member).image(field);
-        data.eventEmitter.emit(eventType.imageChange(target), target);
+        data.eventEmitter.emit(eventType.imageChange(target.base_), target);
         break;
       }
       case Message.kind.logRes: {
         const dataR = msg as Message.LogRes;
         const [member, field] = data.logStore.getReq(dataR.i, dataR.f);
         let log = data.logStore.getRecv(member, field);
-        if(log === null){
-          log = {data: [], sentLines: 0}
+        if (log === null) {
+          log = { data: [], sentLines: 0 };
         }
         let rLogBegin = 0;
         const rLogEnd = dataR.l.length;
@@ -378,7 +381,9 @@ export function onMessage(
             rLogBegin = rLogEnd - Log.keepLines;
           }
           if (log.data.length + (rLogEnd - rLogBegin) > Log.keepLines) {
-            log.data = log.data.slice(log.data.length + (rLogEnd - rLogBegin) - Log.keepLines);
+            log.data = log.data.slice(
+              log.data.length + (rLogEnd - rLogBegin) - Log.keepLines
+            );
           }
         }
         for (let i = rLogBegin; i < rLogEnd; i++) {
@@ -390,7 +395,7 @@ export function onMessage(
         }
         data.logStore.setRecv(member, field, log);
         const target = wcli.member(member).log(field);
-        data.eventEmitter.emit(eventType.logAppend(target), target);
+        data.eventEmitter.emit(eventType.logAppend(target.base_), target);
         break;
       }
       case Message.kind.call: {
@@ -503,7 +508,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.valueStore.setEntry(member, dataR.f);
         const target = wcli.member(member).value(dataR.f);
-        data.eventEmitter.emit(eventType.valueEntry(target), target);
+        data.eventEmitter.emit(eventType.valueEntry(target.base_), target);
         break;
       }
       case Message.kind.textEntry: {
@@ -511,7 +516,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.textStore.setEntry(member, dataR.f);
         const target = wcli.member(member).text(dataR.f);
-        data.eventEmitter.emit(eventType.textEntry(target), target);
+        data.eventEmitter.emit(eventType.textEntry(target.base_), target);
         break;
       }
       case Message.kind.robotModelEntry: {
@@ -519,7 +524,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.robotModelStore.setEntry(member, dataR.f);
         const target = wcli.member(member).robotModel(dataR.f);
-        data.eventEmitter.emit(eventType.robotModelEntry(target), target);
+        data.eventEmitter.emit(eventType.robotModelEntry(target.base_), target);
         break;
       }
       case Message.kind.viewEntry: {
@@ -527,7 +532,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.viewStore.setEntry(member, dataR.f);
         const target = wcli.member(member).view(dataR.f);
-        data.eventEmitter.emit(eventType.viewEntry(target), target);
+        data.eventEmitter.emit(eventType.viewEntry(target.base_), target);
         break;
       }
       case Message.kind.canvas3DEntry: {
@@ -535,7 +540,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.canvas3DStore.setEntry(member, dataR.f);
         const target = wcli.member(member).canvas3D(dataR.f);
-        data.eventEmitter.emit(eventType.canvas3DEntry(target), target);
+        data.eventEmitter.emit(eventType.canvas3DEntry(target.base_), target);
         break;
       }
       case Message.kind.canvas2DEntry: {
@@ -543,7 +548,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.canvas2DStore.setEntry(member, dataR.f);
         const target = wcli.member(member).canvas2D(dataR.f);
-        data.eventEmitter.emit(eventType.canvas2DEntry(target), target);
+        data.eventEmitter.emit(eventType.canvas2DEntry(target.base_), target);
         break;
       }
       case Message.kind.imageEntry: {
@@ -551,7 +556,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.imageStore.setEntry(member, dataR.f);
         const target = wcli.member(member).image(dataR.f);
-        data.eventEmitter.emit(eventType.imageEntry(target), target);
+        data.eventEmitter.emit(eventType.imageEntry(target.base_), target);
         break;
       }
       case Message.kind.logEntry: {
@@ -559,7 +564,7 @@ export function onMessage(
         const member = data.getMemberNameFromId(dataR.m);
         data.logStore.setEntry(member, dataR.f);
         const target = wcli.member(member).log(dataR.f);
-        data.eventEmitter.emit(eventType.logEntry(target), target);
+        data.eventEmitter.emit(eventType.logEntry(target.base_), target);
         break;
       }
       case Message.kind.funcInfo: {
@@ -578,7 +583,7 @@ export function onMessage(
           })),
         });
         const target = wcli.member(member).func(dataR.f);
-        data.eventEmitter.emit(eventType.funcEntry(target), target);
+        data.eventEmitter.emit(eventType.funcEntry(target.base_), target);
         break;
       }
       default: {
@@ -588,6 +593,6 @@ export function onMessage(
   }
   for (const member of syncMembers) {
     const target = wcli.member(member);
-    data.eventEmitter.emit(eventType.sync(target), target);
+    data.eventEmitter.emit(eventType.sync(target.base_), target);
   }
 }

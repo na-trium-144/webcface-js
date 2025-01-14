@@ -131,34 +131,33 @@ export class RobotModel extends EventTarget<RobotModel> {
    */
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
-    this.eventType_ = eventType.robotModelChange(this);
+    this.eventType_ = eventType.robotModelChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().robotModelStore.addReq(
-      this.member_,
-      this.field_
-    );
+    const reqId = this.base_
+      .dataCheck()
+      .robotModelStore.addReq(this.base_.member_, this.base_.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.robotModelReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
         },
       ]);
@@ -169,10 +168,9 @@ export class RobotModel extends EventTarget<RobotModel> {
    */
   tryGet() {
     this.request();
-    const msgLinks = this.dataCheck().robotModelStore.getRecv(
-      this.member_,
-      this.field_
-    );
+    const msgLinks = this.base_
+      .dataCheck()
+      .robotModelStore.getRecv(this.base_.member_, this.base_.field_);
     if (msgLinks === null) {
       return null;
     } else {
@@ -197,12 +195,15 @@ export class RobotModel extends EventTarget<RobotModel> {
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().robotModelStore.getEntry(this.member_).includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .robotModelStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   // /**
   //  * 文字列をセットする
@@ -223,6 +224,9 @@ export class RobotModel extends EventTarget<RobotModel> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
 }

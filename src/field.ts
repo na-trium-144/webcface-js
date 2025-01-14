@@ -68,70 +68,69 @@ export class Field extends FieldBase {
     return new Field(this.data, this.member_, this.field_ + "." + field);
   }
 
-    /**
-   * Valueオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+  /**
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするValueオブジェクトを生成
+   * @since ver1.10
    */
   value(name: string) {
     return new Value(this.child(name));
   }
   /**
-   * Textオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするTextオブジェクトを生成
+   * @since ver1.10
    */
   text(name: string) {
     return new Text(this.child(name));
   }
   /**
-   * RobotModelオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするRobotModelオブジェクトを生成
+   * @since ver1.10
    */
   robotModel(name: string) {
     return new RobotModel(this.child(name));
   }
   /**
-   * Viewオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするViewオブジェクトを生成
+   * @since ver1.10
    */
   view(name: string) {
     return new View(this.child(name));
   }
   /**
-   * Canvas3Dオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするCanvas3Dオブジェクトを生成
+   * @since ver1.10
    */
   canvas3D(name: string) {
     return new Canvas3D(this.child(name));
   }
   /**
-   * Canvas2Dオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするCanvas2Dオブジェクトを生成
+   * @since ver1.10
    */
   canvas2D(name: string) {
     return new Canvas2D(this.child(name));
   }
   /**
-   * Imageオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするImageオブジェクトを生成
+   * @since ver1.10
    */
   image(name: string) {
     return new Image(this.child(name));
   }
   /**
-   * Funcオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするFuncオブジェクトを生成
+   * @since ver1.10
    */
-  func(name: string): Func{
+  func(name: string): Func {
     return new Func(this, name);
   }
   /**
-   * Logオブジェクトを生成
-   * @since ver1.10 (以前はMemberクラスのメソッド)
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするLogオブジェクトを生成
+   * @since ver1.10
    *
    * ver1.9〜: nameを指定可能 (デフォルトは "default")
    */
   log(name: string = "default") {
     return new Log(this.child(name));
   }
-
 }

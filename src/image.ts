@@ -68,43 +68,42 @@ export class Image extends EventTarget<Image> {
    */
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
-    this.eventType_ = eventType.imageChange(this);
+    this.eventType_ = eventType.imageChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
-   * 子フィールドを返す
-   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするValue
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするImage
    */
   child(field: string): Image {
-    return new Image(this, this.field_ + "." + field);
+    return new Image(this.base_.child(field));
   }
   /**
    * 値をリクエストする。
    */
   request(reqOption?: ImageReq) {
-    const reqId = this.dataCheck().imageStore.addReq(
-      this.member_,
-      this.field_,
-      reqOption
-    );
+    const reqId = this.base_
+      .dataCheck()
+      .imageStore.addReq(this.base_.member_, this.base_.field_, reqOption);
     if (reqId > 0) {
-      this.dataCheck().imageStore.clearRecv(this.member_, this.field_);
-      this.dataCheck().pushSendReq([
+      this.base_
+        .dataCheck()
+        .imageStore.clearRecv(this.base_.member_, this.base_.field_);
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.imageReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
           w: reqOption?.width || null,
           h: reqOption?.height || null,
@@ -123,7 +122,9 @@ export class Image extends EventTarget<Image> {
    */
   tryGet() {
     this.request();
-    return this.dataCheck().imageStore.getRecv(this.member_, this.field_);
+    return this.base_
+      .dataCheck()
+      .imageStore.getRecv(this.base_.member_, this.base_.field_);
   }
   /**
    *  画像を返す
@@ -139,18 +140,21 @@ export class Image extends EventTarget<Image> {
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().imageStore.getEntry(this.member_).includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .imageStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * 値をセットする
    */
   set(data: ImageFrame) {
-    this.setCheck().imageStore.setSend(this.field_, data);
+    this.base_.setCheck().imageStore.setSend(this.base_.field_, data);
     this.triggerEvent(this);
   }
   /**
@@ -159,6 +163,9 @@ export class Image extends EventTarget<Image> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
 }

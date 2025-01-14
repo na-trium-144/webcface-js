@@ -209,7 +209,7 @@ export class ViewComponent extends IdBase {
       if (options.onClick instanceof AnonymousFunc) {
         this.on_click_tmp_ = options.onClick;
       } else if (options.onClick instanceof Func) {
-        this.on_click_ = options.onClick;
+        this.on_click_ = options.onClick.base_;
       } else {
         this.on_click_tmp_ = new AnonymousFunc(
           null,
@@ -279,7 +279,7 @@ export class ViewComponent extends IdBase {
         new Field(data, data.selfMemberName, `..v${viewName}/${this.id}`)
       );
       this.on_click_tmp_.lockTo(f);
-      this.on_click_ = f;
+      this.on_click_ = f.base_;
     }
     if (this.text_ref_tmp_) {
       const t = new Text(
@@ -289,7 +289,7 @@ export class ViewComponent extends IdBase {
       if (this.init_ != null && t.tryGet() == null) {
         t.set(this.init_);
       }
-      this.text_ref_ = t;
+      this.text_ref_ = t.base_;
     }
     return this;
   }
@@ -425,38 +425,39 @@ export class View extends EventTarget<View> {
    */
   constructor(base: Field, field = "") {
     super("", base.data, base.member_, field || base.field_);
-    this.eventType_ = eventType.viewChange(this);
+    this.eventType_ = eventType.viewChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
-   * 子フィールドを返す
-   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするView
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするView
    */
   child(field: string): View {
-    return new View(this, this.field_ + "." + field);
+    return new View(this.base_.child(field));
   }
   /**
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().viewStore.addReq(this.member_, this.field_);
+    const reqId = this.base_
+      .dataCheck()
+      .viewStore.addReq(this.base_.member_, this.base_.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.viewReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
         },
       ]);
@@ -470,10 +471,12 @@ export class View extends EventTarget<View> {
     this.request();
     const idxNext = new Map<number, number>();
     return (
-      this.dataCheck()
-        .viewStore.getRecv(this.member_, this.field_)
-        ?.map((v) => new ViewComponent(v, this.data, undefined, idxNext)) ||
-      null
+      this.base_
+        .dataCheck()
+        .viewStore.getRecv(this.base_.member_, this.base_.field_)
+        ?.map(
+          (v) => new ViewComponent(v, this.base_.data, undefined, idxNext)
+        ) || null
     );
   }
   /**
@@ -495,9 +498,10 @@ export class View extends EventTarget<View> {
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck()
-      .viewStore.getEntry(this.member_)
-      .includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .viewStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * Memberのsyncの時刻を返す
@@ -505,7 +509,10 @@ export class View extends EventTarget<View> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
   /**
    * ViewComponentのリストをセットする
@@ -530,10 +537,12 @@ export class View extends EventTarget<View> {
       }
     }
     const idxNext = new Map<number, number>();
-    this.setCheck().viewStore.setSend(
-      this.field_,
+    this.base_.setCheck().viewStore.setSend(
+      this.base_.field_,
       data2.map((c) =>
-        c.lockTmp(this.dataCheck(), this.field_, idxNext).toMessage()
+        c
+          .lockTmp(this.base_.dataCheck(), this.base_.field_, idxNext)
+          .toMessage()
       )
     );
     this.triggerEvent(this);

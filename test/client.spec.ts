@@ -42,7 +42,7 @@ describe("Client Tests", function () {
     initServer();
     setTimeout(() => {
       wcli = new Client(selfName, "127.0.0.1", 37530, "trace");
-      data = wcli.dataCheck();
+      data = wcli.base_.dataCheck();
       setTimeout(done, 10);
     }, 10);
   });
