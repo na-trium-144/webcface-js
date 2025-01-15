@@ -14,7 +14,7 @@ export class Client extends Member {
    * @return サーバーに接続できていればtrue
    */
   get connected() {
-    return this.dataCheck().ws != null;
+    return this.base_.dataCheck().ws != null;
   }
   /**
    * @param name 名前
@@ -28,29 +28,29 @@ export class Client extends Member {
     logLevel: "trace" | "verbose" | "none" = "none"
   ) {
     super(new Field(new ClientData(name, host, port, logLevel), name), name);
-    // clientWs.syncDataFirst(this.dataCheck());
+    // clientWs.syncDataFirst(this.base_.dataCheck());
   }
   get logLevel() {
-    return this.dataCheck().logLevel;
+    return this.base_.dataCheck().logLevel;
   }
   set logLevel(logLevel: "trace" | "verbose" | "none") {
-    this.dataCheck().logLevel = logLevel;
+    this.base_.dataCheck().logLevel = logLevel;
   }
   /**
    * 接続を切り、今後再接続しない
    * JavaScriptにデストラクタはないので、忘れずに呼ぶ必要がある。
    */
   close() {
-    this.dataCheck().closing = true;
-    this.dataCheck().ws?.close();
+    this.base_.dataCheck().closing = true;
+    this.base_.dataCheck().ws?.close();
   }
   /**
    * サーバーに接続を開始する。
    */
   start() {
-    if (!this.dataCheck().connectionStarted) {
-      this.dataCheck().connectionStarted = true;
-      clientWs.reconnect(this, this.dataCheck());
+    if (!this.base_.dataCheck().connectionStarted) {
+      this.base_.dataCheck().connectionStarted = true;
+      clientWs.reconnect(this, this.base_.dataCheck());
     }
   }
   /**
@@ -60,12 +60,12 @@ export class Client extends Member {
    */
   sync() {
     this.start();
-    if (!this.connected && this.dataCheck().syncFirst === null) {
-      clientWs.initSyncDataFirst(this.dataCheck());
+    if (!this.connected && this.base_.dataCheck().syncFirst === null) {
+      clientWs.initSyncDataFirst(this.base_.dataCheck());
     } else {
-      this.dataCheck().pushSendAlways(
-        clientWs.syncData(this.dataCheck(), false)
-      );
+      this.base_
+        .dataCheck()
+        .pushSendAlways(clientWs.syncData(this.base_.dataCheck(), false));
     }
   }
 
@@ -78,7 +78,7 @@ export class Client extends Member {
     if (member === "") {
       return this as Member;
     } else {
-      return new Member(this, member);
+      return new Member(this.base_, member);
     }
   }
   /**
@@ -86,7 +86,7 @@ export class Client extends Member {
    * 自分自身と、無名のmemberを除く。
    */
   members() {
-    return [...this.dataCheck().valueStore.getMembers()].map((n) =>
+    return [...this.base_.dataCheck().valueStore.getMembers()].map((n) =>
       this.member(n)
     );
   }
@@ -96,26 +96,26 @@ export class Client extends Member {
    * コールバックの型は (target: Member) => void
    */
   get onMemberEntry() {
-    return new EventTarget<Member>(eventType.memberEntry(), this.data, "", "");
+    return new EventTarget<Member>(eventType.memberEntry(), this.base_.data);
   }
   /**
    * サーバーの識別情報
    * @return 通常は"webcface"
    */
   get serverName() {
-    return this.dataCheck().svrName;
+    return this.base_.dataCheck().svrName;
   }
   /**
    * サーバーのバージョン
    */
   get serverVersion() {
-    return this.dataCheck().svrVersion;
+    return this.base_.dataCheck().svrVersion;
   }
   /**
    * サーバーのホスト名
    * @since ver1.7
    */
   get serverHostName() {
-    return this.dataCheck().svrHostName;
+    return this.base_.dataCheck().svrHostName;
   }
 }

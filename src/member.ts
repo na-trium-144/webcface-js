@@ -1,7 +1,7 @@
 import { Value } from "./value.js";
 import { Text } from "./text.js";
 import { Log } from "./log.js";
-import { Func, FuncCallback, AnonymousFunc, Arg } from "./func.js";
+import { Func } from "./func.js";
 import { View } from "./view.js";
 import { Image } from "./image.js";
 import { Field } from "./field.js";
@@ -16,164 +16,220 @@ import * as Message from "./message.js";
  *
  * 詳細は {@link https://na-trium-144.github.io/webcface/md_02__member.html Memberのドキュメント} を参照
  */
-export class Member extends Field {
+export class Member {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Client.member(), Client.members(), Client.onMemberEntry などを使うこと
    */
   constructor(base: Field, member = "") {
-    super(base.data, member || base.member_, "");
+    this.base_ = new Field(base.data, member || base.member_, "");
   }
   /**
    * Member名
    */
   get name() {
-    return this.member_;
+    return this.base_.member_;
   }
+
   /**
-   * Valueを参照する
+   * Valueオブジェクトを生成
    */
   value(name: string) {
-    return new Value(this, name);
+    return new Value(this.base_.child(name));
   }
   /**
-   * Textを参照する
+   * Textオブジェクトを生成
    */
   text(name: string) {
-    return new Text(this, name);
+    return new Text(this.base_.child(name));
   }
   /**
-   * RobotModelを参照する
+   * RobotModelオブジェクトを生成
    */
   robotModel(name: string) {
-    return new RobotModel(this, name);
+    return new RobotModel(this.base_.child(name));
   }
   /**
-   * Viewを参照する
+   * Viewオブジェクトを生成
    */
   view(name: string) {
-    return new View(this, name);
+    return new View(this.base_.child(name));
   }
   /**
-   * Canvas3Dを参照する
+   * Canvas3Dオブジェクトを生成
    */
   canvas3D(name: string) {
-    return new Canvas3D(this, name);
+    return new Canvas3D(this.base_.child(name));
   }
   /**
-   * Canvas2Dを参照する
+   * Canvas2Dオブジェクトを生成
    */
   canvas2D(name: string) {
-    return new Canvas2D(this, name);
+    return new Canvas2D(this.base_.child(name));
   }
   /**
-   * Imageを参照する
+   * Imageオブジェクトを生成
    */
   image(name: string) {
-    return new Image(this, name);
+    return new Image(this.base_.child(name));
   }
   /**
-   * Funcを参照する
+   * Funcオブジェクトを生成
    */
-  func(name: string): Func;
-  /**
-   * Funcの名前を決めずに一時的なFuncオブジェクト(AnonymoudFuncオブジェクト)を作成し、
-   * 関数をセットする。
-   *
-   * 関数のセットについては Func.set() を参照。
-   * @param callback セットする関数
-   * @param returnType 関数の戻り値の型
-   * @param arg 関数の引数の情報
-   */
-  func(callback: FuncCallback, returnType: number, args: Arg[]): AnonymousFunc;
-  func(...args: [string] | [FuncCallback, number, Arg[]]) {
-    if (typeof args[0] === "string") {
-      return new Func(this, args[0]);
-    } else {
-      return new AnonymousFunc(this, args[0], args[1] || 0, args[2] || []);
-    }
+  func(name: string): Func {
+    return new Func(this.base_.child(name));
   }
   /**
-   * Logを参照する
+   * Logオブジェクトを生成
    *
    * ver1.9〜: nameを指定可能 (デフォルトは "default")
    */
   log(name: string = "default") {
-    return new Log(this, name);
+    return new Log(this.base_.child(name));
   }
+
   /**
-   * このMemberが公開しているValueのリストを返す
+   * 公開されているデータのリスト
+   * @since ver1.10
+   *
+   * * データ型を問わずすべてのデータを列挙する。
+   * * childrenRecurse() と異なり、
+   * 名前にさらにピリオドが含まれる場合はその前までの名前を返す。
+   * * 同名で複数のデータが存在する場合も1回のみカウントする。
    */
-  values() {
-    return this.dataCheck()
-      .valueStore.getEntry(this.member_)
-      .map((n) => this.value(n));
+  children() {
+    return this.base_.children();
   }
   /**
-   * このMemberが公開しているTextのリストを返す
+   * 公開されているデータのリスト(再帰)
+   * @since ver1.10
+   *
+   * * データ型を問わずすべてのデータを列挙する。
+   * * 同名で複数のデータが存在する場合も1回のみカウントする。
    */
-  texts() {
-    return this.dataCheck()
-      .textStore.getEntry(this.member_)
-      .map((n) => this.text(n));
+  childrenRecurse() {
+    return this.base_.childrenRecurse();
   }
   /**
-   * このMemberが公開しているRobotModelのリストを返す
+   * 公開されているデータが存在するかどうかを返す
+   * @since ver1.10
    */
-  robotModels() {
-    return this.dataCheck()
-      .robotModelStore.getEntry(this.member_)
-      .map((n) => this.robotModel(n));
+  hasChildren() {
+    return this.base_.hasChildren();
   }
+
   /**
-   * このMemberが公開しているViewのリストを返す
+   * 公開されているvalueのリストを返す。
+   * @since ver1.10
    */
-  views() {
-    return this.dataCheck()
-      .viewStore.getEntry(this.member_)
-      .map((n) => this.view(n));
+  valueEntries() {
+    return this.base_.valueEntries();
   }
   /**
-   * このMemberが公開しているCanvas3Dのリストを返す
+   * 公開されているtextのリストを返す。
+   * @since ver1.10
    */
-  canvas3DEntries() {
-    return this.dataCheck()
-      .canvas3DStore.getEntry(this.member_)
-      .map((n) => this.canvas3D(n));
+  textEntries() {
+    return this.base_.textEntries();
   }
   /**
-   * このMemberが公開しているCanvas2Dのリストを返す
+   * 公開されているfuncのリストを返す。
+   * @since ver1.10
    */
-  canvas2DEntries() {
-    return this.dataCheck()
-      .canvas2DStore.getEntry(this.member_)
-      .map((n) => this.canvas2D(n));
+  funcEntries() {
+    return this.base_.funcEntries();
   }
   /**
-   * このMemberが公開しているImageのリストを返す
+   * 公開されているviewのリストを返す。
+   * @since ver1.10
    */
-  images() {
-    return this.dataCheck()
-      .imageStore.getEntry(this.member_)
-      .map((n) => this.image(n));
+  viewEntries() {
+    return this.base_.viewEntries();
   }
   /**
-   * このMemberが公開しているFuncのリストを返す
-   */
-  funcs() {
-    return this.dataCheck()
-      .funcStore.getEntry(this.member_)
-      .map((n) => this.func(n));
-  }
-  /**
-   * このmemberが公開しているLogのリストを返す
+   * 公開されているlogのリストを返す。
    * @since ver1.9
    */
   logEntries() {
-    return this.dataCheck()
-      .logStore.getEntry(this.member_)
-      .map((n) => this.log(n));
+    return this.base_.logEntries();
   }
+  /**
+   * 公開されているimageのリストを返す。
+   * @since ver1.10
+   */
+  imageEntries() {
+    return this.base_.imageEntries();
+  }
+  /**
+   * 公開されているcanvas2Dのリストを返す。
+   */
+  canvas2DEntries() {
+    return this.base_.canvas2DEntries();
+  }
+  /**
+   * 公開されているcanvas3Dのリストを返す。
+   */
+  canvas3DEntries() {
+    return this.base_.canvas3DEntries();
+  }
+  /**
+   * 公開されているrobotModelのリストを返す。
+   * @since ver1.10
+   */
+  robotModelEntries() {
+    return this.base_.robotModelEntries();
+  }
+
+  /**
+   * このMemberが公開しているValueのリストを返す
+   *
+   * @deprecated ver1.10〜 valueEntries() に移行
+   */
+  values() {
+    return this.base_.valueEntries();
+  }
+  /**
+   * このMemberが公開しているTextのリストを返す
+   *
+   * @deprecated ver1.10〜 textEntries() に移行
+   */
+  texts() {
+    return this.base_.textEntries();
+  }
+  /**
+   * このMemberが公開しているRobotModelのリストを返す
+   *
+   * @deprecated ver1.10〜 robotModelEntries() に移行
+   */
+  robotModels() {
+    return this.base_.robotModelEntries();
+  }
+  /**
+   * このMemberが公開しているViewのリストを返す
+   *
+   * @deprecated ver1.10〜 viewEntries() に移行
+   */
+  views() {
+    return this.base_.viewEntries();
+  }
+  /**
+   * このMemberが公開しているImageのリストを返す
+   *
+   * @deprecated ver1.10〜 imageEntries() に移行
+   */
+  images() {
+    return this.base_.imageEntries();
+  }
+  /**
+   * このMemberが公開しているFuncのリストを返す
+   *
+   * @deprecated ver1.10〜 funcEntries() に移行
+   */
+  funcs() {
+    return this.base_.funcEntries();
+  }
+
   /**
    * Valueが追加された時のイベント
    *
@@ -181,9 +237,8 @@ export class Member extends Field {
    */
   get onValueEntry() {
     return new EventTarget<Value>(
-      eventType.valueEntry(this),
-      this.data,
-      this.member_
+      eventType.valueEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -193,9 +248,8 @@ export class Member extends Field {
    */
   get onTextEntry() {
     return new EventTarget<Text>(
-      eventType.textEntry(this),
-      this.data,
-      this.member_
+      eventType.textEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -205,9 +259,8 @@ export class Member extends Field {
    */
   get onRobotModelEntry() {
     return new EventTarget<RobotModel>(
-      eventType.robotModelEntry(this),
-      this.data,
-      this.member_
+      eventType.robotModelEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -217,9 +270,8 @@ export class Member extends Field {
    */
   get onFuncEntry() {
     return new EventTarget<Func>(
-      eventType.funcEntry(this),
-      this.data,
-      this.member_
+      eventType.funcEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -229,9 +281,8 @@ export class Member extends Field {
    */
   get onViewEntry() {
     return new EventTarget<View>(
-      eventType.viewEntry(this),
-      this.data,
-      this.member_
+      eventType.viewEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -241,9 +292,8 @@ export class Member extends Field {
    */
   get onCanvas3DEntry() {
     return new EventTarget<Canvas3D>(
-      eventType.canvas3DEntry(this),
-      this.data,
-      this.member_
+      eventType.canvas3DEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -253,9 +303,8 @@ export class Member extends Field {
    */
   get onCanvas2DEntry() {
     return new EventTarget<Canvas2D>(
-      eventType.canvas2DEntry(this),
-      this.data,
-      this.member_
+      eventType.canvas2DEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -265,22 +314,20 @@ export class Member extends Field {
    */
   get onImageEntry() {
     return new EventTarget<Image>(
-      eventType.imageEntry(this),
-      this.data,
-      this.member_
+      eventType.imageEntry(this.base_),
+      this.base_.data
     );
   }
   /**
    * Logが追加された時のイベント
    * @since ver1.9
-   * 
+   *
    * コールバックの型は (target: Log) => void
    */
   get onLogEntry() {
     return new EventTarget<Log>(
-      eventType.logEntry(this),
-      this.data,
-      this.member_
+      eventType.logEntry(this.base_),
+      this.base_.data
     );
   }
   /**
@@ -289,11 +336,7 @@ export class Member extends Field {
    * コールバックの型は (target: Member) => void
    */
   get onSync() {
-    return new EventTarget<Member>(
-      eventType.sync(this),
-      this.data,
-      this.member_
-    );
+    return new EventTarget<Member>(eventType.sync(this.base_), this.base_.data);
   }
   /**
    * このMemberが使っているWebCFaceライブラリの識別情報
@@ -303,9 +346,11 @@ export class Member extends Field {
    */
   get libName() {
     return (
-      this.dataCheck().memberLibName.get(
-        this.dataCheck().getMemberIdFromName(this.member_)
-      ) || ""
+      this.base_
+        .dataCheck()
+        .memberLibName.get(
+          this.base_.dataCheck().getMemberIdFromName(this.base_.member_)
+        ) || ""
     );
   }
   /**
@@ -313,9 +358,11 @@ export class Member extends Field {
    */
   get libVersion() {
     return (
-      this.dataCheck().memberLibVer.get(
-        this.dataCheck().getMemberIdFromName(this.member_)
-      ) || ""
+      this.base_
+        .dataCheck()
+        .memberLibVer.get(
+          this.base_.dataCheck().getMemberIdFromName(this.base_.member_)
+        ) || ""
     );
   }
   /**
@@ -323,9 +370,11 @@ export class Member extends Field {
    */
   get remoteAddr() {
     return (
-      this.dataCheck().memberRemoteAddr.get(
-        this.dataCheck().getMemberIdFromName(this.member_)
-      ) || ""
+      this.base_
+        .dataCheck()
+        .memberRemoteAddr.get(
+          this.base_.dataCheck().getMemberIdFromName(this.base_.member_)
+        ) || ""
     );
   }
   /**
@@ -336,9 +385,11 @@ export class Member extends Field {
    */
   get pingStatus() {
     this.requestPingStatus();
-    const ps = this.dataCheck().pingStatus.get(
-      this.dataCheck().getMemberIdFromName(this.member_)
-    );
+    const ps = this.base_
+      .dataCheck()
+      .pingStatus.get(
+        this.base_.dataCheck().getMemberIdFromName(this.base_.member_)
+      );
     return ps !== undefined ? ps : null;
   }
   /**
@@ -347,9 +398,9 @@ export class Member extends Field {
    *
    */
   requestPingStatus() {
-    if (!this.dataCheck().pingStatusReq) {
-      this.dataCheck().pingStatusReq = true;
-      this.dataCheck().pushSendReq([
+    if (!this.base_.dataCheck().pingStatusReq) {
+      this.base_.dataCheck().pingStatusReq = true;
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.pingStatusReq,
         },
@@ -364,16 +415,15 @@ export class Member extends Field {
    */
   get onPing() {
     this.requestPingStatus();
-    return new EventTarget<Member>(
-      eventType.ping(this),
-      this.data,
-      this.member_
-    );
+    return new EventTarget<Member>(eventType.ping(this.base_), this.base_.data);
   }
   /**
    * syncの時刻を返す
    */
   syncTime() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
 }

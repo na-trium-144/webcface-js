@@ -2,7 +2,8 @@ export { Client } from "./client.js";
 // export { } from "./clientData.js";
 export { Value } from "./value.js";
 export { Text, InputRef } from "./text.js";
-export { Log, LogLine } from "./log.js";
+export { Log } from "./log.js";
+export { LogLine } from "./logBase.js";
 export { Member } from "./member.js";
 export {
   View,
@@ -16,8 +17,8 @@ export {
   imageCompressMode,
   ImageFrame,
   ImageReq,
-  Image,
-} from "./image.js";
+} from "./imageBase.js";
+export { Image } from "./image.js";
 export {
   RobotModel,
   RobotLink,
@@ -40,8 +41,9 @@ export {
   canvas2DComponentType,
 } from "./canvas2d.js";
 export { valType } from "./message.js";
-export { Arg, Func, FuncPromise, AsyncFuncResult, FuncNotFoundError } from "./func.js";
+export { Func, FuncPromise, AsyncFuncResult } from "./func.js";
+export { Arg, FuncNotFoundError } from "./funcBase.js";
 export { EventTarget } from "./event.js";
-// export {} from "./field.js";
+export { Field } from "./field.js";
 import version_ from "./version.js";
 export const version = version_;

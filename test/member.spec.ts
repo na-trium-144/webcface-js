@@ -3,13 +3,13 @@ import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
 import { Log } from "../src/log.js";
-import { Func, AnonymousFunc } from "../src/func.js";
-import { valType } from "../src/message.js";
+import { Func } from "../src/func.js";
 import { View } from "../src/view.js";
 import { RobotModel } from "../src/robotModel.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
+import { FieldBase } from "../src/fieldBase.js";
 
 describe("Member Tests", function () {
   const selfName = "test";
@@ -63,13 +63,6 @@ describe("Member Tests", function () {
       assert.instanceOf(v, Func);
       assert.strictEqual(v.member.name, "a");
       assert.strictEqual(v.name, "b");
-    });
-    it("returns AnonymousFunc object in which callback is already set", function () {
-      const v = member(selfName).func(() => undefined, valType.none_, []);
-      assert.instanceOf(v, AnonymousFunc);
-      assert.strictEqual(v.base_?.member?.name, selfName);
-      assert.isNotEmpty(v.base_?.name || "");
-      assert.isNotEmpty(data.funcStore.dataRecv.get(selfName) || new Map());
     });
   });
   describe("#log()", function () {

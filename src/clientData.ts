@@ -1,11 +1,11 @@
 import isEqual from "lodash.isequal";
-import { FuncInfo, FuncPromiseData } from "./func.js";
+import { FuncInfo, FuncPromiseData } from "./funcBase.js";
 import { EventEmitter } from "eventemitter3";
-import { LogLine } from "./log.js";
+import { LogLine } from "./logBase.js";
 import * as Message from "./message.js";
-import { Field } from "./field.js";
 import websocket from "websocket";
-import { ImageFrame, ImageReq } from "./image.js";
+import { ImageFrame, ImageReq } from "./imageBase.js";
+import { FieldBase } from "./fieldBase.js";
 
 export interface Canvas2DData {
   width: number;
@@ -446,9 +446,9 @@ export class SyncDataStore1<T> {
 
 export class FuncResultStore {
   results: FuncPromiseData[] = [];
-  addResult(caller: string, base: Field) {
+  addResult(caller: string, base: FieldBase, data: ClientData) {
     const callerId = this.results.length;
-    this.results.push(new FuncPromiseData(callerId, caller, base));
+    this.results.push(new FuncPromiseData(callerId, caller, base, data));
     return this.results[callerId];
   }
   getResult(callerId: number) {

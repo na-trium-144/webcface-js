@@ -3,12 +3,6 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
 
-export interface LogLine {
-  level: number;
-  time: Date;
-  message: string;
-}
-
 /**
  *  ログの送受信データを表すクラス
  *
@@ -16,22 +10,24 @@ export interface LogLine {
  * を参照
  */
 export class Log extends EventTarget<Log> {
-  constructor(base: Field, name: string) {
-    super("", base.data, base.member_, name);
-    this.eventType_ = eventType.logAppend(this);
+  base_: Field;
+  constructor(base: Field, field: string = "") {
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
+    this.eventType_ = eventType.logAppend(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    * @since ver1.9
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
 
   /**
@@ -49,13 +45,15 @@ export class Log extends EventTarget<Log> {
    * 値をリクエストする。
    */
   request() {
-    const req = this.dataCheck().logStore.addReq(this.member_, this.field_);
+    const req = this.base_
+      .dataCheck()
+      .logStore.addReq(this.base_.member_, this.base_.field_);
     if (req) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.logReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: req,
         },
       ]);
@@ -67,7 +65,10 @@ export class Log extends EventTarget<Log> {
   tryGet() {
     this.request();
     return (
-      this.dataCheck().logStore.getRecv(this.member_, this.field_)?.data.slice() || null
+      this.base_
+        .dataCheck()
+        .logStore.getRecv(this.base_.member_, this.base_.field_)
+        ?.data.slice() || null
     );
   }
   /**
@@ -89,9 +90,10 @@ export class Log extends EventTarget<Log> {
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck()
-      .logStore.getEntry(this.member_)
-      .includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .logStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * 受信したログをクリアする
@@ -99,10 +101,12 @@ export class Log extends EventTarget<Log> {
    * リクエスト状態は解除しない
    */
   clear() {
-    this.dataCheck().logStore.setRecv(this.member_, this.field_, {
-      data: [],
-      sentLines: 0,
-    });
+    this.base_
+      .dataCheck()
+      .logStore.setRecv(this.base_.member_, this.base_.field_, {
+        data: [],
+        sentLines: 0,
+      });
     return this;
   }
 
@@ -116,12 +120,14 @@ export class Log extends EventTarget<Log> {
       time: new Date(),
       message,
     };
-    let log = this.setCheck().logStore.getRecv(this.member_, this.field_);
+    let log = this.base_
+      .setCheck()
+      .logStore.getRecv(this.base_.member_, this.base_.field_);
     if (log === null) {
       log = { data: [], sentLines: 0 };
     }
     log.data.push(ll);
-    this.setCheck().logStore.setSend(this.field_, log);
+    this.base_.setCheck().logStore.setSend(this.base_.field_, log);
     this.triggerEvent(this);
   }
 }

@@ -1,5 +1,5 @@
 import { Transform, Point } from "./transform.js";
-import { FieldBase, Field } from "./field.js";
+import { Field } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
@@ -10,6 +10,7 @@ import {
   Canvas2DComponentOption,
   canvas2DComponentType,
 } from "./canvas2d.js";
+import { FieldBase } from "./fieldBase.js";
 
 export const geometryType = {
   none: 0,
@@ -392,47 +393,47 @@ export const canvas3DComponentType = {
  * を参照
  */
 export class Canvas3D extends EventTarget<Canvas3D> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.canvas3D(), Member.canvas3DEntries(), Member.onCanvas3DEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
-    this.eventType_ = eventType.canvas3DChange(this);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
+    this.eventType_ = eventType.canvas3DChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
-   * 子フィールドを返す
-   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするView
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするCanvas3D
    */
   child(field: string): Canvas3D {
-    return new Canvas3D(this, this.field_ + "." + field);
+    return new Canvas3D(this.base_.child(field));
   }
   /**
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().canvas3DStore.addReq(
-      this.member_,
-      this.field_
-    );
+    const reqId = this.base_
+      .dataCheck()
+      .canvas3DStore.addReq(this.base_.member_, this.base_.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.canvas3DReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
         },
       ]);
@@ -445,9 +446,10 @@ export class Canvas3D extends EventTarget<Canvas3D> {
   tryGet() {
     this.request();
     return (
-      this.dataCheck()
-        .canvas3DStore.getRecv(this.member_, this.field_)
-        ?.map((v) => Canvas3DComponent.fromMessage(this.data, v)) || null
+      this.base_
+        .dataCheck()
+        .canvas3DStore.getRecv(this.base_.member_, this.base_.field_)
+        ?.map((v) => Canvas3DComponent.fromMessage(this.base_.data, v)) || null
     );
   }
   /**
@@ -464,12 +466,15 @@ export class Canvas3D extends EventTarget<Canvas3D> {
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().canvas3DStore.getEntry(this.member_).includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .canvas3DStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * Memberのsyncの時刻を返す
@@ -477,14 +482,17 @@ export class Canvas3D extends EventTarget<Canvas3D> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
   /**
    * Canvas3DComponentのリストをセットする
    */
   set(data: (Canvas3DComponent | TemporalGeometry)[]) {
-    this.setCheck().canvas3DStore.setSend(
-      this.field_,
+    this.base_.setCheck().canvas3DStore.setSend(
+      this.base_.field_,
       data.map((c) => c.to3().toMessage())
     );
     this.triggerEvent(this);

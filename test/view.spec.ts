@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Func, AnonymousFunc, FuncCallback } from "../src/func.js";
+import { Func } from "../src/func.js";
 import {
   View,
   viewComponents,
@@ -9,7 +9,6 @@ import {
 import { ClientData } from "../src/clientData.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
-import { valType } from "../src/message.js";
 
 describe("View Tests", function () {
   const selfName = "test";
@@ -18,8 +17,6 @@ describe("View Tests", function () {
     new View(new Field(data, member, field));
   const func = (member: string, field: string) =>
     new Func(new Field(data, member, field));
-  const afunc1 = (func: FuncCallback) =>
-    new AnonymousFunc(new Field(data, selfName, ""), func, valType.none_, []);
   beforeEach(function () {
     data = new ClientData(selfName);
     data.logLevel = "trace";
@@ -97,10 +94,6 @@ describe("View Tests", function () {
         }),
         viewComponents.newLine(),
         viewComponents.button("f", func(selfName, "f")),
-        viewComponents.button(
-          "a",
-          afunc1(() => undefined)
-        ),
         viewComponents.button("a2", () => undefined),
       ]);
       const v = data.viewStore.dataRecv.get(selfName)?.get("a") || [];
@@ -122,16 +115,10 @@ describe("View Tests", function () {
       });
       assert.include(v[6], {
         t: viewComponentTypes.button,
-        x: "a",
-        L: selfName,
-      });
-      assert.isNotEmpty(v[6].l);
-      assert.include(v[7], {
-        t: viewComponentTypes.button,
         x: "a2",
         L: selfName,
       });
-      assert.isNotEmpty(v[7].l);
+      assert.isNotEmpty(v[6].l);
     });
     it("triggers change event", function () {
       let called = 0;

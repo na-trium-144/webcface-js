@@ -1,19 +1,21 @@
-import { Field, FieldBase } from "./field.js";
+import { Field } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
 import { TemporalGeometry, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
-import { Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { Func } from "./func.js";
 import { IdBase } from "./view.js";
+import { FieldBase } from "./fieldBase.js";
+import { FuncCallback } from "./funcBase.js";
 
 export interface Canvas2DComponentOption {
   origin?: Transform;
   color?: number;
   fillColor?: number;
   strokeWidth?: number;
-  onClick?: FieldBase | AnonymousFunc | FuncCallback;
+  onClick?: FieldBase | Func | FuncCallback;
 }
 export class Canvas2DComponent extends IdBase {
   private _type: number;
@@ -23,7 +25,7 @@ export class Canvas2DComponent extends IdBase {
   private _stroke_width: number;
   private _geometry: Geometry | null;
   private _on_click: FieldBase | null;
-  private _on_click_tmp: AnonymousFunc | null;
+  private _on_click_tmp: FuncCallback | null;
   private _text: string;
   private data: ClientData | null;
   constructor(
@@ -45,17 +47,12 @@ export class Canvas2DComponent extends IdBase {
     this._on_click_tmp = null;
     this._text = text;
     if (options?.onClick !== undefined) {
-      if (options.onClick instanceof AnonymousFunc) {
-        this._on_click_tmp = options.onClick;
-      } else if (options.onClick instanceof FieldBase) {
+      if (options.onClick instanceof FieldBase) {
         this._on_click = options.onClick;
+      } else if (options.onClick instanceof Func) {
+        this._on_click = options.onClick.base_;
       } else {
-        this._on_click_tmp = new AnonymousFunc(
-          null,
-          options.onClick,
-          Message.valType.none_,
-          []
-        );
+        this._on_click_tmp = options.onClick;
       }
     }
   }
@@ -68,8 +65,8 @@ export class Canvas2DComponent extends IdBase {
       const f = new Func(
         new Field(data, data.selfMemberName, `..c2${canvasName}/${this.id}`)
       );
-      this._on_click_tmp.lockTo(f);
-      this._on_click = f;
+      f.set(this._on_click_tmp);
+      this._on_click = f.base_;
     }
     return this;
   }
@@ -175,47 +172,47 @@ export const canvas2DComponentType = {
  * を参照
  */
 export class Canvas2D extends EventTarget<Canvas2D> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.canvas2D(), Member.canvas2DEntries(), Member.onCanvas2DEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
-    this.eventType_ = eventType.canvas2DChange(this);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
+    this.eventType_ = eventType.canvas2DChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
-   * 子フィールドを返す
-   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするView
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするCanvas2D
    */
   child(field: string): Canvas2D {
-    return new Canvas2D(this, this.field_ + "." + field);
+    return new Canvas2D(this.base_.child(field));
   }
   /**
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().canvas2DStore.addReq(
-      this.member_,
-      this.field_
-    );
+    const reqId = this.base_
+      .dataCheck()
+      .canvas2DStore.addReq(this.base_.member_, this.base_.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.canvas2DReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
         },
       ]);
@@ -229,10 +226,11 @@ export class Canvas2D extends EventTarget<Canvas2D> {
     this.request();
     const idxNext = new Map<number, number>();
     return (
-      this.dataCheck()
-        .canvas2DStore.getRecv(this.member_, this.field_)
+      this.base_
+        .dataCheck()
+        .canvas2DStore.getRecv(this.base_.member_, this.base_.field_)
         ?.components.map((v) =>
-          Canvas2DComponent.fromMessage(this.data, v, idxNext)
+          Canvas2DComponent.fromMessage(this.base_.data, v, idxNext)
         ) || null
     );
   }
@@ -249,25 +247,32 @@ export class Canvas2D extends EventTarget<Canvas2D> {
   }
   get width() {
     return (
-      this.dataCheck().canvas2DStore.getRecv(this.member_, this.field_)
-        ?.width || null
+      this.base_
+        .dataCheck()
+        .canvas2DStore.getRecv(this.base_.member_, this.base_.field_)?.width ||
+      null
     );
   }
   get height() {
     return (
-      this.dataCheck().canvas2DStore.getRecv(this.member_, this.field_)
-        ?.height || null
+      this.base_
+        .dataCheck()
+        .canvas2DStore.getRecv(this.base_.member_, this.base_.field_)?.height ||
+      null
     );
   }
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().canvas2DStore.getEntry(this.member_).includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .canvas2DStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * Memberのsyncの時刻を返す
@@ -275,7 +280,10 @@ export class Canvas2D extends EventTarget<Canvas2D> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
   /**
    * Canvas2DComponentのリストをセットする
@@ -287,11 +295,14 @@ export class Canvas2D extends EventTarget<Canvas2D> {
     data: (Canvas2DComponent | TemporalGeometry)[]
   ) {
     const idxNext = new Map<number, number>();
-    this.setCheck().canvas2DStore.setSend(this.field_, {
+    this.base_.setCheck().canvas2DStore.setSend(this.base_.field_, {
       width,
       height,
       components: data.map((c) =>
-        c.to2().lockTmp(this.dataCheck(), this.field_, idxNext).toMessage()
+        c
+          .to2()
+          .lockTmp(this.base_.dataCheck(), this.base_.field_, idxNext)
+          .toMessage()
       ),
     });
     this.triggerEvent(this);

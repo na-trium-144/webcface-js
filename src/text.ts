@@ -10,49 +10,47 @@ import * as Message from "./message.js";
  * を参照
  */
 export class Text extends EventTarget<Text> {
+  base_: Field
   /**
    * このコンストラクタは直接使わず、
    * Member.text(), Member.texts(), Member.onTextEntry などを使うこと
    */
   constructor(base: Field | null, field = "") {
-    super(
-      "",
-      base?.data || null,
-      base?.member_ || "",
-      field || base?.field_ || ""
-    );
-    this.eventType_ = eventType.textChange(this);
+    super("", base?.data || null);
+    this.base_ = new Field(base?.data || null, base?.member_ || "", field || base?.field_);
+    this.eventType_ = eventType.textChange(this.base_);
   }
   /**
    * Memberを返す
    */
   get member() {
-    return new Member(this);
+    return new Member(this.base_);
   }
   /**
    * field名を返す
    */
   get name() {
-    return this.field_;
+    return this.base_.field_;
   }
   /**
-   * 子フィールドを返す
-   * @return 「(thisのフィールド名).(子フィールド名)」をフィールド名とするText
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするText
    */
   child(field: string): Text {
-    return new Text(this, this.field_ + "." + field);
+    return new Text(this.base_.child(field));
   }
   /**
    * 値をリクエストする。
    */
   request() {
-    const reqId = this.dataCheck().textStore.addReq(this.member_, this.field_);
+    const reqId = this.base_
+      .dataCheck()
+      .textStore.addReq(this.base_.member_, this.base_.field_);
     if (reqId > 0) {
-      this.dataCheck().pushSendReq([
+      this.base_.dataCheck().pushSendReq([
         {
           kind: Message.kind.textReq,
-          M: this.member_,
-          f: this.field_,
+          M: this.base_.member_,
+          f: this.base_.field_,
           i: reqId,
         },
       ]);
@@ -63,7 +61,9 @@ export class Text extends EventTarget<Text> {
    */
   tryGet() {
     this.request();
-    const v = this.dataCheck().textStore.getRecv(this.member_, this.field_);
+    const v = this.base_
+      .dataCheck()
+      .textStore.getRecv(this.base_.member_, this.base_.field_);
     if (v === null) {
       return null;
     } else {
@@ -75,7 +75,9 @@ export class Text extends EventTarget<Text> {
    */
   tryGetAny() {
     this.request();
-    return this.dataCheck().textStore.getRecv(this.member_, this.field_);
+    return this.base_
+      .dataCheck()
+      .textStore.getRecv(this.base_.member_, this.base_.field_);
   }
   /**
    * 文字列を返す
@@ -97,12 +99,15 @@ export class Text extends EventTarget<Text> {
   /**
    * このフィールドにデータが存在すればtrueを返す
    * @since ver1.8
-   * 
+   *
    * tryGet() とは違って、実際のデータを受信しない。
    * (リクエストも送信しない)
    */
   exists() {
-    return this.dataCheck().textStore.getEntry(this.member_).includes(this.field_);
+    return this.base_
+      .dataCheck()
+      .textStore.getEntry(this.base_.member_)
+      .includes(this.base_.field_);
   }
   /**
    * 文字列をセットする
@@ -113,7 +118,7 @@ export class Text extends EventTarget<Text> {
         this.child(k).set(v as string | object);
       }
     } else {
-      this.setCheck().textStore.setSend(this.field_, String(data));
+      this.base_.setCheck().textStore.setSend(this.base_.field_, String(data));
       this.triggerEvent(this);
     }
   }
@@ -123,7 +128,10 @@ export class Text extends EventTarget<Text> {
    * @deprecated ver1.6〜 Member.syncTime() に移行
    */
   time() {
-    return this.dataCheck().syncTimeStore.getRecv(this.member_) || new Date(0);
+    return (
+      this.base_.dataCheck().syncTimeStore.getRecv(this.base_.member_) ||
+      new Date(0)
+    );
   }
 }
 
@@ -133,7 +141,7 @@ export class InputRef {
     this.state = new Text(null);
   }
   get() {
-    if (this.state.isValid()) {
+    if (this.state.base_.isValid()) {
       return this.state.getAny();
     } else {
       return "";

@@ -1,5 +1,5 @@
 import msgpack from "@ygoe/msgpack";
-import { Val } from "./func.js";
+import { Val } from "./funcBase.js";
 
 export function unpack(msg: ArrayBuffer) {
   if (msg.byteLength === 0) {
