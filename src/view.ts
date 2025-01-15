@@ -1,6 +1,6 @@
 import isEqual from "lodash.isequal";
 import { Val, FuncCallback } from "./funcBase.js";
-import { Func, AnonymousFunc } from "./func.js";
+import { Func } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
@@ -91,11 +91,7 @@ export const viewComponents = {
   /**
    * buttonコンポーネント
    */
-  button: (
-    t: string,
-    f: Func | AnonymousFunc | FuncCallback,
-    options?: ViewComponentOption
-  ) =>
+  button: (t: string, f: Func | FuncCallback, options?: ViewComponentOption) =>
     new ViewComponent(viewComponentTypes.button, null, {
       ...options,
       text: t,
@@ -119,7 +115,7 @@ export const viewComponents = {
 
 interface ViewComponentOption {
   text?: string;
-  onClick?: Func | AnonymousFunc | FuncCallback;
+  onClick?: Func | FuncCallback;
   onChange?: FuncCallback;
   bind?: InputRef;
   textColor?: number;
@@ -154,7 +150,8 @@ export class ViewComponent extends IdBase {
   type_ = 0;
   text_ = "";
   on_click_: FieldBase | null = null;
-  on_click_tmp_: AnonymousFunc | null = null;
+  on_click_tmp_: FuncCallback | null = null;
+  on_change_tmp_: FuncCallback | null = null;
   text_ref_: FieldBase | null = null;
   text_ref_tmp_: InputRef | null = null;
   text_color_ = 0;
@@ -208,43 +205,26 @@ export class ViewComponent extends IdBase {
       this.text_ = options?.text;
     }
     if (options?.onClick !== undefined) {
-      if (options.onClick instanceof AnonymousFunc) {
-        this.on_click_tmp_ = options.onClick;
-      } else if (options.onClick instanceof Func) {
+      if (options.onClick instanceof Func) {
         this.on_click_ = options.onClick.base_;
       } else {
-        this.on_click_tmp_ = new AnonymousFunc(
-          null,
-          options.onClick,
-          Message.valType.none_,
-          []
-        );
+        this.on_click_tmp_ = options.onClick;
       }
     }
     if (options?.onChange !== undefined) {
       const ref = new InputRef();
       const func = options.onChange;
-      this.on_click_tmp_ = new AnonymousFunc(
-        null,
-        (val: Val) => {
-          ref.state.set(val);
-          return func(val);
-        },
-        Message.valType.none_,
-        [{ type: Message.valType.string_ }]
-      );
+      this.on_change_tmp_ = (val: Val) => {
+        ref.state.set(val);
+        return func(val);
+      };
       this.text_ref_tmp_ = ref;
     }
     if (options?.bind !== undefined) {
       const ref = options.bind;
-      this.on_click_tmp_ = new AnonymousFunc(
-        null,
-        (val: Val) => {
-          ref.state.set(val);
-        },
-        Message.valType.none_,
-        [{ type: Message.valType.string_ }]
-      );
+      this.on_change_tmp_ = (val: Val) => {
+        ref.state.set(val);
+      };
       this.text_ref_tmp_ = ref;
     }
     if (options?.textColor !== undefined) {
@@ -280,7 +260,14 @@ export class ViewComponent extends IdBase {
       const f = new Func(
         new Field(data, data.selfMemberName, `..v${viewName}/${this.id}`)
       );
-      this.on_click_tmp_.lockTo(f);
+      f.set(this.on_click_tmp_);
+      this.on_click_ = f.base_;
+    }
+    if (this.on_change_tmp_) {
+      const f = new Func(
+        new Field(data, data.selfMemberName, `..v${viewName}/${this.id}`)
+      );
+      f.set(this.on_change_tmp_, Message.valType.none_, [{}]);
       this.on_click_ = f.base_;
     }
     if (this.text_ref_tmp_) {

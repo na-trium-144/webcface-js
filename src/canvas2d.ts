@@ -5,7 +5,7 @@ import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
 import { TemporalGeometry, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
-import { Func, AnonymousFunc } from "./func.js";
+import { Func } from "./func.js";
 import { IdBase } from "./view.js";
 import { FieldBase } from "./fieldBase.js";
 import { FuncCallback } from "./funcBase.js";
@@ -15,7 +15,7 @@ export interface Canvas2DComponentOption {
   color?: number;
   fillColor?: number;
   strokeWidth?: number;
-  onClick?: FieldBase | Func | AnonymousFunc | FuncCallback;
+  onClick?: FieldBase | Func | FuncCallback;
 }
 export class Canvas2DComponent extends IdBase {
   private _type: number;
@@ -25,7 +25,7 @@ export class Canvas2DComponent extends IdBase {
   private _stroke_width: number;
   private _geometry: Geometry | null;
   private _on_click: FieldBase | null;
-  private _on_click_tmp: AnonymousFunc | null;
+  private _on_click_tmp: FuncCallback | null;
   private _text: string;
   private data: ClientData | null;
   constructor(
@@ -47,19 +47,12 @@ export class Canvas2DComponent extends IdBase {
     this._on_click_tmp = null;
     this._text = text;
     if (options?.onClick !== undefined) {
-      if (options.onClick instanceof AnonymousFunc) {
-        this._on_click_tmp = options.onClick;
-      } else if (options.onClick instanceof FieldBase) {
+      if (options.onClick instanceof FieldBase) {
         this._on_click = options.onClick;
       } else if (options.onClick instanceof Func) {
         this._on_click = options.onClick.base_;
       } else {
-        this._on_click_tmp = new AnonymousFunc(
-          null,
-          options.onClick,
-          Message.valType.none_,
-          []
-        );
+        this._on_click_tmp = options.onClick;
       }
     }
   }
@@ -72,7 +65,7 @@ export class Canvas2DComponent extends IdBase {
       const f = new Func(
         new Field(data, data.selfMemberName, `..c2${canvasName}/${this.id}`)
       );
-      this._on_click_tmp.lockTo(f);
+      f.set(this._on_click_tmp);
       this._on_click = f.base_;
     }
     return this;

@@ -1,11 +1,11 @@
 import { assert } from "chai";
-import { Func, AnonymousFunc } from "../src/func.js";
+import { Func } from "../src/func.js";
 import { ClientData } from "../src/clientData.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
 import * as Message from "../src/message.js";
-import { FuncCallback, FuncNotFoundError } from "../src/funcBase.js";
+import { FuncNotFoundError } from "../src/funcBase.js";
 
 describe("Func Tests", function () {
   const selfName = "test";
@@ -221,49 +221,5 @@ describe("Func Tests", function () {
       func("a", "a").free();
       assert.notExists(data.funcStore.dataRecv.get("a")?.get("a"));
     });
-  });
-});
-
-describe("AnonymousFunc Tests", function () {
-  const selfName = "test";
-  let data: ClientData;
-  const func = (member: string, field: string) =>
-    new Func(new Field(data, member, field));
-  const afunc1 = (func: FuncCallback, name = selfName) =>
-    new AnonymousFunc(new Field(data, name, ""), func, valType.none_, []);
-  const afunc2 = (func: FuncCallback) =>
-    new AnonymousFunc(null, func, valType.none_, []);
-  beforeEach(function () {
-    data = new ClientData(selfName);
-  });
-  it("constructed with data", async function () {
-    let called = 0;
-    const af = afunc1(() => ++called);
-    const f = func(selfName, "a");
-    af.lockTo(f);
-    assert.isTrue(data.funcStore.dataRecv.get(selfName)?.has("a"));
-    // DefinitelyTypedのPR#66744が修正されるまでanyにして対処
-    assert.lengthOf(
-      (data.funcStore.dataRecv.get(selfName) || new Map()) as any,
-      1
-    );
-    await f.runAsync().result;
-    assert.strictEqual(called, 1);
-  });
-  it("throws error when constructed with field which is not self", function () {
-    assert.throws(() => afunc1(() => undefined, "a"), Error);
-  });
-  it("constructed without data", async function () {
-    let called = 0;
-    const af = afunc2(() => ++called);
-    const f = func(selfName, "a");
-    af.lockTo(f);
-    assert.isTrue(data.funcStore.dataRecv.get(selfName)?.has("a"));
-    assert.lengthOf(
-      (data.funcStore.dataRecv.get(selfName) || new Map()) as any,
-      1
-    );
-    await f.runAsync().result;
-    assert.strictEqual(called, 1);
   });
 });
