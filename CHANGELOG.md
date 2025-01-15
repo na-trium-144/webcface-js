@@ -1,3 +1,12 @@
+## [1.10.0] - 2025-01-15
+### Added
+* Field::member(), name(), child(), children(), hasChildren(), 各種データ型の関数(value(), text(), ...と、 valueEntries(), textEntries(), ...) (#255)
+	* Member.values() -> valueEntries() に名前変更
+	* Value, Textなど各種データ型, Member, ClientがFieldを継承するのをやめた
+* Viewの要素にwidth, heightプロパティ追加 (#254)
+### Changed
+* AnonymousFuncクラス削除 (#255)
+
 ## [1.9.1] - 2024-11-30
 ### Fixed
 * syncInitの受信時にそのメンバーの過去のデータを消すようにした (#238)
