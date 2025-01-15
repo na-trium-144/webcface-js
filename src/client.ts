@@ -96,12 +96,7 @@ export class Client extends Member {
    * コールバックの型は (target: Member) => void
    */
   get onMemberEntry() {
-    return new EventTarget<Member>(
-      eventType.memberEntry(),
-      this.base_.data,
-      "",
-      ""
-    );
+    return new EventTarget<Member>(eventType.memberEntry(), this.base_.data);
   }
   /**
    * サーバーの識別情報

@@ -1,19 +1,21 @@
-import { Field, FieldBase } from "./field.js";
+import { Field } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
 import { Member } from "./member.js";
 import { TemporalGeometry, Geometry } from "./canvas3d.js";
 import { Transform } from "./transform.js";
-import { Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { Func, AnonymousFunc } from "./func.js";
 import { IdBase } from "./view.js";
+import { FieldBase } from "./fieldBase.js";
+import { FuncCallback } from "./funcBase.js";
 
 export interface Canvas2DComponentOption {
   origin?: Transform;
   color?: number;
   fillColor?: number;
   strokeWidth?: number;
-  onClick?: FieldBase | AnonymousFunc | FuncCallback;
+  onClick?: FieldBase | Func | AnonymousFunc | FuncCallback;
 }
 export class Canvas2DComponent extends IdBase {
   private _type: number;
@@ -49,6 +51,8 @@ export class Canvas2DComponent extends IdBase {
         this._on_click_tmp = options.onClick;
       } else if (options.onClick instanceof FieldBase) {
         this._on_click = options.onClick;
+      } else if (options.onClick instanceof Func) {
+        this._on_click = options.onClick.base_;
       } else {
         this._on_click_tmp = new AnonymousFunc(
           null,
@@ -175,12 +179,14 @@ export const canvas2DComponentType = {
  * を参照
  */
 export class Canvas2D extends EventTarget<Canvas2D> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.canvas2D(), Member.canvas2DEntries(), Member.onCanvas2DEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.canvas2DChange(this.base_);
   }
   /**

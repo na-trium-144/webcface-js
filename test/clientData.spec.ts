@@ -5,7 +5,8 @@ import {
   SyncDataStore1,
   FuncResultStore,
 } from "../src/clientData.js";
-import { Field } from "../src/field.js";
+import { FuncPromise } from "../src/func.js";
+import { FieldBase } from "../src/fieldBase.js";
 
 describe("ClientData Tests", function () {
   const selfName = "test";
@@ -281,20 +282,20 @@ describe("ClientData Tests", function () {
     });
     describe("#addResult()", function () {
       it("returns result object", function () {
-        const r = fs.addResult("a", new Field(data, "b", "c"));
+        const r = fs.addResult("a", new FieldBase("b", "c"), data);
         assert.strictEqual(r.caller, "a");
-        assert.strictEqual(r.getter().member.name, "b");
-        assert.strictEqual(r.getter().name, "c");
+        assert.strictEqual(new FuncPromise(r).member.name, "b");
+        assert.strictEqual(new FuncPromise(r).name, "c");
         assert.strictEqual(r.callerId, 0);
       });
     });
     describe("#getResult()", function () {
       it("returns result object", function () {
-        fs.addResult("a", new Field(data, "b", "c"));
+        fs.addResult("a", new FieldBase("b", "c"), data);
         const r = fs.getResult(0);
         assert.strictEqual(r.caller, "a");
-        assert.strictEqual(r.getter().member.name, "b");
-        assert.strictEqual(r.getter().name, "c");
+        assert.strictEqual(new FuncPromise(r).member.name, "b");
+        assert.strictEqual(new FuncPromise(r).name, "c");
         assert.strictEqual(r.callerId, 0);
       });
     });

@@ -10,12 +10,14 @@ import * as Message from "./message.js";
  * を参照
  */
 export class Value extends EventTarget<Value> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.value(), Member.values(), Member.onValueEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.valueChange(this.base_);
   }
   /**

@@ -1,9 +1,11 @@
 import isEqual from "lodash.isequal";
-import { Val, Func, AnonymousFunc, FuncCallback } from "./func.js";
+import { Val, FuncCallback } from "./funcBase.js";
+import { Func, AnonymousFunc } from "./func.js";
 import { Member } from "./member.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
-import { Field, FieldBase } from "./field.js";
+import { Field } from "./field.js";
+import { FieldBase } from "./fieldBase.js";
 import { Text, InputRef } from "./text.js";
 import * as Message from "./message.js";
 
@@ -419,12 +421,14 @@ export class ViewComponent extends IdBase {
  * を参照
  */
 export class View extends EventTarget<View> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.view(), Member.views(), Member.onViewEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.viewChange(this.base_);
   }
   /**

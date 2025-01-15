@@ -3,12 +3,6 @@ import { EventTarget, eventType } from "./event.js";
 import { Field } from "./field.js";
 import * as Message from "./message.js";
 
-export interface LogLine {
-  level: number;
-  time: Date;
-  message: string;
-}
-
 /**
  *  ログの送受信データを表すクラス
  *
@@ -16,8 +10,10 @@ export interface LogLine {
  * を参照
  */
 export class Log extends EventTarget<Log> {
-  constructor(base: Field, name: string = "") {
-    super("", base.data, base.member_, name);
+  base_: Field;
+  constructor(base: Field, field: string = "") {
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.logAppend(this.base_);
   }
   /**

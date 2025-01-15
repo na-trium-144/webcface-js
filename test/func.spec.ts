@@ -1,15 +1,11 @@
 import { assert } from "chai";
-import {
-  Func,
-  AnonymousFunc,
-  FuncCallback,
-  FuncNotFoundError,
-} from "../src/func.js";
+import { Func, AnonymousFunc } from "../src/func.js";
 import { ClientData } from "../src/clientData.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
 import * as Message from "../src/message.js";
+import { FuncCallback, FuncNotFoundError } from "../src/funcBase.js";
 
 describe("Func Tests", function () {
   const selfName = "test";

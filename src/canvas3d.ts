@@ -1,5 +1,5 @@
 import { Transform, Point } from "./transform.js";
-import { FieldBase, Field } from "./field.js";
+import { Field } from "./field.js";
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
 import { EventTarget, eventType } from "./event.js";
@@ -10,6 +10,7 @@ import {
   Canvas2DComponentOption,
   canvas2DComponentType,
 } from "./canvas2d.js";
+import { FieldBase } from "./fieldBase.js";
 
 export const geometryType = {
   none: 0,
@@ -392,12 +393,14 @@ export const canvas3DComponentType = {
  * を参照
  */
 export class Canvas3D extends EventTarget<Canvas3D> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.canvas3D(), Member.canvas3DEntries(), Member.onCanvas3DEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.canvas3DChange(this.base_);
   }
   /**

@@ -179,8 +179,7 @@ export class Member {
   get onValueEntry() {
     return new EventTarget<Value>(
       eventType.valueEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -191,8 +190,7 @@ export class Member {
   get onTextEntry() {
     return new EventTarget<Text>(
       eventType.textEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -203,8 +201,7 @@ export class Member {
   get onRobotModelEntry() {
     return new EventTarget<RobotModel>(
       eventType.robotModelEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -215,8 +212,7 @@ export class Member {
   get onFuncEntry() {
     return new EventTarget<Func>(
       eventType.funcEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -227,8 +223,7 @@ export class Member {
   get onViewEntry() {
     return new EventTarget<View>(
       eventType.viewEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -239,8 +234,7 @@ export class Member {
   get onCanvas3DEntry() {
     return new EventTarget<Canvas3D>(
       eventType.canvas3DEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -251,8 +245,7 @@ export class Member {
   get onCanvas2DEntry() {
     return new EventTarget<Canvas2D>(
       eventType.canvas2DEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -263,8 +256,7 @@ export class Member {
   get onImageEntry() {
     return new EventTarget<Image>(
       eventType.imageEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -276,8 +268,7 @@ export class Member {
   get onLogEntry() {
     return new EventTarget<Log>(
       eventType.logEntry(this.base_),
-      this.base_.data,
-      this.base_.member_
+      this.base_.data
     );
   }
   /**
@@ -286,11 +277,7 @@ export class Member {
    * コールバックの型は (target: Member) => void
    */
   get onSync() {
-    return new EventTarget<Member>(
-      eventType.sync(this.base_),
-      this.base_.data,
-      this.base_.member_
-    );
+    return new EventTarget<Member>(eventType.sync(this.base_), this.base_.data);
   }
   /**
    * このMemberが使っているWebCFaceライブラリの識別情報
@@ -369,11 +356,7 @@ export class Member {
    */
   get onPing() {
     this.requestPingStatus();
-    return new EventTarget<Member>(
-      eventType.ping(this.base_),
-      this.base_.data,
-      this.base_.member_
-    );
+    return new EventTarget<Member>(eventType.ping(this.base_), this.base_.data);
   }
   /**
    * syncの時刻を返す

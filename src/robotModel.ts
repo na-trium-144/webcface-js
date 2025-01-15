@@ -125,12 +125,14 @@ export class RobotLink {
  * を参照
  */
 export class RobotModel extends EventTarget<RobotModel> {
+  base_: Field;
   /**
    * このコンストラクタは直接使わず、
    * Member.robotModel(), Member.robotModels(), Member.onRobotModelEntry などを使うこと
    */
   constructor(base: Field, field = "") {
-    super("", base.data, base.member_, field || base.field_);
+    super("", base.data);
+    this.base_ = new Field(base.data, base.member_, field || base.field_);
     this.eventType_ = eventType.robotModelChange(this.base_);
   }
   /**

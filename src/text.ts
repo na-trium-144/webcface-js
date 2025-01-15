@@ -10,17 +10,14 @@ import * as Message from "./message.js";
  * を参照
  */
 export class Text extends EventTarget<Text> {
+  base_: Field
   /**
    * このコンストラクタは直接使わず、
    * Member.text(), Member.texts(), Member.onTextEntry などを使うこと
    */
   constructor(base: Field | null, field = "") {
-    super(
-      "",
-      base?.data || null,
-      base?.member_ || "",
-      field || base?.field_ || ""
-    );
+    super("", base?.data || null);
+    this.base_ = new Field(base?.data || null, base?.member_ || "", field || base?.field_);
     this.eventType_ = eventType.textChange(this.base_);
   }
   /**

@@ -1,14 +1,15 @@
 import * as Message from "./message.js";
 import { ClientData } from "./clientData.js";
-import { runFunc, Val } from "./func.js";
+import { runFunc } from "./func.js";
 import { getDiff, mergeDiff } from "./view.js";
 import websocket from "websocket";
 const w3cwebsocket = websocket.w3cwebsocket;
 import { eventType } from "./event.js";
 import version from "./version.js";
 import { Client } from "./client.js";
-import { ImageFrame, imageCompressMode } from "./image.js";
 import { Log } from "./log.js";
+import { imageCompressMode, ImageFrame } from "./imageBase.js";
+import { Val } from "./funcBase.js";
 
 export function reconnect(wcli: Client, data: ClientData) {
   if (data.closing) {

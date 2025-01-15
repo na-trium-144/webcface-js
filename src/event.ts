@@ -1,5 +1,5 @@
 import { ClientData } from "./clientData.js";
-import { FieldBase, Field } from "./field.js";
+import { FieldBase } from "./fieldBase.js";
 
 export const eventType = {
   onWsOpen: () => "wsOpen",
@@ -37,41 +37,50 @@ export const eventType = {
 type EventListener<TargetType> = (target: TargetType) => void;
 
 export class EventTarget<TargetType> {
-  base_: Field
+  data: ClientData | null;
   eventType_: string;
   // onAppend: () => void;
-  constructor(
-    eventType: string,
-    data: ClientData | null,
-    member: string,
-    field = ""
-    // onAppend: () => void = () => undefined
-  ) {
-    this.base_ = new Field(data, member, field);
+  constructor(eventType: string, data: ClientData | null) {
+    this.data = data;
     this.eventType_ = eventType;
     // this.onAppend = onAppend;
   }
   triggerEvent(arg: TargetType) {
-    this.base_.dataCheck().eventEmitter.emit(this.eventType_, arg);
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    this.data.eventEmitter.emit(this.eventType_, arg);
   }
   addListener(listener: EventListener<TargetType>) {
-    this.base_.dataCheck().eventEmitter.addListener(this.eventType_, listener);
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    this.data.eventEmitter.addListener(this.eventType_, listener);
     // this.onAppend();
   }
   on(listener: EventListener<TargetType>) {
     this.addListener(listener);
   }
   once(listener: EventListener<TargetType>) {
-    this.base_.dataCheck().eventEmitter.once(this.eventType_, listener);
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    this.data.eventEmitter.once(this.eventType_, listener);
     // this.onAppend();
   }
   removeListener(listener: EventListener<TargetType>) {
-    this.base_.dataCheck().eventEmitter.removeListener(this.eventType_, listener);
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    this.data.eventEmitter.removeListener(this.eventType_, listener);
   }
   off(listener: EventListener<TargetType>) {
     this.removeListener(listener);
   }
   removeAllListeners() {
-    this.base_.dataCheck().eventEmitter.removeAllListeners(this.eventType_);
+    if (this.data == null) {
+      throw new Error("ClientData is null");
+    }
+    this.data.eventEmitter.removeAllListeners(this.eventType_);
   }
 }

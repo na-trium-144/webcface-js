@@ -9,15 +9,8 @@ import { Image } from "./image.js";
 import { RobotModel } from "./robotModel.js";
 import { Canvas3D } from "./canvas3d.js";
 import { Canvas2D } from "./canvas2d.js";
+import { FieldBase } from "./fieldBase.js";
 
-export class FieldBase {
-  member_: string;
-  field_: string;
-  constructor(member: string, field = "") {
-    this.member_ = member;
-    this.field_ = field;
-  }
-}
 export class Field extends FieldBase {
   data: ClientData | null;
   constructor(data: ClientData | null, member: string, field = "") {

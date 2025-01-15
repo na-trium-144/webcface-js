@@ -3,13 +3,13 @@ import { ClientData } from "../src/clientData.js";
 import { Value } from "../src/value.js";
 import { Text } from "../src/text.js";
 import { Log } from "../src/log.js";
-import { Func, AnonymousFunc } from "../src/func.js";
-import { valType } from "../src/message.js";
+import { Func } from "../src/func.js";
 import { View } from "../src/view.js";
 import { RobotModel } from "../src/robotModel.js";
-import { Field, FieldBase } from "../src/field.js";
+import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { eventType } from "../src/event.js";
+import { FieldBase } from "../src/fieldBase.js";
 
 describe("Member Tests", function () {
   const selfName = "test";

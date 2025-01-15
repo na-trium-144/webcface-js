@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Func, AnonymousFunc, FuncCallback } from "../src/func.js";
+import { Func, AnonymousFunc } from "../src/func.js";
 import {
   View,
   viewComponents,
@@ -10,6 +10,7 @@ import { ClientData } from "../src/clientData.js";
 import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
+import { FuncCallback } from "../src/funcBase.js";
 
 describe("View Tests", function () {
   const selfName = "test";
