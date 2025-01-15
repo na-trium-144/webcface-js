@@ -90,87 +90,146 @@ export class Member {
   }
 
   /**
-   * このMemberが公開しているValueのリストを返す
+   * 公開されているデータのリスト
+   * @since ver1.10
+   *
+   * * データ型を問わずすべてのデータを列挙する。
+   * * childrenRecurse() と異なり、
+   * 名前にさらにピリオドが含まれる場合はその前までの名前を返す。
+   * * 同名で複数のデータが存在する場合も1回のみカウントする。
    */
-  values() {
-    return this.base_
-      .dataCheck()
-      .valueStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.value(n));
+  children() {
+    return this.base_.children();
   }
   /**
-   * このMemberが公開しているTextのリストを返す
+   * 公開されているデータのリスト(再帰)
+   * @since ver1.10
+   *
+   * * データ型を問わずすべてのデータを列挙する。
+   * * 同名で複数のデータが存在する場合も1回のみカウントする。
    */
-  texts() {
-    return this.base_
-      .dataCheck()
-      .textStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.text(n));
+  childrenRecurse() {
+    return this.base_.childrenRecurse();
   }
   /**
-   * このMemberが公開しているRobotModelのリストを返す
+   * 公開されているデータが存在するかどうかを返す
+   * @since ver1.10
    */
-  robotModels() {
-    return this.base_
-      .dataCheck()
-      .robotModelStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.robotModel(n));
+  hasChildren() {
+    return this.base_.hasChildren();
+  }
+
+  /**
+   * 公開されているvalueのリストを返す。
+   * @since ver1.10
+   */
+  valueEntries() {
+    return this.base_.valueEntries();
   }
   /**
-   * このMemberが公開しているViewのリストを返す
+   * 公開されているtextのリストを返す。
+   * @since ver1.10
    */
-  views() {
-    return this.base_
-      .dataCheck()
-      .viewStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.view(n));
+  textEntries() {
+    return this.base_.textEntries();
   }
   /**
-   * このMemberが公開しているCanvas3Dのリストを返す
+   * 公開されているfuncのリストを返す。
+   * @since ver1.10
    */
-  canvas3DEntries() {
-    return this.base_
-      .dataCheck()
-      .canvas3DStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.canvas3D(n));
+  funcEntries() {
+    return this.base_.funcEntries();
   }
   /**
-   * このMemberが公開しているCanvas2Dのリストを返す
+   * 公開されているviewのリストを返す。
+   * @since ver1.10
    */
-  canvas2DEntries() {
-    return this.base_
-      .dataCheck()
-      .canvas2DStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.canvas2D(n));
+  viewEntries() {
+    return this.base_.viewEntries();
   }
   /**
-   * このMemberが公開しているImageのリストを返す
-   */
-  images() {
-    return this.base_
-      .dataCheck()
-      .imageStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.image(n));
-  }
-  /**
-   * このMemberが公開しているFuncのリストを返す
-   */
-  funcs() {
-    return this.base_
-      .dataCheck()
-      .funcStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.func(n));
-  }
-  /**
-   * このmemberが公開しているLogのリストを返す
+   * 公開されているlogのリストを返す。
    * @since ver1.9
    */
   logEntries() {
-    return this.base_
-      .dataCheck()
-      .logStore.getEntry(this.base_.member_)
-      .map((n) => this.base_.log(n));
+    return this.base_.logEntries();
   }
+  /**
+   * 公開されているimageのリストを返す。
+   * @since ver1.10
+   */
+  imageEntries() {
+    return this.base_.imageEntries();
+  }
+  /**
+   * 公開されているcanvas2Dのリストを返す。
+   */
+  canvas2DEntries() {
+    return this.base_.canvas2DEntries();
+  }
+  /**
+   * 公開されているcanvas3Dのリストを返す。
+   */
+  canvas3DEntries() {
+    return this.base_.canvas3DEntries();
+  }
+  /**
+   * 公開されているrobotModelのリストを返す。
+   * @since ver1.10
+   */
+  robotModelEntries() {
+    return this.base_.robotModelEntries();
+  }
+
+  /**
+   * このMemberが公開しているValueのリストを返す
+   *
+   * @deprecated ver1.10〜 valueEntries() に移行
+   */
+  values() {
+    return this.base_.valueEntries();
+  }
+  /**
+   * このMemberが公開しているTextのリストを返す
+   *
+   * @deprecated ver1.10〜 textEntries() に移行
+   */
+  texts() {
+    return this.base_.textEntries();
+  }
+  /**
+   * このMemberが公開しているRobotModelのリストを返す
+   *
+   * @deprecated ver1.10〜 robotModelEntries() に移行
+   */
+  robotModels() {
+    return this.base_.robotModelEntries();
+  }
+  /**
+   * このMemberが公開しているViewのリストを返す
+   *
+   * @deprecated ver1.10〜 viewEntries() に移行
+   */
+  views() {
+    return this.base_.viewEntries();
+  }
+  /**
+   * このMemberが公開しているImageのリストを返す
+   *
+   * @deprecated ver1.10〜 imageEntries() に移行
+   */
+  images() {
+    return this.base_.imageEntries();
+  }
+  /**
+   * このMemberが公開しているFuncのリストを返す
+   *
+   * @deprecated ver1.10〜 funcEntries() に移行
+   */
+  funcs() {
+    return this.base_.funcEntries();
+  }
+
   /**
    * Valueが追加された時のイベント
    *
