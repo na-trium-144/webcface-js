@@ -7,6 +7,7 @@ import {
   FuncCallback,
   FuncInfo,
   FuncPromiseData,
+  incFuncIndex,
   Val,
 } from "./funcBase.js";
 
@@ -128,19 +129,35 @@ export class Func {
   /** 関数からFuncInfoを構築しセットする
    *
    * @param func 登録したい関数
-   * @param return_type 関数の戻り値 (valTypeオブジェクトの定数を使う)
+   * @param returnType 関数の戻り値 (valTypeオブジェクトの定数を使う)
    * @param args 関数の引数の情報
+   * @param index ver1.11〜: 関数の登録順序を表す番号(手動で上書きしたい場合)
    */
   set(
     func: FuncCallback,
     returnType: number = valType.none_,
-    args: Arg[] = []
+    args: Arg[] = [],
+    index?: number
   ) {
+    const newIndex = incFuncIndex();
     this.setInfo({
       returnType: returnType,
       args: args,
       funcImpl: func,
+      index: index !== undefined ? index : newIndex,
     });
+  }
+  /**
+   * @since ver1.11
+   */
+  get index(): number {
+    const funcInfo = this.base_
+      .dataCheck()
+      .funcStore.getRecv(this.base_.member_, this.base_.field_);
+    if (funcInfo !== null) {
+      return funcInfo.index;
+    }
+    return 0;
   }
   get returnType() {
     const funcInfo = this.base_
