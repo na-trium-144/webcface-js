@@ -8,7 +8,15 @@ export interface FuncInfo {
   returnType: number;
   args: Arg[];
   funcImpl?: FuncCallback;
+  index: number;
   // call
+}
+let lastFuncIndex = 0;
+export function resetFuncIndex() {
+  lastFuncIndex = 0;
+}
+export function incFuncIndex() {
+  return ++lastFuncIndex;
 }
 
 export interface Arg {
@@ -39,9 +47,14 @@ export class FuncPromiseData {
   base: FieldBase;
   data: ClientData;
 
-  constructor(callerId: number, caller: string, base: FieldBase, data: ClientData) {
+  constructor(
+    callerId: number,
+    caller: string,
+    base: FieldBase,
+    data: ClientData
+  ) {
     this.base = base;
-    this.data = data
+    this.data = data;
     this.callerId = callerId;
     this.caller = caller;
     this.reach = new Promise((res) => {
