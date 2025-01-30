@@ -1,6 +1,6 @@
 {
   "name": "webcface",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "WebCFace client library for Node.js and browser",
   "type": "module",
   "main": "dist/src/index.js",
