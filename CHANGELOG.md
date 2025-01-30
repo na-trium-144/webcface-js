@@ -1,3 +1,7 @@
+## [1.11.0] - 2025-01-30
+### Added
+* Func.index (#263)
+
 ## [1.10.0] - 2025-01-15
 ### Added
 * Field::member(), name(), child(), children(), hasChildren(), 各種データ型の関数(value(), text(), ...と、 valueEntries(), textEntries(), ...) (#255)
