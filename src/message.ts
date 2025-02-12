@@ -357,6 +357,7 @@ export interface FuncInfo {
   f: string;
   r: number;
   a: Arg[];
+  i?: number;
 }
 
 export interface LogLine {
