@@ -111,6 +111,11 @@ export function initSyncDataFirst(data: ClientData) {
       msg.push({ kind: Message.kind.viewReq, M: k, f: k2, i: v2 });
     }
   }
+  for (const [k, v] of data.plotStore.transferReq().entries()) {
+    for (const [k2, v2] of v.entries()) {
+      msg.push({ kind: Message.kind.plotReq, M: k, f: k2, i: v2 });
+    }
+  }
   for (const [k, v] of data.canvas3DStore.transferReq().entries()) {
     for (const [k2, v2] of v.entries()) {
       msg.push({ kind: Message.kind.canvas3DReq, M: k, f: k2, i: v2 });
@@ -168,6 +173,9 @@ export function syncData(data: ClientData, isFirst: boolean) {
   }
   for (const [k, v] of data.robotModelStore.transferSend(isFirst).entries()) {
     msg.push({ kind: Message.kind.robotModel, f: k, d: v });
+  }
+  for (const [k, v] of data.plotStore.transferSend(isFirst).entries()) {
+    msg.push({ kind: Message.kind.plot, f: k, d: v });
   }
   const viewPrev = data.viewStore.getSendPrev(isFirst);
   for (const [k, v] of data.viewStore.transferSend(isFirst).entries()) {
@@ -308,6 +316,14 @@ export function onMessage(
           eventType.robotModelChange(target.base_),
           target
         );
+        break;
+      }
+      case Message.kind.plotRes: {
+        const dataR = msg as Message.PlotRes;
+        const [member, field] = data.plotStore.getReq(dataR.i, dataR.f);
+        data.plotStore.setRecv(member, field, dataR.d);
+        const target = wcli.member(member).plot(field);
+        data.eventEmitter.emit(eventType.plotChange(target.base_), target);
         break;
       }
       case Message.kind.viewRes: {
@@ -492,6 +508,7 @@ export function onMessage(
         data.funcStore.initMember(dataR.M);
         data.logStore.initMember(dataR.M);
         data.viewStore.initMember(dataR.M);
+        data.plotStore.initMember(dataR.M);
         data.imageStore.initMember(dataR.M);
         data.robotModelStore.initMember(dataR.M);
         data.canvas3DStore.initMember(dataR.M);
@@ -535,6 +552,14 @@ export function onMessage(
         data.viewStore.setEntry(member, dataR.f);
         const target = wcli.member(member).view(dataR.f);
         data.eventEmitter.emit(eventType.viewEntry(target.base_), target);
+        break;
+      }
+      case Message.kind.plotEntry: {
+        const dataR = msg as Message.Entry;
+        const member = data.getMemberNameFromId(dataR.m);
+        data.plotStore.setEntry(member, dataR.f);
+        const target = wcli.member(member).plot(dataR.f);
+        data.eventEmitter.emit(eventType.plotEntry(target.base_), target);
         break;
       }
       case Message.kind.canvas3DEntry: {
