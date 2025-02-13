@@ -160,7 +160,7 @@ export class Member {
    * @since ver1.12
    */
   plotEntries() {
-    return this.base_.viewEntries();
+    return this.base_.plotEntries();
   }
   /**
    * 公開されているlogのリストを返す。
