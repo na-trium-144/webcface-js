@@ -3,6 +3,7 @@ import { Text } from "./text.js";
 import { Log } from "./log.js";
 import { Func } from "./func.js";
 import { View } from "./view.js";
+import { Plot } from "./plot.js";
 import { Image } from "./image.js";
 import { Field } from "./field.js";
 import { RobotModel } from "./robotModel.js";
@@ -55,6 +56,13 @@ export class Member {
    */
   view(name: string) {
     return new View(this.base_.child(name));
+  }
+  /**
+   * Plotオブジェクトを生成
+   * @since ver1.12
+   */
+  plot(name: string) {
+    return new Plot(this.base_.child(name));
   }
   /**
    * Canvas3Dオブジェクトを生成
@@ -146,6 +154,13 @@ export class Member {
    */
   viewEntries() {
     return this.base_.viewEntries();
+  }
+  /**
+   * 公開されているplotのリストを返す。
+   * @since ver1.12
+   */
+  plotEntries() {
+    return this.base_.plotEntries();
   }
   /**
    * 公開されているlogのリストを返す。
@@ -282,6 +297,18 @@ export class Member {
   get onViewEntry() {
     return new EventTarget<View>(
       eventType.viewEntry(this.base_),
+      this.base_.data
+    );
+  }
+  /**
+   * Plotが追加された時のイベント
+   * @since ver1.12
+   *
+   * コールバックの型は (target: Plot) => void
+   */
+  get onPlotEntry() {
+    return new EventTarget<Plot>(
+      eventType.plotEntry(this.base_),
       this.base_.data
     );
   }

@@ -32,6 +32,7 @@ export const kind = {
   robotModel: 6,
   canvas3D: 7,
   log: 8,
+  plot: 12,
   valueEntry: 20,
   textEntry: 21,
   viewEntry: 23,
@@ -40,6 +41,7 @@ export const kind = {
   robotModelEntry: 26,
   canvas3DEntry: 27,
   logEntry: 28,
+  plotEntry: 32,
   valueReq: 40,
   textReq: 41,
   viewReq: 43,
@@ -48,6 +50,7 @@ export const kind = {
   robotModelReq: 46,
   canvas3DReq: 47,
   logReq: 48,
+  plotReq: 52,
   valueRes: 60,
   textRes: 61,
   viewRes: 63,
@@ -56,6 +59,7 @@ export const kind = {
   robotModelRes: 66,
   canvas3DRes: 67,
   logRes: 68,
+  plotRes: 72,
   syncInit: 80,
   call: 81,
   callResponse: 82,
@@ -188,20 +192,31 @@ export interface RobotModel {
   f: string;
   d: RobotLink[];
 }
-
 export interface Log {
   kind: 8;
   f: string;
   l: LogLine[];
 }
+export interface PlotSeries {
+  V: string[];
+  v: string[];
+  c: number;
+  t: number;
+  r: number[];
+}
+export interface Plot {
+  kind: 12;
+  f: string;
+  d: PlotSeries[];
+}
 
 export interface Entry {
-  kind: 20 | 21 | 23 | 24 | 25 | 26 | 27 | 28;
+  kind: 20 | 21 | 23 | 24 | 25 | 26 | 27 | 28 | 32;
   m: number;
   f: string;
 }
 export interface Req {
-  kind: 40 | 41 | 43 | 44 | 46 | 47 | 48;
+  kind: 40 | 41 | 43 | 44 | 46 | 47 | 48 | 52;
   M: string;
   f: string;
   i: number;
@@ -274,6 +289,12 @@ export interface LogRes {
   i: number;
   f: string;
   l: LogLine[];
+}
+export interface PlotRes {
+  kind: 72;
+  i: number;
+  f: string;
+  d: PlotSeries[];
 }
 export interface SyncInit {
   kind: 80;
@@ -360,6 +381,7 @@ export type AnyMessage =
   | RobotModel
   | Canvas3D
   | Canvas2D
+  | Plot
   | Req
   | ImageReq
   | Entry

@@ -10,6 +10,7 @@ export const eventType = {
   textEntry: (b: FieldBase) => JSON.stringify(["textEntry", b.member_]),
   funcEntry: (b: FieldBase) => JSON.stringify(["funcEntry", b.member_]),
   viewEntry: (b: FieldBase) => JSON.stringify(["viewEntry", b.member_]),
+  plotEntry: (b: FieldBase) => JSON.stringify(["plotEntry", b.member_]),
   imageEntry: (b: FieldBase) => JSON.stringify(["imageEntry", b.member_]),
   canvas3DEntry: (b: FieldBase) => JSON.stringify(["canvas3DEntry", b.member_]),
   canvas2DEntry: (b: FieldBase) => JSON.stringify(["canvas2DEntry", b.member_]),
@@ -22,6 +23,8 @@ export const eventType = {
     JSON.stringify(["textChange", b.member_, b.field_]),
   viewChange: (b: FieldBase) =>
     JSON.stringify(["viewChange", b.member_, b.field_]),
+  plotChange: (b: FieldBase) =>
+    JSON.stringify(["plotChange", b.member_, b.field_]),
   imageChange: (b: FieldBase) =>
     JSON.stringify(["imageChange", b.member_, b.field_]),
   robotModelChange: (b: FieldBase) =>
