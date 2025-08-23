@@ -14,7 +14,7 @@ export interface FuncInfo {
 export interface Arg {
   name?: string;
   type?: number;
-  init?: Val | null;
+  init?: Val | Val[] | null;
   min?: number | null;
   max?: number | null;
   option?: string[] | number[];

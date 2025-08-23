@@ -64,24 +64,37 @@ export class FuncPromise {
 export const AsyncFuncResult = FuncPromise;
 export type AsyncFuncResult = FuncPromise;
 
-export function runFunc(fi: FuncInfo, args: Val[]) {
+function convertValSingle(a: Val, type: number){
+  switch (type) {
+    case valType.string_:
+      return String(a);
+    case valType.boolean_:
+      if (typeof a === "string") {
+        return a !== "";
+      } else {
+        return !!a;
+      }
+    case valType.int_:
+      return parseInt(String(a));
+    case valType.float_:
+      return parseFloat(String(a));
+    default:
+      return a;
+  }
+}
+export function runFunc(fi: FuncInfo, args: (Val | Val[])[]) {
   if (fi.args.length === args.length) {
-    const newArgs: Val[] = args.map((a, i) => {
-      switch (fi.args[i].type) {
-        case valType.string_:
-          return String(a);
-        case valType.boolean_:
-          if (typeof a === "string") {
-            return a !== "";
-          } else {
-            return !!a;
-          }
-        case valType.int_:
-          return parseInt(String(a));
-        case valType.float_:
-          return parseFloat(String(a));
-        default:
-          return a;
+    const newArgs: (Val | Val[])[] = args.map((a, i) => {
+      if(fi.args[i].type !== undefined && fi.args[i].type & valType.array_){
+        if(!Array.isArray(a)){
+          a = [a];
+        }
+        return a.map((a) => convertValSingle(a, fi.args[i].type! ^ valType.array_));
+      } else {
+        if(Array.isArray(a)){
+          a = a[0];
+        }
+        return convertValSingle(a, fi.args[i].type || 0);
       }
     });
     if (fi.funcImpl !== undefined) {
@@ -168,7 +181,7 @@ export class Func {
       .dataCheck()
       .funcStore.unsetRecv(this.base_.member_, this.base_.field_);
   }
-  runImpl(r: FuncPromiseData, args: Val[]) {
+  runImpl(r: FuncPromiseData, args: (Val | Val[])[]) {
     const funcInfo = this.base_
       .dataCheck()
       .funcStore.getRecv(this.base_.member_, this.base_.field_);
@@ -215,7 +228,7 @@ export class Func {
    *
    * 戻り値やエラー、例外はFuncPromiseから取得する
    */
-  runAsync(...args: Val[]) {
+  runAsync(...args: (Val | Val[])[]) {
     const r = this.base_
       .dataCheck()
       .funcResultStore.addResult("", this.base_, this.base_.dataCheck());
