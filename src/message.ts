@@ -325,7 +325,7 @@ export interface CallResult {
   i: number;
   c: number;
   e: boolean;
-  r: Val;
+  r: Val | Val[];
 }
 
 export interface Arg {

@@ -32,8 +32,8 @@ export class FuncPromiseData {
   caller: string;
   reach: Promise<boolean>;
   resolveReach: (r: boolean) => void = () => undefined;
-  finish: Promise<Val>;
-  resolveFinish: (r: Val | Promise<Val>) => void = () => undefined;
+  finish: Promise<Val | Val[]>;
+  resolveFinish: (r: Val | Val[] | Promise<Val | Val[]>) => void = () => undefined;
   // 例外をセットする
   rejectFinish: (e: Error) => void = () => undefined;
   base: FieldBase;
