@@ -220,6 +220,7 @@ export function syncData(data: ClientData, isFirst: boolean) {
           x: a.max !== undefined ? a.max : null,
           o: a.option !== undefined ? a.option : [],
         })),
+        i: v.index,
       });
     }
   }
@@ -582,6 +583,7 @@ export function onMessage(
             max: a.x,
             option: a.o,
           })),
+          index: dataR.i || 0,
         });
         const target = wcli.member(member).func(dataR.f);
         data.eventEmitter.emit(eventType.funcEntry(target.base_), target);

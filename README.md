@@ -16,7 +16,7 @@ npm install webcface
 
 Since ver1.7, you can also load webcface library built with webpack from CDN:
 ```html
-<script src="https://cdn.jsdelivr.net/npm/webcface@1.10.0/dist/webcface.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/webcface@1.11.0/dist/webcface.bundle.js"></script>
 ```
 
 ## API Documentation

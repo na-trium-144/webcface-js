@@ -5,7 +5,7 @@ import { Field } from "../src/field.js";
 import { Member } from "../src/member.js";
 import { valType } from "../src/message.js";
 import * as Message from "../src/message.js";
-import { FuncNotFoundError } from "../src/funcBase.js";
+import { FuncNotFoundError, resetFuncIndex } from "../src/funcBase.js";
 
 describe("Func Tests", function () {
   const selfName = "test";
@@ -15,6 +15,7 @@ describe("Func Tests", function () {
   beforeEach(function () {
     data = new ClientData(selfName);
     data.logLevel = "trace";
+    resetFuncIndex();
   });
   describe("#member", function () {
     it("returns Member object with its member name", function () {
@@ -39,6 +40,21 @@ describe("Func Tests", function () {
       assert.strictEqual(called, 1);
       assert.strictEqual(fi?.returnType, valType.number_);
       assert.isNotEmpty(fi?.args || []);
+    });
+    it("increments index automatically", function () {
+      func(selfName, "a").set(() => undefined, valType.none_, []);
+      const fi = data.funcStore.dataRecv.get(selfName)?.get("a");
+      assert.strictEqual(fi?.index, 1);
+      func(selfName, "b").set(() => undefined, valType.none_, []);
+      const fi_a = data.funcStore.dataRecv.get(selfName)?.get("a");
+      const fi_b = data.funcStore.dataRecv.get(selfName)?.get("b");
+      assert.strictEqual(fi_a?.index, 1);
+      assert.strictEqual(fi_b?.index, 2);
+    });
+    it("allows overriding the index", function () {
+      func(selfName, "a").set(() => undefined, valType.none_, [], 42);
+      const fi = data.funcStore.dataRecv.get(selfName)?.get("a");
+      assert.strictEqual(fi?.index, 42);
     });
     it("throws error when member is not self", function () {
       assert.throws(
@@ -71,6 +87,7 @@ describe("Func Tests", function () {
                 { name: "b", type: valType.number_ },
                 { name: "c", type: valType.boolean_ },
               ],
+              index: 42,
             },
           ],
         ])
@@ -170,6 +187,7 @@ describe("Func Tests", function () {
             {
               returnType: valType.string_,
               args: [],
+              index: 0,
             },
           ],
         ])
@@ -178,6 +196,27 @@ describe("Func Tests", function () {
     });
     it("returns valType.none_ if func is not set", function () {
       assert.strictEqual(func("a", "a").returnType, valType.none_);
+    });
+  });
+  describe("#index", function () {
+    it("returns index", function () {
+      data.funcStore.dataRecv.set(
+        "a",
+        new Map([
+          [
+            "a",
+            {
+              returnType: valType.string_,
+              args: [],
+              index: 42,
+            },
+          ],
+        ])
+      );
+      assert.strictEqual(func("a", "a").index, 42);
+    });
+    it("returns 0 if func is not set", function () {
+      assert.strictEqual(func("a", "a").index, 0);
     });
   });
   describe("#args", function () {
@@ -190,6 +229,7 @@ describe("Func Tests", function () {
             {
               returnType: valType.string_,
               args: [{ name: "a" }, { name: "b" }],
+              index: 0,
             },
           ],
         ])
@@ -214,6 +254,7 @@ describe("Func Tests", function () {
             {
               returnType: valType.string_,
               args: [],
+              index: 0,
             },
           ],
         ])

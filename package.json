@@ -1,6 +1,6 @@
 {
   "name": "webcface",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "WebCFace client library for Node.js and browser",
   "type": "module",
   "main": "dist/src/index.js",
@@ -45,7 +45,7 @@
     "typescript": "^5.3.3",
     "util": "^0.12.5",
     "webpack": "^5.93.0",
-    "webpack-cli": "^5.1.4",
+    "webpack-cli": "^6.0.1",
     "ws": "^8.14.1"
   },
   "dependencies": {

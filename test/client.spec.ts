@@ -523,11 +523,13 @@ describe("Client Tests", function () {
                 o: [],
               },
             ],
+            i: 100,
           });
           setTimeout(() => {
             assert.strictEqual(called, 1);
             assert.lengthOf(wcli.member("a").funcs(), 1);
             assert.isTrue(wcli.member("a").func("b").exists());
+            assert.strictEqual(wcli.member("a").func("b").index, 100);
             wssSend({
               kind: Message.kind.syncInit,
               M: "a",
@@ -648,6 +650,7 @@ describe("Client Tests", function () {
               option: [],
             },
           ],
+          index: 100,
         });
         wcli.sync();
         setTimeout(() => {
@@ -657,6 +660,7 @@ describe("Client Tests", function () {
           assert.strictEqual(m?.f, "a");
           assert.strictEqual(m?.r, valType.number_);
           assert.lengthOf(m?.a || [], 1);
+          assert.strictEqual(m?.i, 100);
           done();
         }, 10);
       });
@@ -1257,6 +1261,7 @@ describe("Client Tests", function () {
                 option: [],
               },
             ],
+            index: 100,
           });
           wssSend({
             kind: Message.kind.call,
@@ -1301,6 +1306,7 @@ describe("Client Tests", function () {
                 option: [],
               },
             ],
+            index: 100,
           });
           wssSend({
             kind: Message.kind.call,
@@ -1332,6 +1338,7 @@ describe("Client Tests", function () {
             },
             returnType: valType.none_,
             args: [],
+            index: 100,
           });
           wssSend({
             kind: Message.kind.call,
