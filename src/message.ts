@@ -79,6 +79,7 @@ export const valType = {
   int_: 3,
   float_: 4,
   number_: 4,
+  array_: 16,
 } as const;
 
 export interface Value {
@@ -311,7 +312,7 @@ export interface Call {
   c: number;
   r: number;
   f: string;
-  a: Val[];
+  a: (Val | Val[])[];
 }
 export interface CallResponse {
   kind: 82;
@@ -324,13 +325,13 @@ export interface CallResult {
   i: number;
   c: number;
   e: boolean;
-  r: Val;
+  r: Val | Val[];
 }
 
 export interface Arg {
   n: string;
   t: number;
-  i: Val | null;
+  i: Val | Val[] | null;
   m: number | null;
   x: number | null;
   o: number[] | string[];

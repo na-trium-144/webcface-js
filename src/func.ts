@@ -37,13 +37,14 @@ export class FuncPromise {
    * * 関数の戻り値をstring,number,booleanのいずれかで返す。
    * * 関数が例外を返した場合、 Error(エラーメッセージ) の値でrejectする。
    *   * ver1.7以前ではany型だったが、1.8以降任意の例外をStringに変換した上でError型のメッセージにする
+   * * ver1.12〜 arrayを返すこともある。
    */
-  finish: Promise<string | number | boolean>;
+  finish: Promise<Val | Val[]>;
   /**
    * finish と同じ
    * @deprecated ver1.8〜
    */
-  result: Promise<Val>;
+  result: Promise<Val | Val[]>;
   constructor(pData: FuncPromiseData) {
     this.base_ = new Field(pData.data, pData.base.member_, pData.base.field_);
     this.reach = this.started = pData.reach;
@@ -65,24 +66,39 @@ export class FuncPromise {
 export const AsyncFuncResult = FuncPromise;
 export type AsyncFuncResult = FuncPromise;
 
-export function runFunc(fi: FuncInfo, args: Val[]) {
+function convertValSingle(a: Val, type: number) {
+  switch (type) {
+    case valType.string_:
+      return String(a);
+    case valType.boolean_:
+      if (typeof a === "string") {
+        return a !== "";
+      } else {
+        return !!a;
+      }
+    case valType.int_:
+      return parseInt(String(a));
+    case valType.float_:
+      return parseFloat(String(a));
+    default:
+      return a;
+  }
+}
+export function runFunc(fi: FuncInfo, args: (Val | Val[])[]) {
   if (fi.args.length === args.length) {
-    const newArgs: Val[] = args.map((a, i) => {
-      switch (fi.args[i].type) {
-        case valType.string_:
-          return String(a);
-        case valType.boolean_:
-          if (typeof a === "string") {
-            return a !== "";
-          } else {
-            return !!a;
-          }
-        case valType.int_:
-          return parseInt(String(a));
-        case valType.float_:
-          return parseFloat(String(a));
-        default:
-          return a;
+    const newArgs: (Val | Val[])[] = args.map((a, i) => {
+      if (fi.args[i].type !== undefined && fi.args[i].type & valType.array_) {
+        if (!Array.isArray(a)) {
+          a = [a];
+        }
+        return a.map((a) =>
+          convertValSingle(a, fi.args[i].type! ^ valType.array_),
+        );
+      } else {
+        if (Array.isArray(a)) {
+          a = a[0];
+        }
+        return convertValSingle(a, fi.args[i].type || 0);
       }
     });
     if (fi.funcImpl !== undefined) {
@@ -91,7 +107,7 @@ export function runFunc(fi: FuncInfo, args: Val[]) {
     return undefined;
   } else {
     throw new Error(
-      `require ${fi.args.length} arguments, but got ${args.length}`
+      `require ${fi.args.length} arguments, but got ${args.length}`,
     );
   }
 }
@@ -185,7 +201,7 @@ export class Func {
       .dataCheck()
       .funcStore.unsetRecv(this.base_.member_, this.base_.field_);
   }
-  runImpl(r: FuncPromiseData, args: Val[]) {
+  runImpl(r: FuncPromiseData, args: (Val | Val[])[]) {
     const funcInfo = this.base_
       .dataCheck()
       .funcStore.getRecv(this.base_.member_, this.base_.field_);
@@ -231,8 +247,10 @@ export class Func {
    * 関数を実行する (非同期)
    *
    * 戻り値やエラー、例外はFuncPromiseから取得する
+   *
+   * * ver1.12〜 array型引数に対応
    */
-  runAsync(...args: Val[]) {
+  runAsync(...args: (Val | Val[])[]) {
     const r = this.base_
       .dataCheck()
       .funcResultStore.addResult("", this.base_, this.base_.dataCheck());
