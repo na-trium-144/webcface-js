@@ -5,6 +5,7 @@ import { Text } from "./text.js";
 import { Log } from "./log.js";
 import { Func } from "./func.js";
 import { View } from "./view.js";
+import { Plot } from "./plot.js";
 import { Image } from "./image.js";
 import { RobotModel } from "./robotModel.js";
 import { Canvas3D } from "./canvas3d.js";
@@ -90,6 +91,13 @@ export class Field extends FieldBase {
     return new View(this.child(name));
   }
   /**
+   * 「(thisのフィールド名).(追加の名前)」をフィールド名とするPlotオブジェクトを生成
+   * @since ver1.12
+   */
+  plot(name: string) {
+    return new Plot(this.child(name));
+  }
+  /**
    * 「(thisのフィールド名).(追加の名前)」をフィールド名とするCanvas3Dオブジェクトを生成
    * @since ver1.10
    */
@@ -172,6 +180,7 @@ export class Field extends FieldBase {
     this.entries(ret, data.robotModelStore, false);
     this.entries(ret, data.funcStore, false);
     this.entries(ret, data.viewStore, false);
+    this.entries(ret, data.plotStore, false);
     this.entries(ret, data.canvas2DStore, false);
     this.entries(ret, data.canvas3DStore, false);
     this.entries(ret, data.imageStore, false);
@@ -193,6 +202,7 @@ export class Field extends FieldBase {
     this.entries(ret, data.robotModelStore, true);
     this.entries(ret, data.funcStore, true);
     this.entries(ret, data.viewStore, true);
+    this.entries(ret, data.plotStore, true);
     this.entries(ret, data.canvas2DStore, true);
     this.entries(ret, data.canvas3DStore, true);
     this.entries(ret, data.imageStore, true);
@@ -211,6 +221,7 @@ export class Field extends FieldBase {
       this.hasEntries(data.robotModelStore) ||
       this.hasEntries(data.funcStore) ||
       this.hasEntries(data.viewStore) ||
+      this.hasEntries(data.plotStore) ||
       this.hasEntries(data.canvas2DStore) ||
       this.hasEntries(data.canvas3DStore) ||
       this.hasEntries(data.imageStore) ||
@@ -257,6 +268,16 @@ export class Field extends FieldBase {
     const data = this.dataCheck();
     this.entries(ret, data.viewStore, true);
     return ret.map((f) => new View(this, f));
+  }
+  /**
+   * 「(thisの名前).(追加の名前)」で公開されているplotのリストを返す。
+   * @since ver1.12
+   */
+  plotEntries() {
+    const ret: string[] = [];
+    const data = this.dataCheck();
+    this.entries(ret, data.plotStore, true);
+    return ret.map((f) => new Plot(this, f));
   }
   /**
    * 「(thisの名前).(追加の名前)」で公開されているcanvas2dのリストを返す。

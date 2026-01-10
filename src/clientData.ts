@@ -24,6 +24,7 @@ export class ClientData {
   viewStore: SyncDataStore2<Message.ViewComponent[]>;
   imageStore: SyncDataStore2<ImageFrame, ImageReq>;
   robotModelStore: SyncDataStore2<Message.RobotLink[]>;
+  plotStore: SyncDataStore2<Message.PlotSeries[]>;
   canvas3DStore: SyncDataStore2<Message.Canvas3DComponent[]>;
   canvas2DStore: SyncDataStore2<Canvas2DData>;
   logStore: SyncDataStore2<LogData>;
@@ -72,6 +73,10 @@ export class ClientData {
     this.viewStore = new SyncDataStore2<Message.ViewComponent[]>(name);
     this.imageStore = new SyncDataStore2<ImageFrame, ImageReq>(name);
     this.robotModelStore = new SyncDataStore2<Message.RobotLink[]>(name);
+    this.plotStore = new SyncDataStore2<Message.PlotSeries[]>(
+      name,
+      SyncDataStore2.shouldSendOnChange
+    );
     this.canvas3DStore = new SyncDataStore2<Message.Canvas3DComponent[]>(name);
     this.canvas2DStore = new SyncDataStore2<Canvas2DData>(name);
     this.logStore = new SyncDataStore2<LogData>(name);
@@ -129,7 +134,7 @@ export class ClientData {
 
   /**
    * 次回接続後一番最初に送信するメッセージ
-   * 
+   *
    * * syncDataFirst() の返り値であり、
    * すべてのリクエストとすべてのsyncデータ(1時刻分)が含まれる
    * * sync()時に未接続かつこれが空ならその時点のsyncDataFirstをこれにセット
@@ -149,7 +154,7 @@ export class ClientData {
         this.ws.send(msg);
       }
       this.messageQueue = [];
-    }    
+    }
   }
   /**
    * メッセージを追加 & messageQueueを消費
@@ -172,7 +177,7 @@ export class ClientData {
       }
       this.sendMsg();
       return true;
-    }else{
+    } else {
       return false;
     }
   }
@@ -186,7 +191,7 @@ export class ClientData {
       }
       this.sendMsg();
       return true;
-    }else{
+    } else {
       return false;
     }
   }

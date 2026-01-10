@@ -40,6 +40,7 @@ export {
   Canvas2D,
   canvas2DComponentType,
 } from "./canvas2d.js";
+export { Plot, PlotSeries, plotSeriesType } from "./plot.js";
 export { valType } from "./message.js";
 export { Func, FuncPromise, AsyncFuncResult } from "./func.js";
 export { Arg, FuncNotFoundError } from "./funcBase.js";
